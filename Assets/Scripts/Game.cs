@@ -22,6 +22,13 @@ public class Game : MonoBehaviour
     //Game Ending
     private bool gameOver = false;
 
+    public struct MoveData {
+    public GameObject piece; // Quân cờ sẽ đi
+    public int targetX;      // Tọa độ X đến
+    public int targetY;      // Tọa độ Y đến
+    public int score;        // Điểm số của nước đi này
+}
+
     //Unity calls this right when the game starts, there are a few built in functions
     //that Unity can call for you
     public void Start()
@@ -94,14 +101,118 @@ public class Game : MonoBehaviour
 
     public void NextTurn()
     {
-        if (currentPlayer == "white")
+        currentPlayer = (currentPlayer == "white") ? "black" : "white";
+
+        if (!gameOver && currentPlayer == "black")
         {
-            currentPlayer = "black";
+            Invoke("DoAITurn", 0.5f);
         }
-        else
+    }
+    void DoAITurn()
+    {
+        if (gameOver) return;
+
+        List<MoveData> allPossibleMoves = new List<MoveData>();
+
+        // 1. Tìm tất cả quân cờ đang có trên bàn
+        GameObject[] allPieces = GameObject.FindGameObjectsWithTag("Chessman");
+
+        foreach (GameObject p in allPieces)
         {
-            currentPlayer = "white";
+            Chessman script = p.GetComponent<Chessman>();
+            
+            // 2. Chỉ tính toán cho quân Đen
+            if (script.GetPlayer() == "black")
+            {
+                // Tạo các ô di chuyển hợp lệ cho quân này (đã bao gồm chặn đường trong Chessman.cs)
+                script.InitiateMovePlates();
+
+                // Tìm các MovePlate vừa mới tạo ra
+                GameObject[] movePlates = GameObject.FindGameObjectsWithTag("MovePlate");
+
+                foreach (GameObject mp in movePlates)
+                {
+                    MovePlate mpScript = mp.GetComponent<MovePlate>();
+                    int moveScore = 0;
+
+                    // 3. Đánh giá nước đi (Ưu tiên ăn quân)
+                    if (mpScript.attack)
+                    {
+                        GameObject victim = GetPosition(mpScript.GetMatrixX(), mpScript.GetMatrixY());
+                        if (victim != null)
+                        {
+                            moveScore = GetPieceValue(victim.name);
+                        }
+                    }
+
+                    allPossibleMoves.Add(new MoveData
+                    {
+                        piece = p,
+                        targetX = mpScript.GetMatrixX(),
+                        targetY = mpScript.GetMatrixY(),
+                        score = moveScore
+                    });
+                }
+
+                // 4. CỰC KỲ QUAN TRỌNG: Xóa sạch MovePlate ngay lập tức để quân sau không bị nhầm
+                foreach (GameObject mp in movePlates)
+                {
+                    DestroyImmediate(mp); 
+                }
+            }
         }
+
+        // 5. Chọn nước đi tốt nhất
+        if (allPossibleMoves.Count > 0)
+        {
+            // Trộn ngẫu nhiên danh sách trước khi sắp xếp để AI không đi quá máy móc khi điểm bằng nhau
+            System.Random rng = new System.Random();
+            int n = allPossibleMoves.Count;
+            while (n > 1) {
+                n--;
+                int k = rng.Next(n + 1);
+                MoveData value = allPossibleMoves[k];
+                allPossibleMoves[k] = allPossibleMoves[n];
+                allPossibleMoves[n] = value;
+            }
+
+            // Sắp xếp lấy nước đi điểm cao nhất
+            allPossibleMoves.Sort((a, b) => b.score.CompareTo(a.score));
+            
+            ExecuteAIMove(allPossibleMoves[0]);
+        }
+    }    
+    int GetPieceValue(string name)
+    {
+        if (name.Contains("pawn")) return 10;
+        if (name.Contains("knight")) return 30;
+        if (name.Contains("bishop")) return 30;
+        if (name.Contains("rook")) return 50;
+        if (name.Contains("queen")) return 90;
+        if (name.Contains("king")) return 900;
+        return 0;
+    }   
+
+void ExecuteAIMove(MoveData move)
+    {
+        Chessman cm = move.piece.GetComponent<Chessman>();
+
+        // Nếu có quân địch tại đó -> Xóa quân địch
+        GameObject victim = GetPosition(move.targetX, move.targetY);
+        if (victim != null) {
+            if (victim.name.Contains("king")) Winner("black");
+            Destroy(victim);
+        }
+
+        // Cập nhật mảng và vị trí
+        SetPositionEmpty(cm.GetXBoard(), cm.GetYBoard());
+        cm.SetXBoard(move.targetX);
+        cm.SetYBoard(move.targetY);
+        cm.SetCoords();
+        SetPosition(move.piece);
+
+        // Kết thúc lượt AI
+        NextTurn();
     }
 
     public void Update()
@@ -125,4 +236,5 @@ public class Game : MonoBehaviour
 
         GameObject.FindGameObjectWithTag("RestartText").GetComponent<Text>().enabled = true;
     }
+    
 }

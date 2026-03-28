@@ -45,7 +45,10 @@ public class Chessman : MonoBehaviour
             case "white_pawn": this.GetComponent<SpriteRenderer>().sprite = white_pawn; player = "white"; break;
         }
     }
-
+    public string GetPlayer()
+    {
+        return player;
+    }
     public void SetCoords()
     {
         //Get the board value in order to convert to xy coords

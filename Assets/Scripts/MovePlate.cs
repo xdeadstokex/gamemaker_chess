@@ -75,4 +75,6 @@ public class MovePlate : MonoBehaviour
     {
         return reference;
     }
+    public int GetMatrixX() => matrixX;
+    public int GetMatrixY() => matrixY;
 }
