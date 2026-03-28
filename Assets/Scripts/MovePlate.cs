@@ -29,16 +29,21 @@ public class MovePlate : MonoBehaviour
     public void OnMouseUp()
     {
         controller = GameObject.FindGameObjectWithTag("GameController");
-
+        Game gameScript = controller.GetComponent<Game>();
         //Destroy the victim Chesspiece
         if (attack)
         {
+            gameScript.PlaySound(gameScript.captureSound);
             GameObject cp = controller.GetComponent<Game>().GetPosition(matrixX, matrixY);
 
             if (cp.name == "white_king") controller.GetComponent<Game>().Winner("black");
             if (cp.name == "black_king") controller.GetComponent<Game>().Winner("white");
 
             Destroy(cp);
+        }
+        else
+        {
+            gameScript.PlaySound(gameScript.moveSound);
         }
 
         //Set the Chesspiece's original location to be empty

@@ -45,6 +45,85 @@ public class Chessman : MonoBehaviour
             case "white_pawn": this.GetComponent<SpriteRenderer>().sprite = white_pawn; player = "white"; break;
         }
     }
+    public bool CanMoveTo(int x, int y)
+    {
+        Game sc = controller.GetComponent<Game>();
+        if (!sc.PositionOnBoard(x, y)) return false;
+
+        // Không được đi vào ô có quân mình đang đứng
+        GameObject target = sc.GetPosition(x, y);
+        if (target != null && target.GetComponent<Chessman>().player == player) return false;
+
+        string type = this.name.Split('_')[1]; // Lấy "rook", "knight",... từ "black_rook"
+
+        switch (type)
+        {
+            case "queen":  return IsLineMoveValid(x, y) || IsDiagonalMoveValid(x, y);
+            case "rook":   return IsLineMoveValid(x, y);
+            case "bishop": return IsDiagonalMoveValid(x, y);
+            case "knight": return IsKnightMoveValid(x, y);
+            case "pawn":   return IsPawnMoveValid(x, y);
+        }
+        return false;
+    }
+    private bool IsLineMoveValid(int tx, int ty)
+    {
+        if (tx != xBoard && ty != yBoard) return false; // Không thẳng hàng/cột
+
+        int xStep = System.Math.Sign(tx - xBoard);
+        int yStep = System.Math.Sign(ty - yBoard);
+
+        int curX = xBoard + xStep;
+        int curY = yBoard + yStep;
+
+        while (curX != tx || curY != ty)
+        {
+            if (controller.GetComponent<Game>().GetPosition(curX, curY) != null) return false; // Bị chặn
+            curX += xStep;
+            curY += yStep;
+        }
+        return true;
+    }
+    private bool IsDiagonalMoveValid(int tx, int ty)
+    {
+        if (System.Math.Abs(tx - xBoard) != System.Math.Abs(ty - yBoard)) return false;
+
+        int xStep = System.Math.Sign(tx - xBoard);
+        int yStep = System.Math.Sign(ty - yBoard);
+
+        int curX = xBoard + xStep;
+        int curY = yBoard + yStep;
+
+        while (curX != tx || curY != ty)
+        {
+            if (controller.GetComponent<Game>().GetPosition(curX, curY) != null) return false;
+            curX += xStep;
+            curY += yStep;
+        }
+        return true;
+    }
+    private bool IsKnightMoveValid(int tx, int ty)
+    {
+        int dx = System.Math.Abs(tx - xBoard);
+        int dy = System.Math.Abs(ty - yBoard);
+        return (dx == 1 && dy == 2) || (dx == 2 && dy == 1);
+    }
+
+private bool IsPawnMoveValid(int tx, int ty)
+    {
+        Game sc = controller.GetComponent<Game>();
+        int direction = (player == "white") ? 1 : -1;
+        int dx = tx - xBoard;
+        int dy = ty - yBoard;
+
+        // Ăn chéo
+        if (System.Math.Abs(dx) == 1 && dy == direction)
+        {
+            GameObject target = sc.GetPosition(tx, ty);
+            return target != null && target.GetComponent<Chessman>().player != player;
+        }
+        return false;
+    }
     public string GetPlayer()
     {
         return player;

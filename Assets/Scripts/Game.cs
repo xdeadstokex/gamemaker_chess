@@ -28,7 +28,22 @@ public class Game : MonoBehaviour
     public int targetY;      // Tọa độ Y đến
     public int score;        // Điểm số của nước đi này
 }
+    public AudioSource audioSource;
+    public AudioClip moveSound;   // Âm thanh đi quân bình thường
+    public AudioClip captureSound; // Âm thanh khi ăn quân
+    public AudioClip checkSound;
+    // public AudioClip winSound;
+    public AudioClip startSound;
+    public AudioClip endSound;
+    public AudioClip timeLess;
 
+    public void PlaySound(AudioClip clip)
+    {
+        if (audioSource != null && clip != null)
+        {
+            audioSource.PlayOneShot(clip);
+        }
+    }
     //Unity calls this right when the game starts, there are a few built in functions
     //that Unity can call for you
     public void Start()
@@ -52,8 +67,9 @@ public class Game : MonoBehaviour
             SetPosition(playerBlack[i]);
             SetPosition(playerWhite[i]);
         }
+        PlaySound(startSound);
     }
-
+    
     public GameObject Create(string name, int x, int y)
     {
         GameObject obj = Instantiate(chesspiece, new Vector3(0, 0, -1), Quaternion.identity);
@@ -93,7 +109,44 @@ public class Game : MonoBehaviour
     {
         return currentPlayer;
     }
+    // Thêm vào trong class Game trong file Game.cs
 
+public bool IsKingInCheck(string kingColor)
+    {
+        Chessman king = GetKing(kingColor); // Tự viết hàm tìm King hoặc dùng mảng
+        int kX = king.GetXBoard();
+        int kY = king.GetYBoard();
+
+        GameObject[] enemies = (kingColor == "white") ? playerBlack : playerWhite;
+
+        foreach (GameObject enemyObj in enemies)
+        {
+            if (enemyObj == null) continue;
+            if (enemyObj.GetComponent<Chessman>().CanMoveTo(kX, kY)) return true;
+        }
+        return false;
+    }
+public Chessman GetKing(string color)
+    {
+        // Xác định mảng quân cờ cần quét dựa trên màu sắc
+        GameObject[] pieces = (color == "white") ? playerWhite : playerBlack;
+
+        foreach (GameObject obj in pieces)
+        {
+            // Kiểm tra xem quân cờ còn tồn tại trên bàn không (tránh lỗi khi bị ăn)
+            if (obj != null)
+            {
+                // Kiểm tra tên hoặc loại quân cờ
+                if (obj.name.Contains("king"))
+                {
+                    return obj.GetComponent<Chessman>();
+                }
+            }
+        }
+
+        Debug.LogError("Không tìm thấy quân Vua phe " + color + "! Có thể bạn chưa kéo Prefab hoặc quân Vua đã bị xóa nhầm.");
+        return null;
+    }
     public bool IsGameOver()
     {
         return gameOver;
@@ -102,7 +155,11 @@ public class Game : MonoBehaviour
     public void NextTurn()
     {
         currentPlayer = (currentPlayer == "white") ? "black" : "white";
-
+        if (!gameOver && IsKingInCheck(currentPlayer))
+        {
+            PlaySound(checkSound); // Phát file 'check' bạn đã kéo vào Inspector
+            Debug.Log(currentPlayer + " is in CHECK!");
+        }
         if (!gameOver && currentPlayer == "black")
         {
             Invoke("DoAITurn", 0.5f);
@@ -200,8 +257,14 @@ void ExecuteAIMove(MoveData move)
         // Nếu có quân địch tại đó -> Xóa quân địch
         GameObject victim = GetPosition(move.targetX, move.targetY);
         if (victim != null) {
+            PlaySound(captureSound);
             if (victim.name.Contains("king")) Winner("black");
+            //PlaySound(winSound);
             Destroy(victim);
+        }
+        else
+        {
+            PlaySound(moveSound);
         }
 
         // Cập nhật mảng và vị trí
