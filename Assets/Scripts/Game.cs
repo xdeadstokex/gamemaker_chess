@@ -160,10 +160,10 @@ public Chessman GetKing(string color)
             PlaySound(checkSound); // Phát file 'check' bạn đã kéo vào Inspector
             Debug.Log(currentPlayer + " is in CHECK!");
         }
-        if (!gameOver && currentPlayer == "black")
-        {
-            Invoke("DoAITurn", 0.5f);
-        }
+        // if (!gameOver && currentPlayer == "black")
+        // {
+        //     Invoke("DoAITurn", 0.5f);
+        // }
     }
     void DoAITurn()
     {
