@@ -635,7 +635,7 @@ public class Chessman : MonoBehaviour
         {
 
 
-            bool isAtOpponentHalf = isWhite() ? (xBoard >= 4) : (yBoard <= 3);
+            bool isAtOpponentHalf = isWhite() ? (yBoard >= 4) : (yBoard <= 3);
 
             // Check xem victim có thuộc nhóm Heavy không
             bool ateHeavy = victimScript.unitType == PieceType.KHeavy || 
