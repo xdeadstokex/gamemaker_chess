@@ -114,6 +114,23 @@ MonoBehaviour:
   white_king: {fileID: -3792998861040722889, guid: e2893edc5b99e7b479eb77b816d38151, type: 3}
   white_rook: {fileID: -8948728166497563328, guid: 71fa6a2744ecd5448be885547701a841, type: 3}
   white_pawn: {fileID: 5580225292014371162, guid: cba27f19f032eee4b80440758862166c, type: 3}
+  e_black_queen: {fileID: 987628164968182631, guid: 2e296e6f99517c0958cb0c454cce274f, type: 3}
+  e_black_knight: {fileID: 7448040370718626997, guid: 4a1a704be09dca246b2e8effeb5e5af7, type: 3}
+  e_black_bishop: {fileID: -4531309202314977159, guid: 1f8416ccb9526ba46b1e45f934b3704c, type: 3}
+  e_black_king: {fileID: -4589850335571620270, guid: d052ced392d9f584f965309b658f9426, type: 3}
+  e_black_rook: {fileID: -3293129491534371161, guid: 25648415e7cbe254e94c7c1400c50a2c, type: 3}
+  e_black_pawn_bishop: {fileID: 2417290649967731324, guid: 6e2f157e13f042047b2b86fb3810c569, type: 3}
+  e_black_pawn_knight: {fileID: -5748060717870506092, guid: 6b772d900c03eef498713d0950959b5b, type: 3}
+  e_black_pawn_rook: {fileID: -705458621286082977, guid: bc4262fc57ad68741b7d0b81cf018ae8, type: 3}
+  e_white_queen: {fileID: 7127983344833431581, guid: 85b32a69d4d0a4145a2cd683ccd0da84, type: 3}
+  e_white_knight: {fileID: -508950367483047796, guid: be4ab96d2c6135945ab138e606a9b806, type: 3}
+  e_white_bishop: {fileID: -55767092894854732, guid: 04674cf6970d7a740ab15583d8b9ad7c, type: 3}
+  e_white_king: {fileID: -3581966908914899875, guid: 79188ec0870d904489c6a859d253fdf5, type: 3}
+  e_white_rook: {fileID: 7066076105787869042, guid: 5037163d5db4733429000309b16382d6, type: 3}
+  e_white_pawn_bishop: {fileID: -545874090106461107, guid: e5af85553b67d904780ccb6f2c7c05dd, type: 3}
+  e_white_pawn_knight: {fileID: 3307824522922170136, guid: 0a3902c51ce6899469e33777cba66d67, type: 3}
+  e_white_pawn_rook: {fileID: 5223401505290445284, guid: f501bee6c8abfd340a5b3f0d710256a5, type: 3}
+  score: 0
 --- !u!61 &-6000917894882382003
 BoxCollider2D:
   m_ObjectHideFlags: 0

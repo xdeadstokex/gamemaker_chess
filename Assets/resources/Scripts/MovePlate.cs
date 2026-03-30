@@ -33,9 +33,15 @@ public class MovePlate : MonoBehaviour
         //Destroy the victim Chesspiece
         if (attack)
         {
+
             gameScript.PlaySound(gameScript.captureSound);
             GameObject cp = controller.GetComponent<Game>().GetPosition(matrixX, matrixY);
+            if (cp != null) 
+            {
+                int points = cp.GetComponent<Chessman>().GetScore();
+                reference.GetComponent<Chessman>().AbsorbPoints(points, this.transform.position);
 
+            }
             if (cp.name == "white_king") controller.GetComponent<Game>().Winner("black");
             if (cp.name == "black_king") controller.GetComponent<Game>().Winner("white");
 

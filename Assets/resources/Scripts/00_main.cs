@@ -76,7 +76,6 @@ public class Game : MonoBehaviour{
         cm.Activate(); //It has everything set up so it can now Activate()
         return obj;
     }
-
     public void SetPosition(GameObject obj)
     {
         Chessman cm = obj.GetComponent<Chessman>();
@@ -237,12 +236,12 @@ public Chessman GetKing(string color)
     }    
     int GetPieceValue(string name)
     {
-        if (name.Contains("pawn")) return 10;
-        if (name.Contains("knight")) return 30;
-        if (name.Contains("bishop")) return 30;
-        if (name.Contains("rook")) return 50;
-        if (name.Contains("queen")) return 90;
-        if (name.Contains("king")) return 900;
+        if (name.Contains("pawn")) return 1;
+        if (name.Contains("knight")) return 3;
+        if (name.Contains("bishop")) return 3;
+        if (name.Contains("rook")) return 5;
+        if (name.Contains("queen")) return 9;
+        if (name.Contains("king")) return 90;
         return 0;
     }   
 
@@ -283,6 +282,7 @@ void ExecuteAIMove(MoveData move)
             //Using UnityEngine.SceneManagement is needed here
             SceneManager.LoadScene("Game"); //Restarts the game by loading the scene over again
         }
+        
     }
     
     public void Winner(string playerWinner)
