@@ -11,8 +11,9 @@ public class MovePlate : MonoBehaviour
     GameObject reference = null;
 
     //Location on the board
-    int matrixX;
-    int matrixY;
+    public int matrixX;
+    
+    public int matrixY;
 
     //false: movement, true: attacking
     public bool attack = false;
@@ -39,13 +40,32 @@ public class MovePlate : MonoBehaviour
             if (cp != null) 
             {
                 int points = cp.GetComponent<Chessman>().GetScore();
-                reference.GetComponent<Chessman>().AbsorbPoints(points, this.transform.position);
+                reference.GetComponent<Chessman>().AbsorbPoints(cp,points, this.transform.position);
 
             }
-            if (cp.name == "white_king") controller.GetComponent<Game>().Winner("black");
-            if (cp.name == "black_king") controller.GetComponent<Game>().Winner("white");
+            string victimName = cp.name;
+            if (victimName == "white_king") controller.GetComponent<Game>().Winner("black");
+            if (victimName == "black_king") controller.GetComponent<Game>().Winner("white");
+            string[] checkq = victimName.Split("_");
+            if (checkq[0] == "e" && checkq[2] == "queen")
+            {
+                // checkequeen.SendToWaitingZone(); 
+                Destroy(cp);
+                if(checkq[1]=="white")
+                {
+                    gameScript.Create("white_queen", -1, 0);
+                    Debug.Log("<color=green>" + this.name + "Saved Queen");
 
-            Destroy(cp);
+                }
+                else
+                {
+                    gameScript.Create("black_queen", -1,7);
+                    Debug.Log("<color=green>" + this.name + "Saved Queen");
+
+                }
+
+            }
+            else{Destroy(cp);}
         }
         else
         {

@@ -131,6 +131,11 @@ MonoBehaviour:
   e_white_pawn_knight: {fileID: 3307824522922170136, guid: 0a3902c51ce6899469e33777cba66d67, type: 3}
   e_white_pawn_rook: {fileID: 5223401505290445284, guid: f501bee6c8abfd340a5b3f0d710256a5, type: 3}
   score: 0
+  unitType: 0
+  score_to_envo: 0
+  matrixX: -1
+  matrixY: -1
+  player: 
 --- !u!61 &-6000917894882382003
 BoxCollider2D:
   m_ObjectHideFlags: 0

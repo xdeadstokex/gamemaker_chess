@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+public enum PieceType { Light, ELight, KHeavy, BHeavy, RHeavy, Core }
 public class Chessman : MonoBehaviour
 {
     //References to objects in our Unity Scene
@@ -13,8 +14,7 @@ public class Chessman : MonoBehaviour
     private int xBoard = -1;
     private int yBoard = -1;
 
-    //Variable for keeping track of the player it belongs to "black" or "white"
-    private string player;
+    //Variable for keeping track of the player it belongs to "black" or "white
 
     //References to all the possible Sprites that this Chesspiece could be
     public Sprite black_queen, black_knight, black_bishop, black_king, black_rook, black_pawn;
@@ -23,8 +23,12 @@ public class Chessman : MonoBehaviour
     public Sprite e_black_queen, e_black_knight, e_black_bishop, e_black_king, e_black_rook, e_black_pawn_bishop, e_black_pawn_knight, e_black_pawn_rook;
     public Sprite e_white_queen, e_white_knight, e_white_bishop, e_white_king, e_white_rook, e_white_pawn_bishop, e_white_pawn_knight, e_white_pawn_rook;
     public int score;
+    public PieceType unitType;
     public int score_to_envo; // điểm tiến hóa
-
+    public int matrixX = -1;
+    public int matrixY = -1;
+    public string player;
+    // ... các code khác ...
     // Thêm các hàm Getter/Setter để Game.cs có thể truy cập
     public void SetScore(int Score)
     {
@@ -35,6 +39,16 @@ public class Chessman : MonoBehaviour
     {
         return score;
     }
+    public bool isWhite()
+    {
+        // Gán trực tiếp vào biến public player để Card.cs có thể đọc được
+        player = name.Contains("white") ? "white" : "black";;
+        return (player == "white");
+    }
+    void Start()
+    {
+        isWhite();
+    }
     public void Activate()
     {
 
@@ -43,95 +57,108 @@ public class Chessman : MonoBehaviour
 
         //Take the instantiated location and adjust transform
         SetCoords();
-        player = name.Contains("white") ? "white" : "black";
-        bool isWhite = (player == "white");
         switch (this.name)
         {
             case "black_queen":
             case "white_queen":
-                GetComponent<SpriteRenderer>().sprite = isWhite ? white_queen : black_queen;
+                GetComponent<SpriteRenderer>().sprite = isWhite() ? white_queen : black_queen;
                 score = 9;
                 score_to_envo = 15;
+                unitType = PieceType.Core;
                 break;
 
             case "black_knight":
             case "white_knight":
-                GetComponent<SpriteRenderer>().sprite = isWhite ? white_knight : black_knight;
+                GetComponent<SpriteRenderer>().sprite = isWhite() ? white_knight : black_knight;
                 score = 3;
                 score_to_envo = 5;
+                unitType = PieceType.KHeavy;
+
                 break;
 
             case "black_bishop":
             case "white_bishop":
-                GetComponent<SpriteRenderer>().sprite = isWhite ? white_bishop : black_bishop;
+                GetComponent<SpriteRenderer>().sprite = isWhite() ? white_bishop : black_bishop;
                 score = 3;
                 score_to_envo = 5;
+                unitType = PieceType.BHeavy;
                 break;
 
             case "black_king":
             case "white_king":
-                GetComponent<SpriteRenderer>().sprite = isWhite ? white_king : black_king;
+                GetComponent<SpriteRenderer>().sprite = isWhite() ? white_king : black_king;
                 score = 0; 
-                score_to_envo = 6;
+                score_to_envo = 7;
+                unitType = PieceType.Core;
                 break;
 
             case "black_rook":
             case "white_rook":
-                GetComponent<SpriteRenderer>().sprite = isWhite ? white_rook : black_rook;
+                GetComponent<SpriteRenderer>().sprite = isWhite() ? white_rook : black_rook;
                 score = 5;
                 score_to_envo = 10;
+                unitType = PieceType.RHeavy;
                 break;
 
             case "black_pawn":
             case "white_pawn":
-                GetComponent<SpriteRenderer>().sprite = isWhite ? white_pawn : black_pawn;
+                GetComponent<SpriteRenderer>().sprite = isWhite() ? white_pawn : black_pawn;
                 score = 1;
                 score_to_envo = 4;
+                unitType = PieceType.Light;
                 break;
             case "e_black_queen":
             case "e_white_queen":
-                GetComponent<SpriteRenderer>().sprite = isWhite ? e_white_queen : e_black_queen;
+                GetComponent<SpriteRenderer>().sprite = isWhite() ? e_white_queen : e_black_queen;
                 // escore = 9;
+                unitType = PieceType.Core;
                 break;
 
             case "e_black_knight":
             case "e_white_knight":
-                GetComponent<SpriteRenderer>().sprite = isWhite ? e_white_knight : e_black_knight;
+                GetComponent<SpriteRenderer>().sprite = isWhite() ? e_white_knight : e_black_knight;
                 // escore = 3;
+                unitType = PieceType.KHeavy;
                 break;
 
             case "e_black_bishop":
             case "e_white_bishop":
-                GetComponent<SpriteRenderer>().sprite = isWhite ? e_white_bishop : e_black_bishop;
+                GetComponent<SpriteRenderer>().sprite = isWhite() ? e_white_bishop : e_black_bishop;
                 // score = 3;
+                unitType = PieceType.BHeavy;
                 break;
 
             case "e_black_king":
             case "e_white_king":
-                GetComponent<SpriteRenderer>().sprite = isWhite ? e_white_king : e_black_king;
+                GetComponent<SpriteRenderer>().sprite = isWhite() ? e_white_king : e_black_king;
                 // score = 0; 
+                unitType = PieceType.Core;
                 break;
 
             case "e_black_rook":
             case "e_white_rook":
-                GetComponent<SpriteRenderer>().sprite = isWhite ? e_white_rook : e_black_rook;
+                GetComponent<SpriteRenderer>().sprite = isWhite() ? e_white_rook : e_black_rook;
                 // score = 5;
+                unitType = PieceType.RHeavy;
                 break;
 
             case "e_black_pawn_rook":
             case "e_white_pawn_rook":
-                GetComponent<SpriteRenderer>().sprite = isWhite ? e_white_pawn_rook : e_black_pawn_rook;
-                // score = 1;
+                GetComponent<SpriteRenderer>().sprite = isWhite() ? e_white_pawn_rook : e_black_pawn_rook;
+                // score = 6;
+                unitType = PieceType.ELight;
                 break;
             case "e_black_pawn_bishop":
             case "e_white_pawn_bishop":
-                GetComponent<SpriteRenderer>().sprite = isWhite ? e_white_pawn_bishop : e_black_pawn_bishop;
-                // score = 1;
+                GetComponent<SpriteRenderer>().sprite = isWhite() ? e_white_pawn_bishop : e_black_pawn_bishop;
+                // score = 5;
+                unitType = PieceType.ELight;
                 break;
             case "e_black_pawn_knight":
             case "e_white_pawn_knight":
-                GetComponent<SpriteRenderer>().sprite = isWhite ? e_white_pawn_knight : e_black_pawn_knight;
-                // score = 1;
+                GetComponent<SpriteRenderer>().sprite = isWhite() ? e_white_pawn_knight : e_black_pawn_knight;
+                // score = 5;
+                unitType = PieceType.ELight;
                 break;
         }
     }
@@ -560,7 +587,10 @@ public class Chessman : MonoBehaviour
         mpScript.SetReference(gameObject);
         mpScript.SetCoords(matrixX, matrixY);
     }
-
+    public float scalePosition(int x)
+    {
+    return x * 1.28f - 4.48f;
+    }
     public void MovePlateAttackSpawn(int matrixX, int matrixY)
     {
         //Get the board value in order to convert to xy coords
@@ -587,22 +617,41 @@ public class Chessman : MonoBehaviour
 // EVOLUTION SYSTEM
 // =========================================================================
 
-    public void AbsorbPoints(int victimScore, Vector3 targetPos)
+    public void AbsorbPoints(GameObject victim, int victimScore, Vector3 targetPos)
     {
         string[] nameParts = this.name.Split('_');
+        Chessman victimScript = victim.GetComponent<Chessman>();
+
+
         if (nameParts[0] == "e") 
         {
             return;
         }
         Debug.Log($"===> HAM AbsorbPoints({victimScore})");
         
-        // if (this.name.Contains("e_")) return;
-
         score += victimScore;
-        Debug.Log(name + " absorbed " + victimScore + " points. Total: " + score);
-        //cần hàm setscore ở đây ko
-        if (score >= score_to_envo)
+
+        if (this.unitType == PieceType.Light)
         {
+
+
+            bool isAtOpponentHalf = isWhite() ? (xBoard >= 4) : (yBoard <= 3);
+
+            // Check xem victim có thuộc nhóm Heavy không
+            bool ateHeavy = victimScript.unitType == PieceType.KHeavy || 
+                            victimScript.unitType == PieceType.BHeavy || 
+                            victimScript.unitType == PieceType.RHeavy;
+
+            if (isAtOpponentHalf && ateHeavy)
+            {
+                EvolveWithWeapon(victimScript.unitType, targetPos);
+                return; 
+            }
+        }
+
+        else if (score >= score_to_envo)
+        {
+            Debug.Log(name + " absorbed " + victimScore + " points. Total: " + score);
             Evolve(targetPos);
         }
     }
@@ -613,4 +662,49 @@ public class Chessman : MonoBehaviour
         Camera.main.GetComponent<CameraControl>().ZoomInTarget(targetPos, 1.0f);
         Debug.Log("<color=green>" + this.name + " HAS EVOLVED!</color>");
     }
+    //pawn
+    private void EvolveWithWeapon(PieceType weaponType, Vector3 targetPos)
+    {
+        unitType = PieceType.ELight; 
+        string evolvedAbility="";
+        switch (weaponType)
+        {
+            case PieceType.KHeavy: 
+                evolvedAbility = "knight"; 
+                break;
+            case PieceType.BHeavy: 
+                evolvedAbility = "bishop"; 
+                break;
+            case PieceType.RHeavy: 
+                evolvedAbility = "rook"; 
+                break;
+        }
+        this.name = "e_" + this.name + "_" + evolvedAbility;
+        Activate();
+        Camera.main.GetComponent<CameraControl>().ZoomInTarget(targetPos, 1.0f);
+     }
+    //queen
+    // public void SendToWaitingZone()
+    // {
+    //     // 1. Lưu lại tọa độ THẬT trước khi ghi đè bằng tọa độ ảo
+    //     int oldX = GetXBoard();
+    //     int oldY = GetYBoard();
+
+    //     // 2. Báo cho Controller xóa Hậu khỏi ô thực tế trên bàn cờ TRƯỚC
+    //     GameObject controller = GameObject.FindGameObjectWithTag("GameController");
+    //     if (controller != null) {
+    //         controller.GetComponent<Game>().SetPositionEmpty(oldX, oldY);
+    //     }
+
+    //     // 3. Bây giờ mới gán tọa độ ảo để "cất" Hậu đi
+    //     this.matrixX = -1;
+    //     this.matrixY = isWhite() ? 0 : 7; 
+    //     float x = scalePosition(this.matrixX); // Sẽ ra -5.76f
+    //     float y = scalePosition(this.matrixY);
+    //     // 4. Đẩy ra khỏi tầm mắt hoàn toàn (tránh vướng víu trên màn hình)
+    //     this.transform.position = new Vector3(x, y, 0);
+
+    //     // 5. Ẩn hình ảnh
+    //     // GetComponent<SpriteRenderer>().enabled = false;
+    // }
 }
