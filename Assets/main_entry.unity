@@ -119,102 +119,6 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1001 &109650299
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: 726457884922420296, guid: e52309b5921b88b4eafb22110edc4a64, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: -0.69
-      objectReference: {fileID: 0}
-    - target: {fileID: 726457884922420296, guid: e52309b5921b88b4eafb22110edc4a64, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 3.29
-      objectReference: {fileID: 0}
-    - target: {fileID: 726457884922420296, guid: e52309b5921b88b4eafb22110edc4a64, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 0.042367104
-      objectReference: {fileID: 0}
-    - target: {fileID: 726457884922420296, guid: e52309b5921b88b4eafb22110edc4a64, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 726457884922420296, guid: e52309b5921b88b4eafb22110edc4a64, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 726457884922420296, guid: e52309b5921b88b4eafb22110edc4a64, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 726457884922420296, guid: e52309b5921b88b4eafb22110edc4a64, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 726457884922420296, guid: e52309b5921b88b4eafb22110edc4a64, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 726457884922420296, guid: e52309b5921b88b4eafb22110edc4a64, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 726457884922420296, guid: e52309b5921b88b4eafb22110edc4a64, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3292204990855882392, guid: e52309b5921b88b4eafb22110edc4a64, type: 3}
-      propertyPath: m_Name
-      value: ChessPiece
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 3292204990855882392, guid: e52309b5921b88b4eafb22110edc4a64, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 109650301}
-  m_SourcePrefab: {fileID: 100100000, guid: e52309b5921b88b4eafb22110edc4a64, type: 3}
---- !u!1 &109650300 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 3292204990855882392, guid: e52309b5921b88b4eafb22110edc4a64, type: 3}
-  m_PrefabInstance: {fileID: 109650299}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &109650301
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 109650300}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 53eea91cf42226c4ebc5561f43313cd8, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  controller: {fileID: 0}
-  movePlate: {fileID: 4721859855820930813, guid: 0313ca181e4352d4194a74442ed6f0d4, type: 3}
-  e_black_queen: {fileID: 987628164968182631, guid: 2e296e6f99517c0958cb0c454cce274f, type: 3}
-  e_black_knight: {fileID: 7448040370718626997, guid: 4a1a704be09dca246b2e8effeb5e5af7, type: 3}
-  e_black_bishop: {fileID: -4531309202314977159, guid: 1f8416ccb9526ba46b1e45f934b3704c, type: 3}
-  e_black_king: {fileID: -4589850335571620270, guid: d052ced392d9f584f965309b658f9426, type: 3}
-  e_black_rook: {fileID: -3293129491534371161, guid: 25648415e7cbe254e94c7c1400c50a2c, type: 3}
-  e_black_pawn_bishop: {fileID: 2417290649967731324, guid: 6e2f157e13f042047b2b86fb3810c569, type: 3}
-  e_black_pawn_knight: {fileID: -5748060717870506092, guid: 6b772d900c03eef498713d0950959b5b, type: 3}
-  e_black_pawn_rook: {fileID: -705458621286082977, guid: bc4262fc57ad68741b7d0b81cf018ae8, type: 3}
-  e_white_queen: {fileID: 7127983344833431581, guid: 85b32a69d4d0a4145a2cd683ccd0da84, type: 3}
-  e_white_knight: {fileID: -508950367483047796, guid: be4ab96d2c6135945ab138e606a9b806, type: 3}
-  e_white_bishop: {fileID: -55767092894854732, guid: 04674cf6970d7a740ab15583d8b9ad7c, type: 3}
-  e_white_king: {fileID: -3581966908914899875, guid: 79188ec0870d904489c6a859d253fdf5, type: 3}
-  e_white_rook: {fileID: 7066076105787869042, guid: 5037163d5db4733429000309b16382d6, type: 3}
-  e_white_pawn_bishop: {fileID: -545874090106461107, guid: e5af85553b67d904780ccb6f2c7c05dd, type: 3}
-  e_white_pawn_knight: {fileID: 3307824522922170136, guid: 0a3902c51ce6899469e33777cba66d67, type: 3}
-  e_white_pawn_rook: {fileID: 5223401505290445284, guid: f501bee6c8abfd340a5b3f0d710256a5, type: 3}
-  escore: 0
 --- !u!1 &163696072
 GameObject:
   m_ObjectHideFlags: 0
@@ -276,7 +180,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: -1
-  m_Sprite: {fileID: 1763014460331064234, guid: f62ed6946867b194a915429f052de601, type: 3}
+  m_Sprite: {fileID: -5006342902938622219, guid: ece3c8a585a953242b88d05e1db4201e, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -411,6 +315,7 @@ GameObject:
   - component: {fileID: 519420032}
   - component: {fileID: 519420031}
   - component: {fileID: 519420029}
+  - component: {fileID: 519420033}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -492,6 +397,18 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &519420033
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 519420028}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2edc46adbe62b1f4dbc155bc38a5ec04, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &609339471
 GameObject:
   m_ObjectHideFlags: 0
@@ -866,4 +783,3 @@ SceneRoots:
   - {fileID: 903329231}
   - {fileID: 609339474}
   - {fileID: 1449883604}
-  - {fileID: 109650299}
