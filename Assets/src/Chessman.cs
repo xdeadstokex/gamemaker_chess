@@ -1,686 +1,325 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
-public enum PieceType { Light, ELight, KHeavy, BHeavy, RHeavy, Core }
-public class Chessman : MonoBehaviour{
-    //References to objects in our Unity Scene
+public enum PieceKind{ Pawn,Knight,Bishop,Rook,Queen,King }
+public enum PieceType{ Light,ELight,KHeavy,BHeavy,RHeavy,Core }
+
+public struct PieceData{
+    public int player;
+    public PieceKind kind;
+    public bool evolved;
+    public int weapon;
+}
+
+public class Chessman:MonoBehaviour{
+
     public GameObject controller;
     public GameObject movePlate;
 
-    //Position for this Chesspiece on the Board
-    //The correct position will be set later
-    public int xBoard = -1;
-    public int yBoard = -1;
+    public int xBoard=-1;
+    public int yBoard=-1;
 
-    //Variable for keeping track of the player it belongs to "black" or "white
-
-    //References to all the possible Sprites that this Chesspiece could be
-    public Sprite black_queen, black_knight, black_bishop, black_king, black_rook, black_pawn;
-    public Sprite white_queen, white_knight, white_bishop, white_king, white_rook, white_pawn;
-
-    public Sprite e_black_queen, e_black_knight, e_black_bishop, e_black_king, e_black_rook, e_black_pawn_bishop, e_black_pawn_knight, e_black_pawn_rook;
-    public Sprite e_white_queen, e_white_knight, e_white_bishop, e_white_king, e_white_rook, e_white_pawn_bishop, e_white_pawn_knight, e_white_pawn_rook;
     public int score;
+    public int score_to_envo;
+
     public PieceType unitType;
-    public int score_to_envo; // điểm tiến hóa
-    public int matrixX = -1;
-    public int matrixY = -1;
-    public string player;
-    // ... các code khác ...
-    // Thêm các hàm Getter/Setter để Game.cs có thể truy cập
-    public void SetScore(int Score)
-    {
-        score = Score;
+    public PieceData piece;
+
+    public bool firstMove=true;
+
+    Game game;
+
+    public Sprite black_queen,black_knight,black_bishop,black_king,black_rook,black_pawn;
+    public Sprite white_queen,white_knight,white_bishop,white_king,white_rook,white_pawn;
+
+    public Sprite e_black_queen,e_black_knight,e_black_bishop,e_black_king,e_black_rook;
+    public Sprite e_white_queen,e_white_knight,e_white_bishop,e_white_king,e_white_rook;
+    public Sprite e_black_pawn_knight,e_black_pawn_bishop,e_black_pawn_rook;
+    public Sprite e_white_pawn_knight,e_white_pawn_bishop,e_white_pawn_rook;
+
+    bool selected=false;
+
+    bool pendingEvolve=false;
+    PieceType pendingWeapon;
+
+    public int player{ get{return piece.player;} }
+
+    void Awake(){
+        controller=GameObject.FindGameObjectWithTag("GameController");
+        game=controller.GetComponent<Game>();
     }
 
-    public int GetScore()
-    {
-        return score;
-    }
-    public bool isWhite()
-    {
-        // Gán trực tiếp vào biến public player để Card.cs có thể đọc được
-        player = name.Contains("white") ? "white" : "black";;
-        return (player == "white");
-    }
-    void Start()
-    {
-        isWhite();
-    }
-    public void Activate()
-    {
+    bool IsWhite(){ return piece.player==1; }
+    GameObject At(int x,int y){ return data.mem.positions[x,y]; }
+    bool IsEnemy(GameObject o){ return o.GetComponent<Chessman>().piece.player!=piece.player; }
+    public string PlayerString(){ return piece.player==1?"white":"black"; }
 
-        //Get the game controller
-        controller = GameObject.FindGameObjectWithTag("GameController");
-
-        //Take the instantiated location and adjust transform
+    // ================= INIT =================
+    public void Activate(){
         SetCoords();
-        switch (this.name)
-        {
-            case "black_queen":
-            case "white_queen":
-                GetComponent<SpriteRenderer>().sprite = isWhite() ? white_queen : black_queen;
-                score = 9;
-                score_to_envo = 15;
-                unitType = PieceType.Core;
+        SpriteRenderer sr=GetComponent<SpriteRenderer>();
+
+        switch(piece.kind){
+            case PieceKind.Pawn:
+                sr.sprite=IsWhite()?white_pawn:black_pawn;
+                score=1; score_to_envo=4; unitType=PieceType.Light;
                 break;
 
-            case "black_knight":
-            case "white_knight":
-                GetComponent<SpriteRenderer>().sprite = isWhite() ? white_knight : black_knight;
-                score = 3;
-                score_to_envo = 5;
-                unitType = PieceType.KHeavy;
-
+            case PieceKind.Knight:
+                sr.sprite=piece.evolved?(IsWhite()?e_white_knight:e_black_knight):(IsWhite()?white_knight:black_knight);
+                score=3; score_to_envo=5; unitType=PieceType.KHeavy;
                 break;
 
-            case "black_bishop":
-            case "white_bishop":
-                GetComponent<SpriteRenderer>().sprite = isWhite() ? white_bishop : black_bishop;
-                score = 3;
-                score_to_envo = 5;
-                unitType = PieceType.BHeavy;
+            case PieceKind.Bishop:
+                sr.sprite=piece.evolved?(IsWhite()?e_white_bishop:e_black_bishop):(IsWhite()?white_bishop:black_bishop);
+                score=3; score_to_envo=5; unitType=PieceType.BHeavy;
                 break;
 
-            case "black_king":
-            case "white_king":
-                GetComponent<SpriteRenderer>().sprite = isWhite() ? white_king : black_king;
-                score = 0; 
-                score_to_envo = 7;
-                unitType = PieceType.Core;
+            case PieceKind.Rook:
+                sr.sprite=piece.evolved?(IsWhite()?e_white_rook:e_black_rook):(IsWhite()?white_rook:black_rook);
+                score=5; score_to_envo=10; unitType=PieceType.RHeavy;
                 break;
 
-            case "black_rook":
-            case "white_rook":
-                GetComponent<SpriteRenderer>().sprite = isWhite() ? white_rook : black_rook;
-                score = 5;
-                score_to_envo = 10;
-                unitType = PieceType.RHeavy;
+            case PieceKind.Queen:
+                sr.sprite=piece.evolved?(IsWhite()?e_white_queen:e_black_queen):(IsWhite()?white_queen:black_queen);
+                score=9; score_to_envo=15; unitType=PieceType.Core;
                 break;
 
-            case "black_pawn":
-            case "white_pawn":
-                GetComponent<SpriteRenderer>().sprite = isWhite() ? white_pawn : black_pawn;
-                score = 1;
-                score_to_envo = 4;
-                unitType = PieceType.Light;
+            case PieceKind.King:
+                sr.sprite=piece.evolved?(IsWhite()?e_white_king:e_black_king):(IsWhite()?white_king:black_king);
+                score=0; score_to_envo=7; unitType=PieceType.Core;
                 break;
-            case "e_black_queen":
-            case "e_white_queen":
-                GetComponent<SpriteRenderer>().sprite = isWhite() ? e_white_queen : e_black_queen;
-                // escore = 9;
-                unitType = PieceType.Core;
-                break;
+        }
 
-            case "e_black_knight":
-            case "e_white_knight":
-                GetComponent<SpriteRenderer>().sprite = isWhite() ? e_white_knight : e_black_knight;
-                // escore = 3;
-                unitType = PieceType.KHeavy;
-                break;
+        // pawn weapon evolve sprite override
+        if(piece.kind==PieceKind.Pawn && piece.evolved && piece.weapon!=-1){
+            unitType=PieceType.ELight;
 
-            case "e_black_bishop":
-            case "e_white_bishop":
-                GetComponent<SpriteRenderer>().sprite = isWhite() ? e_white_bishop : e_black_bishop;
-                // score = 3;
-                unitType = PieceType.BHeavy;
-                break;
+            if(piece.weapon==(int)PieceKind.Knight)
+                sr.sprite=IsWhite()?e_white_pawn_knight:e_black_pawn_knight;
 
-            case "e_black_king":
-            case "e_white_king":
-                GetComponent<SpriteRenderer>().sprite = isWhite() ? e_white_king : e_black_king;
-                // score = 0; 
-                unitType = PieceType.Core;
-                break;
+            if(piece.weapon==(int)PieceKind.Bishop)
+                sr.sprite=IsWhite()?e_white_pawn_bishop:e_black_pawn_bishop;
 
-            case "e_black_rook":
-            case "e_white_rook":
-                GetComponent<SpriteRenderer>().sprite = isWhite() ? e_white_rook : e_black_rook;
-                // score = 5;
-                unitType = PieceType.RHeavy;
-                break;
-
-            case "e_black_pawn_rook":
-            case "e_white_pawn_rook":
-                GetComponent<SpriteRenderer>().sprite = isWhite() ? e_white_pawn_rook : e_black_pawn_rook;
-                // score = 6;
-                unitType = PieceType.ELight;
-                break;
-            case "e_black_pawn_bishop":
-            case "e_white_pawn_bishop":
-                GetComponent<SpriteRenderer>().sprite = isWhite() ? e_white_pawn_bishop : e_black_pawn_bishop;
-                // score = 5;
-                unitType = PieceType.ELight;
-                break;
-            case "e_black_pawn_knight":
-            case "e_white_pawn_knight":
-                GetComponent<SpriteRenderer>().sprite = isWhite() ? e_white_pawn_knight : e_black_pawn_knight;
-                // score = 5;
-                unitType = PieceType.ELight;
-                break;
+            if(piece.weapon==(int)PieceKind.Rook)
+                sr.sprite=IsWhite()?e_white_pawn_rook:e_black_pawn_rook;
         }
     }
-    public bool CanMoveTo(int x, int y)
-    {
-        Game sc = controller.GetComponent<Game>();
-        if (!sc.PositionOnBoard(x, y)) return false;
 
-        // Không được đi vào ô có quân mình đang đứng
-        GameObject target = data.mem.positions[x, y];
-        if (target != null && target.GetComponent<Chessman>().player == player) return false;
-        string[] nameParts = this.name.Split('_');
-        if (nameParts[0] != "e")
-        {
-            string type = nameParts[1];
-            switch (type)
-            {
-                case "queen":  return IsLineMoveValid(x, y) || IsDiagonalMoveValid(x, y);
-                case "rook":   return IsLineMoveValid(x, y);
-                case "bishop": return IsDiagonalMoveValid(x, y);
-                case "knight": return IsKnightMoveValid(x, y);
-                case "pawn":   return IsPawnMoveValid(x, y);
-            }
-        } 
-        else // evolution case
-        {
-        string type = nameParts[2];
-        switch (type)
-        {
-            case "queen":  return IsLineMoveValid(x, y) ||IsDiagonalMoveValid(x, y);
-            case "rook":   return IsLineMoveValid(x, y);
-            case "bishop": return IsDiagonalMoveValid(x, y) || IsKingMoveValid(x, y);
-            case "knight": return additionalIsKnightMoveValid(x, y);
-            case "pawn":   return IsPawnMoveValid(x, y);
+    // ================= INPUT =================
+    void OnMouseEnter(){
+        if(data.mem.gameOver) return;
+        if(data.mem.currentPlayer!=PlayerString()) return;
+        if(selected) return;
 
-        }
+        DestroyMovePlates();
+        ShowMoves();
+    }
+
+    void OnMouseExit(){
+        if(selected) return;
+        DestroyMovePlates();
+    }
+
+    void OnMouseDown(){
+        if(data.mem.gameOver) return;
+        if(data.mem.currentPlayer!=PlayerString()) return;
+
+        selected=!selected;
+
+        DestroyMovePlates();
+        if(selected) ShowMoves();
+    }
+
+    public void DestroyMovePlates(){
+        GameObject[] m=GameObject.FindGameObjectsWithTag("MovePlate");
+        for(int i=0;i<m.Length;i++) Destroy(m[i]);
+    }
+
+    // ================= MOVE =================
+    public bool CanMoveTo(int x,int y){
+        if(!game.PositionOnBoard(x,y)) return false;
+
+        GameObject t=At(x,y);
+        if(t!=null && !IsEnemy(t)) return false;
+
+        switch(piece.kind){
+            case PieceKind.Rook: return Line(x,y);
+            case PieceKind.Bishop: return piece.evolved?(Diag(x,y)||King(x,y)):Diag(x,y);
+            case PieceKind.Queen: return Line(x,y)||Diag(x,y);
+            case PieceKind.Knight: return piece.evolved?EKnight(x,y):Knight(x,y);
+            case PieceKind.King: return piece.evolved?(Line(x,y)||Diag(x,y)):King(x,y);
+            case PieceKind.Pawn: return PawnMove(x,y)||PawnEat(x,y);
         }
         return false;
     }
-    public bool IsLineMoveValid(int tx, int ty)
-    {
-        if (tx != xBoard && ty != yBoard) return false; // Không thẳng hàng/cột
 
-        int xStep = System.Math.Sign(tx - xBoard);
-        int yStep = System.Math.Sign(ty - yBoard);
+    bool Line(int tx,int ty){
+        if(tx!=xBoard && ty!=yBoard) return false;
 
-        int curX = xBoard + xStep;
-        int curY = yBoard + yStep;
+        int dx=(tx==xBoard)?0:(tx>xBoard?1:-1);
+        int dy=(ty==yBoard)?0:(ty>yBoard?1:-1);
 
-        while (curX != tx || curY != ty)
-        {
-            if (data.mem.positions[curX, curY] != null) return false; // Bị chặn
-            curX += xStep;
-            curY += yStep;
+        int x=xBoard+dx;
+        int y=yBoard+dy;
+
+        while(x!=tx || y!=ty){
+            if(At(x,y)!=null) return false;
+            x+=dx; y+=dy;
         }
         return true;
     }
-    public bool IsDiagonalMoveValid(int tx, int ty)
-    {
-        if (System.Math.Abs(tx - xBoard) != System.Math.Abs(ty - yBoard)) return false;
 
-        int xStep = System.Math.Sign(tx - xBoard);
-        int yStep = System.Math.Sign(ty - yBoard);
+    bool Diag(int tx,int ty){
+        if(Mathf.Abs(tx-xBoard)!=Mathf.Abs(ty-yBoard)) return false;
 
-        int curX = xBoard + xStep;
-        int curY = yBoard + yStep;
+        int dx=(tx>xBoard)?1:-1;
+        int dy=(ty>yBoard)?1:-1;
 
-        while (curX != tx || curY != ty)
-        {
-            if (data.mem.positions[curX, curY] != null) return false;
-            curX += xStep;
-            curY += yStep;
+        int x=xBoard+dx;
+        int y=yBoard+dy;
+
+        while(x!=tx){
+            if(At(x,y)!=null) return false;
+            x+=dx; y+=dy;
         }
         return true;
     }
-    public bool IsKnightMoveValid(int tx, int ty)
-    {
-        int dx = System.Math.Abs(tx - xBoard);
-        int dy = System.Math.Abs(ty - yBoard);
-        return (dx == 1 && dy == 2) || (dx == 2 && dy == 1);
+
+    bool Knight(int tx,int ty){
+        int dx=Mathf.Abs(tx-xBoard);
+        int dy=Mathf.Abs(ty-yBoard);
+        return (dx==1&&dy==2)||(dx==2&&dy==1);
     }
-    public bool additionalIsKnightMoveValid(int tx, int ty)
-    {
-        Game sc = controller.GetComponent<Game>();
 
-        int dx = System.Math.Abs(tx - xBoard);
-        int dy = System.Math.Abs(ty - yBoard);
+    bool EKnight(int tx,int ty){
+        int dx=Mathf.Abs(tx-xBoard);
+        int dy=Mathf.Abs(ty-yBoard);
 
-        // Logic nhảy 2x0: (Cách 2 ô ngang, 0 ô dọc) HOẶC (Cách 0 ô ngang, 2 ô dọc)
-        if ((dx == 2 && dy == 0) || (dx == 0 && dy == 2))
-        {
-            GameObject target = data.mem.positions[tx, ty];
-
-            // Ô trống hoặc ô có quân địch
-            if (target == null) return true;
-            return target.GetComponent<Chessman>().player != player;
+        if((dx==2&&dy==0)||(dx==0&&dy==2)){
+            GameObject t=At(tx,ty);
+            return t==null||IsEnemy(t);
         }
-
-        return false;
+        return Knight(tx,ty);
     }
-    public bool IsPawnMoveValid(int tx, int ty)
-    {
-        Game sc = controller.GetComponent<Game>();
-        int direction = (player == "white") ? 1 : -1;
-        int dx = tx - xBoard;
-        int dy = ty - yBoard;
 
-        // Ăn chéo
-        if (System.Math.Abs(dx) == 1 && dy == direction)
-        {
-            GameObject target = data.mem.positions[tx, ty];
-            return target != null && target.GetComponent<Chessman>().player != player;
+    bool King(int tx,int ty){
+        int dx=Mathf.Abs(tx-xBoard);
+        int dy=Mathf.Abs(ty-yBoard);
+        return dx<=1 && dy<=1 && (dx+dy>0);
+    }
+
+    bool PawnMove(int tx,int ty){
+        int dir=IsWhite()?1:-1;
+
+        if(tx!=xBoard) return false;
+
+        if(ty==yBoard+dir && At(tx,ty)==null) return true;
+
+        if(firstMove && ty==yBoard+2*dir){
+            if(At(xBoard,yBoard+dir)==null && At(tx,ty)==null) return true;
         }
         return false;
     }
-    public bool IsKingMoveValid(int tx, int ty)
-    {
-        Game sc = controller.GetComponent<Game>();
-        
-        // Khoảng cách di chuyển của Vua theo trục X và Y
-        int dx = System.Math.Abs(tx - xBoard);
-        int dy = System.Math.Abs(ty - yBoard);
 
-        // Vua chỉ được đi tối đa 1 ô (dx <= 1 và dy <= 1)
-        // Đồng thời không được đứng yên tại chỗ (dx + dy > 0)
-        if (dx <= 1 && dy <= 1 && (dx + dy > 0))
-        {
-            GameObject target = data.mem.positions[tx, ty];
-            
-            // Ô trống hoặc ô có quân địch thì mới đi được
-            if (target == null) return true;
-            
-            // Sử dụng player để tránh lỗi "Inaccessible"
-            return target.GetComponent<Chessman>().player != player;
+    bool PawnEat(int tx,int ty){
+        int dir=IsWhite()?1:-1;
+
+        if(Mathf.Abs(tx-xBoard)==1 && ty==yBoard+dir){
+            GameObject t=At(tx,ty);
+            return t!=null && IsEnemy(t);
         }
-
         return false;
     }
 
-    public void SetCoords()
-    {
-        //Get the board value in order to convert to xy coords
-        float x = xBoard;
-        float y = yBoard;
+    // ================= EXEC =================
+    public void ExecuteMove(int tx,int ty,bool attack){
 
-        //Adjust by variable offset
-        x *= 1.28f;
-        y *= 1.28f;
+        GameObject target=At(tx,ty);
 
-        //Add constants (pos 0,0)
-        x += -4.48f;
-        y += -4.48f;
+        if(attack && target!=null){
+            game.PlaySound(data.mem.captureSound);
 
-        //Set actual unity values
-        this.transform.position = new Vector3(x, y, -1.0f);
-    }
+            Chessman v=target.GetComponent<Chessman>();
+            AbsorbPoints(v.score,v.unitType,transform.position);
 
-    private void OnMouseUp()
-    {
-        if (!data.mem.gameOver && data.mem.currentPlayer == player)
-        {
-            //Remove all moveplates relating to previously selected piece
-            DestroyMovePlates();
+            if(v.piece.kind==PieceKind.King) game.Winner(PlayerString());
 
-            //Create new MovePlates
-            InitiateMovePlates();
+            Destroy(target);
         }
-    }
+        else game.PlaySound(data.mem.moveSound);
 
-    public void DestroyMovePlates()
-    {
-        //Destroy old MovePlates
-        GameObject[] movePlates = GameObject.FindGameObjectsWithTag("MovePlate");
-        for (int i = 0; i < movePlates.Length; i++)
-        {
-            Destroy(movePlates[i]); //Be careful with this function "Destroy" it is asynchronous
-        }
-    }
-// =========================================================================
-// MOVE RULES
-// =========================================================================
+        data.mem.positions[xBoard,yBoard]=null;
 
-    public void InitiateMovePlates()
-    {
-        switch (this.name)
-        {
-            case "black_queen":
-            case "white_queen":
-                QueenMovePlate();
-                break;
-            case "black_knight":
-            case "white_knight":
-                KnightMovePlate();
-                break;
-            case "black_bishop":
-            case "white_bishop":
-                BishopMovePlate();
-                break;
-            case "black_king":
-            case "white_king":
-                KingMovePlate();
-                break;
-            case "black_rook":
-            case "white_rook":
-                RookMovePlate();
-                break;
-            case "black_pawn":
-                PawnMovePlate(xBoard, yBoard - 1);
-                break;
-            case "white_pawn":
-                PawnMovePlate(xBoard, yBoard + 1);
-                break;
-            // evolution
-            case "e_black_queen":
-            case "e_white_queen":
-                QueenMovePlate();
-                break;
-            case "e_black_knight":
-            case "e_white_knight":
-                KnightMovePlate();
-                eKnightMovePlateAddon();
-                break;
-            case "e_black_bishop":
-            case "e_white_bishop":
-                BishopMovePlate();
-                KingMovePlate();
-                break;
-            case "e_black_king":
-            case "e_white_king":
-                QueenMovePlate();
-                break;
-            case "e_black_rook":
-            case "e_white_rook":
-                RookMovePlate();
-                break;
-            case "e_black_pawn_rook":
-            case "e_white_pawn_rook":
-                PawnMovePlate(xBoard, yBoard + (player == "white" ? 1 : -1));
-                RookMovePlate();
-                break;
-            case "e_black_pawn_knight":
-            case "e_white_pawn_knight":
-                PawnMovePlate(xBoard, yBoard + (player == "white" ? 1 : -1));
-                KnightMovePlate();
-                break;
-            case "e_black_pawn_bishop":
-            case "e_white_pawn_bishop":
-                PawnMovePlate(xBoard, yBoard + (player == "white" ? 1 : -1));
-                BishopMovePlate();
-                break;
-            
-        }
-    }
+        xBoard=tx; yBoard=ty;
+        firstMove=false;
+        SetCoords();
 
-    public void LineMovePlate(int xIncrement, int yIncrement)
-    {
-        Game sc = controller.GetComponent<Game>();
+        game.SetPosition(gameObject);
 
-        int x = xBoard + xIncrement;
-        int y = yBoard + yIncrement;
-
-        while (sc.PositionOnBoard(x, y) && data.mem.positions[x, y] == null)
-        {
-            MovePlateSpawn(x, y);
-            x += xIncrement;
-            y += yIncrement;
+        if(pendingEvolve){
+            if(piece.kind==PieceKind.Pawn && pendingWeapon!=0) EvolveWeapon(pendingWeapon);
+            else Evolve();
+            pendingEvolve=false;
         }
 
-        if (sc.PositionOnBoard(x, y) && data.mem.positions[x, y].GetComponent<Chessman>().player != player)
-        {
-            MovePlateAttackSpawn(x, y);
-        }
-    }
-    public void QueenMovePlate()
-    {
-        RookMovePlate();
-        BishopMovePlate();
-    }
-    public void RookMovePlate()
-    {
-        LineMovePlate(1, 0);
-        LineMovePlate(0, 1);
-        LineMovePlate(-1, 0);
-        LineMovePlate(0, -1);
-    }
-    public void BishopMovePlate()
-    {
-        LineMovePlate(1, 1);
-        LineMovePlate(1, -1);
-        LineMovePlate(-1, 1);
-        LineMovePlate(-1, -1);
-    }
-    public void KnightMovePlate()
-    {
-        PointMovePlate(xBoard + 1, yBoard + 2);
-        PointMovePlate(xBoard - 1, yBoard + 2);
-        PointMovePlate(xBoard + 2, yBoard + 1);
-        PointMovePlate(xBoard + 2, yBoard - 1);
-        PointMovePlate(xBoard + 1, yBoard - 2);
-        PointMovePlate(xBoard - 1, yBoard - 2);
-        PointMovePlate(xBoard - 2, yBoard + 1);
-        PointMovePlate(xBoard - 2, yBoard - 1);
-    }
-    public void eKnightMovePlateAddon()
-    {
-        PointMovePlate(xBoard - 2, yBoard);
-        PointMovePlate(xBoard + 2, yBoard);
-        PointMovePlate(xBoard, yBoard+2);
-        PointMovePlate(xBoard, yBoard-2);
-    
+        selected=false;
+        game.NextTurn();
+        DestroyMovePlates();
     }
 
-    public void KingMovePlate()
-    {
-        PointMovePlate(xBoard, yBoard + 1);
-        PointMovePlate(xBoard, yBoard - 1);
-        PointMovePlate(xBoard - 1, yBoard + 0);
-        PointMovePlate(xBoard - 1, yBoard - 1);
-        PointMovePlate(xBoard - 1, yBoard + 1);
-        PointMovePlate(xBoard + 1, yBoard + 0);
-        PointMovePlate(xBoard + 1, yBoard - 1);
-        PointMovePlate(xBoard + 1, yBoard + 1);
+    // ================= MOVE PLATE =================
+    void ShowMoves(){
+        for(int x=0;x<8;x++)
+        for(int y=0;y<8;y++)
+            if(CanMoveTo(x,y))
+                SpawnPlate(x,y,At(x,y)!=null);
     }
 
-    public void PointMovePlate(int x, int y)
-    {
-        Game sc = controller.GetComponent<Game>();
-        if (sc.PositionOnBoard(x, y))
-        {
-            GameObject cp = data.mem.positions[x, y];
+    void SpawnPlate(int x,int y,bool atk){
+        float px=x*1.28f-4.48f;
+        float py=y*1.28f-4.48f;
 
-            if (cp == null)
-            {
-                MovePlateSpawn(x, y);
-            }
-            else if (cp.GetComponent<Chessman>().player != player)
-            {
-                MovePlateAttackSpawn(x, y);
-            }
-        }
+        GameObject mp=Instantiate(movePlate,new Vector3(px,py,-3),Quaternion.identity);
+        mp.GetComponent<MovePlate>().Setup(this,x,y,atk);
     }
 
-    public void PawnMovePlate(int x, int y)
-    {
-        Game sc = controller.GetComponent<Game>();
-        
-        // 1. Kiểm tra ô ngay phía trước (Đi 1 ô)
-        if (sc.PositionOnBoard(x, y) && data.mem.positions[x, y] == null)
-        {
-            MovePlateSpawn(x, y);
+    // ================= EVOLVE =================
+    public void AbsorbPoints(int victimScore,PieceType victimType,Vector3 pos){
+        if(piece.evolved) return;
 
-            // 2. Kiểm tra đi 2 ô (Chỉ khi ô 1 đang trống và Tốt đang ở vị trí xuất phát)
-            // Quân Trắng xuất phát ở hàng 1, muốn đi lên hàng 3 (y + 1)
-            if (player == "white" && yBoard == 1 && data.mem.positions[x, y + 1] == null)
-            {
-                MovePlateSpawn(x, y + 1);
-            }
-            // Quân Đen xuất phát ở hàng 6, muốn đi xuống hàng 4 (y - 1)
-            if (player == "black" && yBoard == 6 && data.mem.positions[x, y - 1] == null)
-            {
-                MovePlateSpawn(x, y - 1);
+        score+=victimScore;
+
+        if(piece.kind==PieceKind.Pawn){
+            bool half=IsWhite()?(yBoard>=4):(yBoard<=3);
+
+            bool heavy=victimType==PieceType.KHeavy||victimType==PieceType.BHeavy||victimType==PieceType.RHeavy;
+
+            if(half && heavy){
+                pendingEvolve=true;
+                pendingWeapon=victimType;
+                return;
             }
         }
 
-        // 3. Kiểm tra ăn chéo bên phải (x + 1)
-        if (sc.PositionOnBoard(x + 1, y) && data.mem.positions[x + 1, y] != null 
-            && data.mem.positions[x + 1, y].GetComponent<Chessman>().player != player)
-        {
-            MovePlateAttackSpawn(x + 1, y);
-        }
-
-        // 4. Kiểm tra ăn chéo bên trái (x - 1)
-        if (sc.PositionOnBoard(x - 1, y) && data.mem.positions[x - 1, y] != null 
-            && data.mem.positions[x - 1, y].GetComponent<Chessman>().player != player)
-        {
-            MovePlateAttackSpawn(x - 1, y);
-        }
+        if(score>=score_to_envo) pendingEvolve=true;
     }
-    // public void PawnMovePlateBishop()
-    // {
-    //     // có khả năng move của bishop nhưng không toàn bản đổ 
 
-    // }
+    void Evolve(){ piece.evolved=true; Activate(); }
 
-    public void MovePlateSpawn(int matrixX, int matrixY)
-    {
-        //Get the board value in order to convert to xy coords
-        float x = matrixX;
-        float y = matrixY;
+    void EvolveWeapon(PieceType t){
+        piece.evolved=true;
 
-        //Adjust by variable offset
-        x *= 1.28f;
-        y *= 1.28f;
+        if(t==PieceType.KHeavy) piece.weapon=(int)PieceKind.Knight;
+        else if(t==PieceType.BHeavy) piece.weapon=(int)PieceKind.Bishop;
+        else if(t==PieceType.RHeavy) piece.weapon=(int)PieceKind.Rook;
 
-        //Add constants (pos 0,0)
-        x += -4.48f;
-        y += -4.48f;
-
-        //Set actual unity values
-        GameObject mp = Instantiate(movePlate, new Vector3(x, y, -3.0f), Quaternion.identity);
-
-        MovePlate mpScript = mp.GetComponent<MovePlate>();
-        mpScript.SetReference(gameObject);
-        mpScript.SetCoords(matrixX, matrixY);
-    }
-    public float scalePosition(int x)
-    {
-    return x * 1.28f - 4.48f;
-    }
-    public void MovePlateAttackSpawn(int matrixX, int matrixY)
-    {
-        //Get the board value in order to convert to xy coords
-        float x = matrixX;
-        float y = matrixY;
-
-        //Adjust by variable offset
-        x *= 1.28f;
-        y *= 1.28f;
-
-        //Add constants (pos 0,0)
-        x += -4.48f;
-        y += -4.48f;
-
-        //Set actual unity values
-        GameObject mp = Instantiate(movePlate, new Vector3(x, y, -3.0f), Quaternion.identity);
-
-        MovePlate mpScript = mp.GetComponent<MovePlate>();
-        mpScript.attack = true;
-        mpScript.SetReference(gameObject);
-        mpScript.SetCoords(matrixX, matrixY);
-    }
-// =========================================================================
-// EVOLUTION SYSTEM
-// =========================================================================
-
-    public void AbsorbPoints(GameObject victim, int victimScore, Vector3 targetPos)
-    {
-        string[] nameParts = this.name.Split('_');
-        Chessman victimScript = victim.GetComponent<Chessman>();
-
-
-        if (nameParts[0] == "e") 
-        {
-            return;
-        }
-        Debug.Log($"===> HAM AbsorbPoints({victimScore})");
-        
-        score += victimScore;
-
-        if (this.unitType == PieceType.Light)
-        {
-
-
-            bool isAtOpponentHalf = isWhite() ? (yBoard >= 4) : (yBoard <= 3);
-
-            // Check xem victim có thuộc nhóm Heavy không
-            bool ateHeavy = victimScript.unitType == PieceType.KHeavy || 
-                            victimScript.unitType == PieceType.BHeavy || 
-                            victimScript.unitType == PieceType.RHeavy;
-
-            if (isAtOpponentHalf && ateHeavy)
-            {
-                EvolveWithWeapon(victimScript.unitType, targetPos);
-                return; 
-            }
-        }
-
-        else if (score >= score_to_envo)
-        {
-            Debug.Log(name + " absorbed " + victimScore + " points. Total: " + score);
-            Evolve(targetPos);
-        }
-    }
-    private void Evolve(Vector3 targetPos)
-    {
-        this.name = "e_" + this.name;
+        unitType=PieceType.ELight;
         Activate();
-        Camera.main.GetComponent<CameraControl>().ZoomInTarget(targetPos, 1.0f);
-        Debug.Log("<color=green>" + this.name + " HAS EVOLVED!</color>");
     }
-    //pawn
-    private void EvolveWithWeapon(PieceType weaponType, Vector3 targetPos)
-    {
-        unitType = PieceType.ELight; 
-        string evolvedAbility="";
-        switch (weaponType)
-        {
-            case PieceType.KHeavy: 
-                evolvedAbility = "knight"; 
-                break;
-            case PieceType.BHeavy: 
-                evolvedAbility = "bishop"; 
-                break;
-            case PieceType.RHeavy: 
-                evolvedAbility = "rook"; 
-                break;
-        }
-        this.name = "e_" + this.name + "_" + evolvedAbility;
-        Activate();
-        Camera.main.GetComponent<CameraControl>().ZoomInTarget(targetPos, 1.0f);
-     }
-    //queen
-    // public void SendToWaitingZone()
-    // {
-    //     // 1. Lưu lại tọa độ THẬT trước khi ghi đè bằng tọa độ ảo
-    //     int oldX = xBoard;
-    //     int oldY = yBoard;
 
-    //     // 2. Báo cho Controller xóa Hậu khỏi ô thực tế trên bàn cờ TRƯỚC
-    //     GameObject controller = GameObject.FindGameObjectWithTag("GameController");
-    //     if (controller != null) {
-    //         controller.GetComponent<Game>().SetPositionEmpty(oldX, oldY);
-    //     }
+    float Scale(int v){ return v*1.28f-4.48f; }
 
-    //     // 3. Bây giờ mới gán tọa độ ảo để "cất" Hậu đi
-    //     this.matrixX = -1;
-    //     this.matrixY = isWhite() ? 0 : 7; 
-    //     float x = scalePosition(this.matrixX); // Sẽ ra -5.76f
-    //     float y = scalePosition(this.matrixY);
-    //     // 4. Đẩy ra khỏi tầm mắt hoàn toàn (tránh vướng víu trên màn hình)
-    //     this.transform.position = new Vector3(x, y, 0);
-
-    //     // 5. Ẩn hình ảnh
-    //     // GetComponent<SpriteRenderer>().enabled = false;
-    // }
+    public void SetCoords(){
+        transform.position=new Vector3(Scale(xBoard),Scale(yBoard),-1);
+    }
 }
