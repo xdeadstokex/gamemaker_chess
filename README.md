@@ -3,6 +3,48 @@
 Dự án biến thể Cờ Vua với cơ chế tích lũy điểm số và hệ thống tiến hóa kỹ năng.
 
 ---
+
+
+### Lore
+## Chapter 1: Painful Pawn
+# Xuyên suốt lịch sử cờ vua, chỉ có 1 danh phận là tốt thí. Đôi khi được gọi là chiến binh, nhưng bản chất vẫn không khác mấy. Tầng lớp này đại diện cho lính cấp thấp hay thậm chí là nông dân ở những phiên bản đầu tiên.
+
+# Ở phiên này, Pawn vẫn là tốt thí. Tuy nhiên họ có 1 ý chí cầu tiến, muốn đổi số phận của mình.
+
+# Khi có đủ Chiến khí trên chiến trường, họ sẽ hấp thụ khả năng của một quân cấp cao nếu kết liễu được quân đó.
+
+## Chapter 2: Big Bishop
+# Thủa đầu, Bishop là Voi. Sau đó du nhập qua Châu Âu thành Tu sĩ/Linh mục hay tướng lĩnh.
+
+# Ở phiên bản này, Bishop là tiểu tướng lĩnh.
+
+# Khi có đủ kinh nghiệm trên chiến trường, họ sẽ trở thành đại tướng lĩnh với khả năng và ngoại hình mới.
+
+## Chapter 3: Royal Knight
+# Như tên gọi, Knight là Kỵ sĩ. Nhờ ngoại hình của mình đôi khi được gọi là Ngựa ở một số phiên bản.
+
+# Ở phiên bản này, Knight là Kỵ sĩ.
+
+# Khi có đủ kinh nghiệm trên chiến trường, họ sẽ trở thành Kỵ sĩ Hoàng Gia với khả năng và ngoại hình mới.
+## Chapter 4: Rook
+
+# Rook đại diện cho xe ngựa, xe công thành, hoặc pháo đài qua nhiều phiên bản.
+# Ở phiên bản này, Rook là xe công thành.
+# Khi có đủ điều kiện, Rook có thể triệu hồi quân tốt *Không có ý chí*  ở xung quanh nó.
+## Chapter 5: Alpha Queen
+# Từ sơ khai, vị trí của quân cờ này đại diện cho Đại tướng/Tổng tư lệnh. Sau khi du nhập sang Châu Âu thì trở thành Hoàng Hậu.
+
+# Ở phiên bản này, Queen là Nữ Tướng lĩnh, vừa là cánh tay phải vừa là Hoàng Hậu của Vua.
+
+# Khi có đủ tiếng tăm trên chiến trường, trở thành Nữ Thần Tướng. Khi này tất cả quân cấp cao đồng minh trở thành tín đồ của Nữ Thần Tướng. Khi Nữ Thần Tướng hy sinh, 1 trong các tín đồ có thể tiếp nhận ý chí của Nữ Thần Tướng để trở thành Tân Nữ Thần Tướng.
+
+## Chapter 6: King
+# Mọi phiên bản đều là người đứng đầu. Chết = thua.
+
+# Khi có đủ áp lực sinh tồn, có một phần khả năng của Nữ Tướng. Tuy nhiên do vấn đề tuổi tác nên hiệu ứng này chỉ duy trì được 1 thời gian nhất định.
+
+# Khi Nữ Tướng đồng minh không có trên bàn cờ, hiệu ứng này sẽ mạnh hơn do Vua nhớ vợ.
+
 ## Phân loại cấp bậc và điểm
 Tốt(1): Quân nhẹ
 Tượng(3), Mã(3), Xe(5): Quân nặng
