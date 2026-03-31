@@ -3,16 +3,15 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public enum PieceType { Light, ELight, KHeavy, BHeavy, RHeavy, Core }
-public class Chessman : MonoBehaviour
-{
+public class Chessman : MonoBehaviour{
     //References to objects in our Unity Scene
     public GameObject controller;
     public GameObject movePlate;
 
     //Position for this Chesspiece on the Board
     //The correct position will be set later
-    private int xBoard = -1;
-    private int yBoard = -1;
+    public int xBoard = -1;
+    public int yBoard = -1;
 
     //Variable for keeping track of the player it belongs to "black" or "white
 
@@ -168,7 +167,7 @@ public class Chessman : MonoBehaviour
         if (!sc.PositionOnBoard(x, y)) return false;
 
         // Không được đi vào ô có quân mình đang đứng
-        GameObject target = sc.GetPosition(x, y);
+        GameObject target = data.mem.positions[x, y];
         if (target != null && target.GetComponent<Chessman>().player == player) return false;
         string[] nameParts = this.name.Split('_');
         if (nameParts[0] != "e")
@@ -210,7 +209,7 @@ public class Chessman : MonoBehaviour
 
         while (curX != tx || curY != ty)
         {
-            if (controller.GetComponent<Game>().GetPosition(curX, curY) != null) return false; // Bị chặn
+            if (data.mem.positions[curX, curY] != null) return false; // Bị chặn
             curX += xStep;
             curY += yStep;
         }
@@ -228,7 +227,7 @@ public class Chessman : MonoBehaviour
 
         while (curX != tx || curY != ty)
         {
-            if (controller.GetComponent<Game>().GetPosition(curX, curY) != null) return false;
+            if (data.mem.positions[curX, curY] != null) return false;
             curX += xStep;
             curY += yStep;
         }
@@ -250,11 +249,11 @@ public class Chessman : MonoBehaviour
         // Logic nhảy 2x0: (Cách 2 ô ngang, 0 ô dọc) HOẶC (Cách 0 ô ngang, 2 ô dọc)
         if ((dx == 2 && dy == 0) || (dx == 0 && dy == 2))
         {
-            GameObject target = sc.GetPosition(tx, ty);
+            GameObject target = data.mem.positions[tx, ty];
 
             // Ô trống hoặc ô có quân địch
             if (target == null) return true;
-            return target.GetComponent<Chessman>().GetPlayer() != player;
+            return target.GetComponent<Chessman>().player != player;
         }
 
         return false;
@@ -269,7 +268,7 @@ public class Chessman : MonoBehaviour
         // Ăn chéo
         if (System.Math.Abs(dx) == 1 && dy == direction)
         {
-            GameObject target = sc.GetPosition(tx, ty);
+            GameObject target = data.mem.positions[tx, ty];
             return target != null && target.GetComponent<Chessman>().player != player;
         }
         return false;
@@ -286,21 +285,18 @@ public class Chessman : MonoBehaviour
         // Đồng thời không được đứng yên tại chỗ (dx + dy > 0)
         if (dx <= 1 && dy <= 1 && (dx + dy > 0))
         {
-            GameObject target = sc.GetPosition(tx, ty);
+            GameObject target = data.mem.positions[tx, ty];
             
             // Ô trống hoặc ô có quân địch thì mới đi được
             if (target == null) return true;
             
-            // Sử dụng GetPlayer() để tránh lỗi "Inaccessible" như lúc nãy nhé Trí
-            return target.GetComponent<Chessman>().GetPlayer() != player;
+            // Sử dụng player để tránh lỗi "Inaccessible"
+            return target.GetComponent<Chessman>().player != player;
         }
 
         return false;
     }
-    public string GetPlayer()
-    {
-        return player;
-    }
+
     public void SetCoords()
     {
         //Get the board value in order to convert to xy coords
@@ -319,29 +315,9 @@ public class Chessman : MonoBehaviour
         this.transform.position = new Vector3(x, y, -1.0f);
     }
 
-    public int GetXBoard()
-    {
-        return xBoard;
-    }
-
-    public int GetYBoard()
-    {
-        return yBoard;
-    }
-
-    public void SetXBoard(int x)
-    {
-        xBoard = x;
-    }
-
-    public void SetYBoard(int y)
-    {
-        yBoard = y;
-    }
-
     private void OnMouseUp()
     {
-        if (!controller.GetComponent<Game>().IsGameOver() && controller.GetComponent<Game>().GetCurrentPlayer() == player)
+        if (!data.mem.gameOver && data.mem.currentPlayer == player)
         {
             //Remove all moveplates relating to previously selected piece
             DestroyMovePlates();
@@ -443,14 +419,14 @@ public class Chessman : MonoBehaviour
         int x = xBoard + xIncrement;
         int y = yBoard + yIncrement;
 
-        while (sc.PositionOnBoard(x, y) && sc.GetPosition(x, y) == null)
+        while (sc.PositionOnBoard(x, y) && data.mem.positions[x, y] == null)
         {
             MovePlateSpawn(x, y);
             x += xIncrement;
             y += yIncrement;
         }
 
-        if (sc.PositionOnBoard(x, y) && sc.GetPosition(x, y).GetComponent<Chessman>().player != player)
+        if (sc.PositionOnBoard(x, y) && data.mem.positions[x, y].GetComponent<Chessman>().player != player)
         {
             MovePlateAttackSpawn(x, y);
         }
@@ -511,7 +487,7 @@ public class Chessman : MonoBehaviour
         Game sc = controller.GetComponent<Game>();
         if (sc.PositionOnBoard(x, y))
         {
-            GameObject cp = sc.GetPosition(x, y);
+            GameObject cp = data.mem.positions[x, y];
 
             if (cp == null)
             {
@@ -529,33 +505,33 @@ public class Chessman : MonoBehaviour
         Game sc = controller.GetComponent<Game>();
         
         // 1. Kiểm tra ô ngay phía trước (Đi 1 ô)
-        if (sc.PositionOnBoard(x, y) && sc.GetPosition(x, y) == null)
+        if (sc.PositionOnBoard(x, y) && data.mem.positions[x, y] == null)
         {
             MovePlateSpawn(x, y);
 
             // 2. Kiểm tra đi 2 ô (Chỉ khi ô 1 đang trống và Tốt đang ở vị trí xuất phát)
             // Quân Trắng xuất phát ở hàng 1, muốn đi lên hàng 3 (y + 1)
-            if (player == "white" && yBoard == 1 && sc.GetPosition(x, y + 1) == null)
+            if (player == "white" && yBoard == 1 && data.mem.positions[x, y + 1] == null)
             {
                 MovePlateSpawn(x, y + 1);
             }
             // Quân Đen xuất phát ở hàng 6, muốn đi xuống hàng 4 (y - 1)
-            if (player == "black" && yBoard == 6 && sc.GetPosition(x, y - 1) == null)
+            if (player == "black" && yBoard == 6 && data.mem.positions[x, y - 1] == null)
             {
                 MovePlateSpawn(x, y - 1);
             }
         }
 
         // 3. Kiểm tra ăn chéo bên phải (x + 1)
-        if (sc.PositionOnBoard(x + 1, y) && sc.GetPosition(x + 1, y) != null 
-            && sc.GetPosition(x + 1, y).GetComponent<Chessman>().player != player)
+        if (sc.PositionOnBoard(x + 1, y) && data.mem.positions[x + 1, y] != null 
+            && data.mem.positions[x + 1, y].GetComponent<Chessman>().player != player)
         {
             MovePlateAttackSpawn(x + 1, y);
         }
 
         // 4. Kiểm tra ăn chéo bên trái (x - 1)
-        if (sc.PositionOnBoard(x - 1, y) && sc.GetPosition(x - 1, y) != null 
-            && sc.GetPosition(x - 1, y).GetComponent<Chessman>().player != player)
+        if (sc.PositionOnBoard(x - 1, y) && data.mem.positions[x - 1, y] != null 
+            && data.mem.positions[x - 1, y].GetComponent<Chessman>().player != player)
         {
             MovePlateAttackSpawn(x - 1, y);
         }
@@ -687,8 +663,8 @@ public class Chessman : MonoBehaviour
     // public void SendToWaitingZone()
     // {
     //     // 1. Lưu lại tọa độ THẬT trước khi ghi đè bằng tọa độ ảo
-    //     int oldX = GetXBoard();
-    //     int oldY = GetYBoard();
+    //     int oldX = xBoard;
+    //     int oldY = yBoard;
 
     //     // 2. Báo cho Controller xóa Hậu khỏi ô thực tế trên bàn cờ TRƯỚC
     //     GameObject controller = GameObject.FindGameObjectWithTag("GameController");

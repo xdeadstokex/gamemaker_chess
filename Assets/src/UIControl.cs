@@ -69,7 +69,7 @@ public class UIControl : MonoBehaviour
                 target.unitType == PieceType.RHeavy)
             {
                 // Thực hiện hồi sinh: Tạo Hậu mới tại vị trí quân Nặng
-                gameScript.Create(card.color + "_queen", target.GetXBoard(), target.GetYBoard());
+                gameScript.Create(card.color + "_queen", target.xBoard, target.yBoard);
 
                 // Hiến tế: Xóa quân Nặng cũ
                 Destroy(target.gameObject);

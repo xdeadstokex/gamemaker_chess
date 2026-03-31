@@ -35,8 +35,8 @@ public class MovePlate : MonoBehaviour
         if (attack)
         {
 
-            gameScript.PlaySound(gameScript.captureSound);
-            GameObject cp = controller.GetComponent<Game>().GetPosition(matrixX, matrixY);
+            gameScript.PlaySound(data.mem.captureSound);
+            GameObject cp = data.mem.positions[matrixX, matrixY];
             if (cp != null) 
             {
                 int points = cp.GetComponent<Chessman>().GetScore();
@@ -69,16 +69,15 @@ public class MovePlate : MonoBehaviour
         }
         else
         {
-            gameScript.PlaySound(gameScript.moveSound);
+            gameScript.PlaySound(data.mem.moveSound);
         }
 
         //Set the Chesspiece's original location to be empty
-        controller.GetComponent<Game>().SetPositionEmpty(reference.GetComponent<Chessman>().GetXBoard(), 
-            reference.GetComponent<Chessman>().GetYBoard());
+		data.mem.positions[reference.GetComponent<Chessman>().xBoard, reference.GetComponent<Chessman>().yBoard] = null;
 
         //Move reference chess piece to this position
-        reference.GetComponent<Chessman>().SetXBoard(matrixX);
-        reference.GetComponent<Chessman>().SetYBoard(matrixY);
+        reference.GetComponent<Chessman>().xBoard = matrixX;
+        reference.GetComponent<Chessman>().yBoard = matrixY;
         reference.GetComponent<Chessman>().SetCoords();
 
         //Update the matrix

@@ -5,52 +5,22 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class Game : MonoBehaviour{
-    //Matrices needed, positions of each of the GameObjects
-    //Also separate arrays for the players in order to easily keep track of them all
-    //Keep in mind that the same objects are going to be in "positions" and "playerBlack"/"playerWhite"
-    private GameObject[,] positions = new GameObject[8, 8];
-    private GameObject[] playerBlack = new GameObject[16];
-    private GameObject[] playerWhite = new GameObject[16];
 
-    //current turn
-    private string currentPlayer = "white";
-
-    //Game Ending
-    private bool gameOver = false;
-
-    public struct MoveData {
-    public GameObject piece; // Quân cờ sẽ đi
-    public int targetX;      // Tọa độ X đến
-    public int targetY;      // Tọa độ Y đến
-    public int score;        // Điểm số của nước đi này
-}
-    public AudioSource audioSource;
-    public AudioClip moveSound;   // Âm thanh đi quân bình thường
-    public AudioClip captureSound; // Âm thanh khi ăn quân
-    public AudioClip checkSound;
-    // public AudioClip winSound;
-    public AudioClip startSound;
-    public AudioClip endSound;
-    public AudioClip timeLess;
-
-    public void PlaySound(AudioClip clip)
-    {
-        if (audioSource != null && clip != null)
-        {
-            audioSource.PlayOneShot(clip);
+    public void PlaySound(AudioClip clip){
+        if(data.mem.audioSource != null && clip != null){
+            data.mem.audioSource.PlayOneShot(clip);
         }
     }
     //Unity calls this right when the game starts, there are a few built in functions
     //that Unity can call for you
-    public void Start()
-    {
-        playerWhite = new GameObject[] { Create("white_rook", 0, 0), Create("white_knight", 1, 0),
+    public void Start(){
+        data.mem.playerWhite = new GameObject[] { Create("white_rook", 0, 0), Create("white_knight", 1, 0),
             Create("white_bishop", 2, 0), Create("white_queen", 3, 0), Create("white_king", 4, 0),
             Create("white_bishop", 5, 0), Create("white_knight", 6, 0), Create("white_rook", 7, 0),
             Create("white_pawn", 0, 1), Create("white_pawn", 1, 1), Create("white_pawn", 2, 1),
             Create("white_pawn", 3, 1), Create("white_pawn", 4, 1), Create("white_pawn", 5, 1),
             Create("white_pawn", 6, 1), Create("white_pawn", 7, 1) };
-        playerBlack = new GameObject[] { Create("black_rook", 0, 7), Create("black_knight",1,7),
+        data.mem.playerBlack = new GameObject[] { Create("black_rook", 0, 7), Create("black_knight",1,7),
             Create("black_bishop",2,7), Create("black_queen",3,7), Create("black_king",4,7),
             Create("black_bishop",5,7), Create("black_knight",6,7), Create("black_rook",7,7),
             Create("black_pawn", 0, 6), Create("black_pawn", 1, 6), Create("black_pawn", 2, 6),
@@ -58,61 +28,45 @@ public class Game : MonoBehaviour{
             Create("black_pawn", 6, 6), Create("black_pawn", 7, 6) };
 
         //Set all piece positions on the positions board
-        for (int i = 0; i < playerBlack.Length; i++)
-        {
-            SetPosition(playerBlack[i]);
-            SetPosition(playerWhite[i]);
+        for (int i = 0; i < data.mem.playerBlack.Length; i++){
+            SetPosition(data.mem.playerBlack[i]);
+            SetPosition(data.mem.playerWhite[i]);
         }
-        PlaySound(startSound);
+        PlaySound(data.mem.startSound);
     }
     
-    public GameObject Create(string name, int x, int y)
-    {
+    public GameObject Create(string name, int x, int y){
         GameObject obj = Instantiate(data.mem.chesspiece, new Vector3(0, 0, -1), Quaternion.identity);
         Chessman cm = obj.GetComponent<Chessman>(); //We have access to the GameObject, we need the script
         cm.name = name; //This is a built in variable that Unity has, so we did not have to declare it before
-        cm.SetXBoard(x);
-        cm.SetYBoard(y);
+        cm.xBoard = x;
+        cm.yBoard = y;
         cm.Activate(); //It has everything set up so it can now Activate()
         return obj;
     }
-    public void SetPosition(GameObject obj)
-    {
+    
+	public void SetPosition(GameObject obj){
         Chessman cm = obj.GetComponent<Chessman>();
 
         //Overwrites either empty space or whatever was there
-        positions[cm.GetXBoard(), cm.GetYBoard()] = obj;
+        data.mem.positions[cm.xBoard, cm.yBoard] = obj;
     }
 
-    public void SetPositionEmpty(int x, int y)
-    {
-        positions[x, y] = null;
-    }
 
-    public GameObject GetPosition(int x, int y)
-    {
-        return positions[x, y];
-    }
 
-    public bool PositionOnBoard(int x, int y)
-    {
-        if (x < 0 || y < 0 || x >= positions.GetLength(0) || y >= positions.GetLength(1)) return false;
+
+    public bool PositionOnBoard(int x, int y){
+        if (x < 0 || y < 0 || x >= data.mem.positions.GetLength(0) || y >= data.mem.positions.GetLength(1)) return false;
         return true;
     }
 
-    public string GetCurrentPlayer()
-    {
-        return currentPlayer;
-    }
-    // Thêm vào trong class Game trong file Game.cs
 
-public bool IsKingInCheck(string kingColor)
-    {
+public bool IsKingInCheck(string kingColor){
         Chessman king = GetKing(kingColor); // Tự viết hàm tìm King hoặc dùng mảng
-        int kX = king.GetXBoard();
-        int kY = king.GetYBoard();
+        int kX = king.xBoard;
+        int kY = king.yBoard;
 
-        GameObject[] enemies = (kingColor == "white") ? playerBlack : playerWhite;
+        GameObject[] enemies = (kingColor == "white") ? data.mem.playerBlack : data.mem.playerWhite;
 
         foreach (GameObject enemyObj in enemies)
         {
@@ -124,7 +78,7 @@ public bool IsKingInCheck(string kingColor)
 public Chessman GetKing(string color)
     {
         // Xác định mảng quân cờ cần quét dựa trên màu sắc
-        GameObject[] pieces = (color == "white") ? playerWhite : playerBlack;
+        GameObject[] pieces = (color == "white") ? data.mem.playerWhite : data.mem.playerBlack;
 
         foreach (GameObject obj in pieces)
         {
@@ -142,29 +96,89 @@ public Chessman GetKing(string color)
         Debug.LogError("Không tìm thấy quân Vua phe " + color + "! Có thể bạn chưa kéo Prefab hoặc quân Vua đã bị xóa nhầm.");
         return null;
     }
-    public bool IsGameOver()
-    {
-        return gameOver;
-    }
 
-    public void NextTurn()
-    {
-        currentPlayer = (currentPlayer == "white") ? "black" : "white";
-        if (!gameOver && IsKingInCheck(currentPlayer))
+    public void NextTurn(){
+        data.mem.currentPlayer = (data.mem.currentPlayer == "white") ? "black" : "white";
+        if (!data.mem.gameOver && IsKingInCheck(data.mem.currentPlayer))
         {
-            PlaySound(checkSound); // Phát file 'check' bạn đã kéo vào Inspector
-            Debug.Log(currentPlayer + " is in CHECK!");
+            PlaySound(data.mem.checkSound); // Phát file 'check' bạn đã kéo vào Inspector
+            Debug.Log(data.mem.currentPlayer + " is in CHECK!");
         }
-        // if (!gameOver && currentPlayer == "black")
+        // if (!data.mem.gameOver && data.mem.currentPlayer == "black")
         // {
         //     Invoke("DoAITurn", 0.5f);
         // }
     }
+
+
+
+    int GetPieceValue(string name){
+        if (name.Contains("pawn")) return 1;
+        if (name.Contains("knight")) return 3;
+        if (name.Contains("bishop")) return 3;
+        if (name.Contains("rook")) return 5;
+        if (name.Contains("queen")) return 9;
+        if (name.Contains("king")) return 90;
+        return 0;
+    }   
+
+void ExecuteAIMove(data.MoveData move){
+        Chessman cm = move.piece.GetComponent<Chessman>();
+
+        // Nếu có quân địch tại đó -> Xóa quân địch
+        GameObject victim = data.mem.positions[move.targetX, move.targetY];
+        if (victim != null) {
+            PlaySound(data.mem.captureSound);
+            if (victim.name.Contains("king")) Winner("black");
+            //PlaySound(winSound);
+            Destroy(victim);
+        }
+        else{ PlaySound(data.mem.moveSound); }
+
+        // Cập nhật mảng và vị trí
+		data.mem.positions[cm.xBoard, cm.yBoard] = null; // set pos empty
+        cm.xBoard = move.targetX;
+        cm.yBoard = move.targetY;
+        cm.SetCoords();
+        SetPosition(move.piece);
+
+        // Kết thúc lượt AI
+        NextTurn();
+    }
+
+    public void Update(){
+        if (data.mem.gameOver == true && Input.GetMouseButtonDown(0))
+        {
+            data.mem.gameOver = false;
+
+            //Using UnityEngine.SceneManagement is needed here
+            SceneManager.LoadScene("Game"); //Restarts the game by loading the scene over again
+        }
+        
+    }
+    
+    public void Winner(string playerWinner)
+    {
+        data.mem.gameOver = true;
+
+        //Using UnityEngine.UI is needed here
+        GameObject.FindGameObjectWithTag("WinnerText").GetComponent<Text>().enabled = true;
+        GameObject.FindGameObjectWithTag("WinnerText").GetComponent<Text>().text = playerWinner + " is the winner";
+
+        GameObject.FindGameObjectWithTag("RestartText").GetComponent<Text>().enabled = true;
+    }
+
+
+
+
+
+
+/*
     void DoAITurn()
     {
-        if (gameOver) return;
+        if (data.mem.gameOver) return;
 
-        List<MoveData> allPossibleMoves = new List<MoveData>();
+        List<data.MoveData> allPossibleMoves = new List<data.MoveData>();
 
         // 1. Tìm tất cả quân cờ đang có trên bàn
         GameObject[] allPieces = GameObject.FindGameObjectsWithTag("Chessman");
@@ -174,8 +188,7 @@ public Chessman GetKing(string color)
             Chessman script = p.GetComponent<Chessman>();
             
             // 2. Chỉ tính toán cho quân Đen
-            if (script.GetPlayer() == "black")
-            {
+            if (script.player == "black"){
                 // Tạo các ô di chuyển hợp lệ cho quân này (đã bao gồm chặn đường trong Chessman.cs)
                 script.InitiateMovePlates();
 
@@ -190,14 +203,14 @@ public Chessman GetKing(string color)
                     // 3. Đánh giá nước đi (Ưu tiên ăn quân)
                     if (mpScript.attack)
                     {
-                        GameObject victim = GetPosition(mpScript.GetMatrixX(), mpScript.GetMatrixY());
+                        GameObject victim = data.mem.positions[mpScript.GetMatrixX(), mpScript.GetMatrixY()];
                         if (victim != null)
                         {
                             moveScore = GetPieceValue(victim.name);
                         }
                     }
 
-                    allPossibleMoves.Add(new MoveData
+                    allPossibleMoves.Add(new data.MoveData
                     {
                         piece = p,
                         targetX = mpScript.GetMatrixX(),
@@ -223,7 +236,7 @@ public Chessman GetKing(string color)
             while (n > 1) {
                 n--;
                 int k = rng.Next(n + 1);
-                MoveData value = allPossibleMoves[k];
+                data.MoveData value = allPossibleMoves[k];
                 allPossibleMoves[k] = allPossibleMoves[n];
                 allPossibleMoves[n] = value;
             }
@@ -233,67 +246,7 @@ public Chessman GetKing(string color)
             
             ExecuteAIMove(allPossibleMoves[0]);
         }
-    }    
-    int GetPieceValue(string name)
-    {
-        if (name.Contains("pawn")) return 1;
-        if (name.Contains("knight")) return 3;
-        if (name.Contains("bishop")) return 3;
-        if (name.Contains("rook")) return 5;
-        if (name.Contains("queen")) return 9;
-        if (name.Contains("king")) return 90;
-        return 0;
-    }   
-
-void ExecuteAIMove(MoveData move)
-    {
-        Chessman cm = move.piece.GetComponent<Chessman>();
-
-        // Nếu có quân địch tại đó -> Xóa quân địch
-        GameObject victim = GetPosition(move.targetX, move.targetY);
-        if (victim != null) {
-            PlaySound(captureSound);
-            if (victim.name.Contains("king")) Winner("black");
-            //PlaySound(winSound);
-            Destroy(victim);
-        }
-        else
-        {
-            PlaySound(moveSound);
-        }
-
-        // Cập nhật mảng và vị trí
-        SetPositionEmpty(cm.GetXBoard(), cm.GetYBoard());
-        cm.SetXBoard(move.targetX);
-        cm.SetYBoard(move.targetY);
-        cm.SetCoords();
-        SetPosition(move.piece);
-
-        // Kết thúc lượt AI
-        NextTurn();
     }
+*/
 
-    public void Update()
-    {
-        if (gameOver == true && Input.GetMouseButtonDown(0))
-        {
-            gameOver = false;
-
-            //Using UnityEngine.SceneManagement is needed here
-            SceneManager.LoadScene("Game"); //Restarts the game by loading the scene over again
-        }
-        
-    }
-    
-    public void Winner(string playerWinner)
-    {
-        gameOver = true;
-
-        //Using UnityEngine.UI is needed here
-        GameObject.FindGameObjectWithTag("WinnerText").GetComponent<Text>().enabled = true;
-        GameObject.FindGameObjectWithTag("WinnerText").GetComponent<Text>().text = playerWinner + " is the winner";
-
-        GameObject.FindGameObjectWithTag("RestartText").GetComponent<Text>().enabled = true;
-    }
-    
 }
