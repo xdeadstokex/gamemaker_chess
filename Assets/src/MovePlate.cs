@@ -24,6 +24,7 @@ public class MovePlate : MonoBehaviour
         {
             //Set to red
             gameObject.GetComponent<SpriteRenderer>().color = new Color(1.0f, 0.0f, 0.0f, 1.0f);
+            
         }
     }
 
@@ -31,11 +32,12 @@ public class MovePlate : MonoBehaviour
     {
         controller = GameObject.FindGameObjectWithTag("GameController");
         Game gameScript = controller.GetComponent<Game>();
+        data dataScript = controller.GetComponent<data>();
         //Destroy the victim Chesspiece
         if (attack)
         {
 
-            gameScript.PlaySound(data.mem.captureSound);
+            gameScript.PlaySound(dataScript.captureSound);
             GameObject cp = data.mem.positions[matrixX, matrixY];
             if (cp != null) 
             {
@@ -69,7 +71,7 @@ public class MovePlate : MonoBehaviour
         }
         else
         {
-            gameScript.PlaySound(data.mem.moveSound);
+            gameScript.PlaySound(dataScript.moveSound);
         }
 
         //Set the Chesspiece's original location to be empty

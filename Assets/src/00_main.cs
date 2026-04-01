@@ -4,12 +4,18 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
+
+
 public class Game : MonoBehaviour{
+    GameObject controller;
+    data dataScript;
+    public void Awake(){
+        controller = GameObject.FindGameObjectWithTag("GameController");
+        dataScript = controller.GetComponent<data>();
+    }
 
     public void PlaySound(AudioClip clip){
-        if(data.mem.audioSource != null && clip != null){
-            data.mem.audioSource.PlayOneShot(clip);
-        }
+        dataScript.audioSource.PlayOneShot(clip);
     }
     //Unity calls this right when the game starts, there are a few built in functions
     //that Unity can call for you
@@ -32,7 +38,7 @@ public class Game : MonoBehaviour{
             SetPosition(data.mem.playerBlack[i]);
             SetPosition(data.mem.playerWhite[i]);
         }
-        PlaySound(data.mem.startSound);
+        PlaySound(dataScript.startSound);
     }
     
     public GameObject Create(string name, int x, int y){
@@ -101,7 +107,7 @@ public Chessman GetKing(string color)
         data.mem.currentPlayer = (data.mem.currentPlayer == "white") ? "black" : "white";
         if (!data.mem.gameOver && IsKingInCheck(data.mem.currentPlayer))
         {
-            PlaySound(data.mem.checkSound); // Phát file 'check' bạn đã kéo vào Inspector
+            PlaySound(dataScript.checkSound); // Phát file 'check' bạn đã kéo vào Inspector
             Debug.Log(data.mem.currentPlayer + " is in CHECK!");
         }
         // if (!data.mem.gameOver && data.mem.currentPlayer == "black")
@@ -128,12 +134,12 @@ void ExecuteAIMove(data.MoveData move){
         // Nếu có quân địch tại đó -> Xóa quân địch
         GameObject victim = data.mem.positions[move.targetX, move.targetY];
         if (victim != null) {
-            PlaySound(data.mem.captureSound);
+            PlaySound(dataScript.captureSound);
             if (victim.name.Contains("king")) Winner("black");
             //PlaySound(winSound);
             Destroy(victim);
         }
-        else{ PlaySound(data.mem.moveSound); }
+        else{ PlaySound(dataScript.moveSound); }
 
         // Cập nhật mảng và vị trí
 		data.mem.positions[cm.xBoard, cm.yBoard] = null; // set pos empty
