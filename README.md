@@ -92,7 +92,7 @@ Hậu chỉ được nhận 1 loại khả năng trong suốt ván đấu.
 
 ### Buff
 Gồm 2 thẻ +1 và +2. Cộng điểm quân đồng minh chỉ định. Lá này sẽ xuất hiện khi Tốt giác ngộ hoặc bị thất thế.
-### Debugg
+### Debuff
 Gồm 1 thẻ là sét. Giáng 3 điểm quân đối thủ chỉ định. Lá này sẽ xuất hiện khi bị thất thế.
 ### GodQueen
 Hồi sinh Nữ Thần Tướng chỉ định vào tín đồ của nàng.
