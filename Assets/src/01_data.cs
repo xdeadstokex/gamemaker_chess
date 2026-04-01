@@ -34,7 +34,12 @@ public class data : MonoBehaviour {
     public AudioClip startSound;
     public AudioClip endSound; // not yet
     public AudioClip timeLess; // not yet
+    public List<Card> allCards;      // Danh sách tất cả các loại thẻ hiện có
+    public List<Card> whiteHand = new List<Card>();
+    public List<Card> blackHand = new List<Card>();
+    public GameObject cardPrefab;
     void Awake() {
         mem = this;
     }
+
 }

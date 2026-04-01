@@ -55,13 +55,13 @@ public class MovePlate : MonoBehaviour
                 Destroy(cp);
                 if(checkq[1]=="white")
                 {
-                    gameScript.Create("white_queen", -1, 0);
+                    // gameScript.Create("white_queen", -1, 0);
                     Debug.Log("<color=green>" + this.name + "Saved Queen");
 
                 }
                 else
                 {
-                    gameScript.Create("black_queen", -1,7);
+                    // gameScript.Create("black_queen", -1,7);
                     Debug.Log("<color=green>" + this.name + "Saved Queen");
 
                 }

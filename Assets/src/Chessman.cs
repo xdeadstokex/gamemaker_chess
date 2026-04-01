@@ -630,13 +630,34 @@ public class Chessman : MonoBehaviour{
             Debug.Log(name + " absorbed " + victimScore + " points. Total: " + score);
             Evolve(targetPos);
         }
-    }
+        else if (nameParts[0] == "e" && score < score_to_envo)
+        {
+            DeEvolve();
+        }
+
+
+        if (score < 0) score = 0;
+            
+        }
     private void Evolve(Vector3 targetPos)
     {
         this.name = "e_" + this.name;
         Activate();
         Camera.main.GetComponent<CameraControl>().ZoomInTarget(targetPos, 1.0f);
         Debug.Log("<color=green>" + this.name + " HAS EVOLVED!</color>");
+    }
+    private void DeEvolve()
+    {
+        if (this.name.StartsWith("e_"))
+        {
+            string[] parts = this.name.Split('_');
+            if (parts.Length >= 3)
+            {
+                this.name = parts[1] + "_" + parts[2]; 
+            }
+            Activate(); 
+            Debug.Log("<color=red>" + this.name + " bị giáng cấp!</color>");
+        }
     }
     //pawn
     private void EvolveWithWeapon(PieceType weaponType, Vector3 targetPos)
