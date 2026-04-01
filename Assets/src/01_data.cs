@@ -2,44 +2,41 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-
+public enum CardType { Buff, Debuff, GodQueen, DemonQueen, Event, Item }
 
 public class data : MonoBehaviour {
     public static data mem;
-	
-	public struct MoveData {
-    public GameObject piece; // Quân cờ sẽ đi
-    public int targetX;      // Tọa độ X đến
-    public int targetY;      // Tọa độ Y đến
-    public int score;        // Điểm số của nước đi này
-	}
-	
-    public GameObject chesspiece; // reserve a space for later assign of unity chesspiece obj/prefab
 
-    //Matrices needed, positions of each of the GameObjects
-    //Also separate arrays for the players in order to easily keep track of them all
-    //Keep in mind that the same objects are going to be in "positions" and "playerBlack"/"playerWhite"
+    public struct MoveData {
+        public GameObject piece;
+        public int targetX;
+        public int targetY;
+        public int score;
+    }
+
+    public GameObject chesspiece;       // chessman prefab
+    public GameObject movePlatePrefab;  // moveplate prefab — moved here from Chessman
+
     public GameObject[,] positions = new GameObject[8, 8];
     public GameObject[] playerBlack = new GameObject[16];
     public GameObject[] playerWhite = new GameObject[16];
+    public List<GameObject> move_plate_list = new List<GameObject>();
 
     public bool gameOver = false;
-	public string currentPlayer = "white";	//current turn
+    public int current_player_color = 0;  // 0 = white, 1 = black
 
     public AudioSource audioSource;
-    public AudioClip moveSound;   // Âm thanh đi quân bình thường
-    public AudioClip captureSound; // Âm thanh khi ăn quân
+    public AudioClip moveSound;
+    public AudioClip captureSound;
     public AudioClip checkSound;
-    // public AudioClip winSound;
     public AudioClip startSound;
-    public AudioClip endSound; // not yet
-    public AudioClip timeLess; // not yet
-    public List<Card> allCards;      // Danh sách tất cả các loại thẻ hiện có
+    public AudioClip endSound;
+    public AudioClip timeLess;
+
+    public List<Card> allCards;
     public List<Card> whiteHand = new List<Card>();
     public List<Card> blackHand = new List<Card>();
     public GameObject cardPrefab;
-    void Awake() {
-        mem = this;
-    }
 
+    void Awake() { mem = this; }
 }
