@@ -8,6 +8,7 @@ TagManager:
   - Chessman
   - WinnerText
   - SpawningCard
+  - Board
   layers:
   - Default
   - TransparentFX
