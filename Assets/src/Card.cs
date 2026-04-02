@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public abstract class Card : ScriptableObject {
@@ -15,34 +13,29 @@ public abstract class Card : ScriptableObject {
 
 public class ThunderCard : Card {
     public override void CardActivate(int x, int y) {
-        GameObject target = data.mem.positions[x, y];
-        if (target == null) return;
+        ref data.chess_piece target = ref data.mem.board[x, y];
+        if (target.rect == null) return;
+        if (target.player_color == data.mem.current_player_color) return;
 
-        Chessman cm = target.GetComponent<Chessman>();
-        if (cm == null) return;
+        data.chess_piece damage = default;
+        damage.score = value;
 
-        // Only affect enemy
-        if (cm.player_color == data.mem.current_player_color) return;
-
-        cm.AbsorbPoints(target, -value, target.transform.position);
-
-        // if (data.mem.checkSound)
-        //     data.mem.audioSource.PlayOneShot(data.mem.checkSound);
+        Game game = GameObject.FindGameObjectWithTag("GameController").GetComponent<Game>();
+        game.AbsorbPoints(ref target, ref damage, target.rect.obj.transform.position);
     }
 }
 
 public class BuffCard : Card {
     public override void CardActivate(int x, int y) {
-        GameObject target = data.mem.positions[x, y];
-        if (target == null) return;
+        ref data.chess_piece target = ref data.mem.board[x, y];
+        if (target.rect == null) return;
+        if (target.player_color != data.mem.current_player_color) return;
 
-        Chessman cm = target.GetComponent<Chessman>();
-        if (cm == null) return;
+        data.chess_piece buff = default;
+        buff.score = value;
 
-        // Only affect ally
-        if (cm.player_color != data.mem.current_player_color) return;
-
-        cm.AbsorbPoints(target, value, target.transform.position);
-        Debug.Log($"Buff {value} points to {cm.piece_type}");
+        Game game = GameObject.FindGameObjectWithTag("GameController").GetComponent<Game>();
+        game.AbsorbPoints(ref target, ref buff, target.rect.obj.transform.position);
+        Debug.Log($"Buff {value} points to {target.piece_type}");
     }
 }
