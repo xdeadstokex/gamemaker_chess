@@ -7,6 +7,8 @@ TagManager:
   - MovePlate
   - Chessman
   - WinnerText
+  - SpawningCard
+  - Board
   layers:
   - Default
   - TransparentFX
