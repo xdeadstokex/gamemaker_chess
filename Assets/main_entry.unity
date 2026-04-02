@@ -1697,6 +1697,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   chesspiece: {fileID: 0}
+  movePlatePrefab: {fileID: 0}
   playerBlack:
   - {fileID: 0}
   - {fileID: 0}
@@ -1731,8 +1732,38 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
+  move_plate_list: []
   gameOver: 0
-  currentPlayer: white
+  current_player_color: 0
+  wp_pawn: {fileID: 0}
+  wp_rook: {fileID: 0}
+  wp_knight: {fileID: 0}
+  wp_bishop: {fileID: 0}
+  wp_queen: {fileID: 0}
+  wp_king: {fileID: 0}
+  bp_pawn: {fileID: 0}
+  bp_rook: {fileID: 0}
+  bp_knight: {fileID: 0}
+  bp_bishop: {fileID: 0}
+  bp_queen: {fileID: 0}
+  bp_king: {fileID: 0}
+  wp_e_rook: {fileID: 0}
+  wp_e_knight: {fileID: 0}
+  wp_e_bishop: {fileID: 0}
+  wp_e_queen: {fileID: 0}
+  wp_e_king: {fileID: 0}
+  wp_e_pawn_rook: {fileID: 0}
+  wp_e_pawn_knight: {fileID: 0}
+  wp_e_pawn_bishop: {fileID: 0}
+  bp_e_rook: {fileID: 0}
+  bp_e_knight: {fileID: 0}
+  bp_e_bishop: {fileID: 0}
+  bp_e_queen: {fileID: 0}
+  bp_e_king: {fileID: 0}
+  bp_e_pawn_rook: {fileID: 0}
+  bp_e_pawn_knight: {fileID: 0}
+  bp_e_pawn_bishop: {fileID: 0}
+  mp_normal: {fileID: 0}
   audioSource: {fileID: 903329232}
   moveSound: {fileID: 8300000, guid: 266c44e1c47ca8f44893ed02df9cab69, type: 3}
   captureSound: {fileID: 8300000, guid: 584405cb601b9774ca469a080e56a564, type: 3}
@@ -2516,6 +2547,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1239710108}
   - component: {fileID: 1239710107}
+  - component: {fileID: 1239710109}
   m_Layer: 0
   m_Name: 01_data
   m_TagString: Untagged
@@ -2536,6 +2568,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   chesspiece: {fileID: 3292204990855882392, guid: e52309b5921b88b4eafb22110edc4a64, type: 3}
+  movePlatePrefab: {fileID: 4721859855820930813, guid: 0313ca181e4352d4194a74442ed6f0d4, type: 3}
   playerBlack:
   - {fileID: 0}
   - {fileID: 0}
@@ -2570,15 +2603,45 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
+  move_plate_list: []
   gameOver: 0
-  currentPlayer: white
-  audioSource: {fileID: 0}
-  moveSound: {fileID: 0}
-  captureSound: {fileID: 0}
-  checkSound: {fileID: 0}
-  startSound: {fileID: 0}
-  endSound: {fileID: 0}
-  timeLess: {fileID: 0}
+  current_player_color: 0
+  wp_pawn: {fileID: 5580225292014371162, guid: cba27f19f032eee4b80440758862166c, type: 3}
+  wp_rook: {fileID: -8948728166497563328, guid: 71fa6a2744ecd5448be885547701a841, type: 3}
+  wp_knight: {fileID: 8769669200613306614, guid: a5324d9f15327f04f83e29ef49c8ac27, type: 3}
+  wp_bishop: {fileID: 7560534232159598683, guid: c4020620204bf1f408f5595064c4d6e6, type: 3}
+  wp_queen: {fileID: 7270707491364550308, guid: 92379d38b184d58498d4decc67141211, type: 3}
+  wp_king: {fileID: -3792998861040722889, guid: e2893edc5b99e7b479eb77b816d38151, type: 3}
+  bp_pawn: {fileID: -4341603147912474925, guid: c76f868ce002ed54ea179e7d38cea122, type: 3}
+  bp_rook: {fileID: -7587791273309554880, guid: aa461b58eedc4d94c9de4011de5f7ff6, type: 3}
+  bp_knight: {fileID: -334450713805299198, guid: d999107dc876ecd44a9fa6cb1e3810cc, type: 3}
+  bp_bishop: {fileID: -6414592721767173361, guid: 4483e56e144643b4e901e36637634990, type: 3}
+  bp_queen: {fileID: -2628853326628446179, guid: 498243a66034ab34db6c0ffb47823eb1, type: 3}
+  bp_king: {fileID: -641104846605737351, guid: 50b324b1246ad6a4dacb356a5f08ddaf, type: 3}
+  wp_e_rook: {fileID: 7066076105787869042, guid: 5037163d5db4733429000309b16382d6, type: 3}
+  wp_e_knight: {fileID: -508950367483047796, guid: be4ab96d2c6135945ab138e606a9b806, type: 3}
+  wp_e_bishop: {fileID: -55767092894854732, guid: 04674cf6970d7a740ab15583d8b9ad7c, type: 3}
+  wp_e_queen: {fileID: 7127983344833431581, guid: 85b32a69d4d0a4145a2cd683ccd0da84, type: 3}
+  wp_e_king: {fileID: -3581966908914899875, guid: 79188ec0870d904489c6a859d253fdf5, type: 3}
+  wp_e_pawn_rook: {fileID: 5223401505290445284, guid: f501bee6c8abfd340a5b3f0d710256a5, type: 3}
+  wp_e_pawn_knight: {fileID: 3307824522922170136, guid: 0a3902c51ce6899469e33777cba66d67, type: 3}
+  wp_e_pawn_bishop: {fileID: -545874090106461107, guid: e5af85553b67d904780ccb6f2c7c05dd, type: 3}
+  bp_e_rook: {fileID: -3293129491534371161, guid: 25648415e7cbe254e94c7c1400c50a2c, type: 3}
+  bp_e_knight: {fileID: 7448040370718626997, guid: 4a1a704be09dca246b2e8effeb5e5af7, type: 3}
+  bp_e_bishop: {fileID: -4531309202314977159, guid: 1f8416ccb9526ba46b1e45f934b3704c, type: 3}
+  bp_e_queen: {fileID: 987628164968182631, guid: 2e296e6f99517c0958cb0c454cce274f, type: 3}
+  bp_e_king: {fileID: -4589850335571620270, guid: d052ced392d9f584f965309b658f9426, type: 3}
+  bp_e_pawn_rook: {fileID: -705458621286082977, guid: bc4262fc57ad68741b7d0b81cf018ae8, type: 3}
+  bp_e_pawn_knight: {fileID: -5748060717870506092, guid: 6b772d900c03eef498713d0950959b5b, type: 3}
+  bp_e_pawn_bishop: {fileID: 2417290649967731324, guid: 6e2f157e13f042047b2b86fb3810c569, type: 3}
+  mp_normal: {fileID: -1642050057519057660, guid: e173589c72f9aad418c543d2e790db5d, type: 3}
+  audioSource: {fileID: 1239710109}
+  moveSound: {fileID: 8300000, guid: 266c44e1c47ca8f44893ed02df9cab69, type: 3}
+  captureSound: {fileID: 8300000, guid: 584405cb601b9774ca469a080e56a564, type: 3}
+  checkSound: {fileID: 8300000, guid: 38a11204485fd994ba67fb2b2d921fb0, type: 3}
+  startSound: {fileID: 8300000, guid: c3774de02d88a2840bf7b3672546b812, type: 3}
+  endSound: {fileID: 8300000, guid: 8b43868e6f5a0704cb3e13eaf8976a6c, type: 3}
+  timeLess: {fileID: 8300000, guid: 98d41c6a4a5e4264aa7597930c2043a1, type: 3}
   allCards: []
   whiteHand: []
   blackHand: []
@@ -2716,8 +2779,107 @@ RectTransform:
   m_PrefabInstance: {fileID: 281030537}
   m_PrefabAsset: {fileID: 0}
 --- !u!1 &1293689980
-GameObject:
+=======
+--- !u!82 &1239710109
+AudioSource:
   m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1239710106}
+  m_Enabled: 1
+  serializedVersion: 4
+  OutputAudioMixerGroup: {fileID: 0}
+  m_audioClip: {fileID: 0}
+  m_Resource: {fileID: 0}
+  m_PlayOnAwake: 1
+  m_Volume: 1
+  m_Pitch: 1
+  Loop: 0
+  Mute: 0
+  Spatialize: 0
+  SpatializePostEffects: 0
+  Priority: 128
+  DopplerLevel: 1
+  MinDistance: 1
+  MaxDistance: 500
+  Pan2D: 0
+  rolloffMode: 0
+  BypassEffects: 0
+  BypassListenerEffects: 0
+  BypassReverbZones: 0
+  rolloffCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  panLevelCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  spreadCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  reverbZoneMixCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+--- !u!1 &129328773
+GameObject
+  m_ObjetHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
