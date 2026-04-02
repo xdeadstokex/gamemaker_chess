@@ -4,33 +4,22 @@ public enum PieceType { Light, ELight, KHeavy, BHeavy, RHeavy, Core }
 
 public class Chessman : MonoBehaviour {
     public GameObject controller;
-    // movePlate prefab lives in Game now — removed from here
 
-    public int mouse_click = 0;    // 0 = no, 1 = pressed
-    public int mouse_unclick = 0;  // 0 = no, 1 = released
-    public int mouse_hover = 0;    // 0 = no, 1 = hovering
-    public int selected = 0;       // 0 = no, 1 = selected
-    public int hovered = 0;        // 0 = no, 1 = yes
+    public int mouse_click = 0;
+    public int mouse_unclick = 0;
+    public int mouse_hover = 0;
+    public int selected = 0;
+    public int hovered = 0;
 
     public int xBoard = -1;
     public int yBoard = -1;
-    public int player_color;       // 0 = white, 1 = black
+    public int player_color;
     public int score;
     public int score_to_envo;
     public PieceType unitType;
-    public int piece_type;         // 0=Pawn 1=Rook 2=Knight 3=Bishop 4=Queen 5=King
-    public int evolved = 0;        // 0 = normal, 1 = evolved
-    public int evolved_type = 0;   // 0=Knight 1=Bishop 2=Rook
-
-    // Sprites — normal
-    public Sprite black_queen, black_knight, black_bishop, black_king, black_rook, black_pawn;
-    public Sprite white_queen, white_knight, white_bishop, white_king, white_rook, white_pawn;
-
-    // Sprites — evolved
-    public Sprite e_black_queen, e_black_knight, e_black_bishop, e_black_king, e_black_rook;
-    public Sprite e_black_pawn_bishop, e_black_pawn_knight, e_black_pawn_rook;
-    public Sprite e_white_queen, e_white_knight, e_white_bishop, e_white_king, e_white_rook;
-    public Sprite e_white_pawn_bishop, e_white_pawn_knight, e_white_pawn_rook;
+    public int piece_type;      // 0=Pawn 1=Rook 2=Knight 3=Bishop 4=Queen 5=King
+    public int evolved = 0;     // 0=normal 1=evolved
+    public int evolved_type = 0;// 0=Knight 1=Bishop 2=Rook
 
     Game _game;
     SpriteRenderer _sr;
@@ -39,50 +28,56 @@ public class Chessman : MonoBehaviour {
     // LIFECYCLE
     // =========================================================================
 
-    void Start() { CacheComponents(); }
+    void Start() { cache_components(); }
 
-    void CacheComponents() {
+    void cache_components() {
         if (controller == null) controller = GameObject.FindGameObjectWithTag("GameController");
         _game = controller.GetComponent<Game>();
         _sr   = GetComponent<SpriteRenderer>();
     }
 
     public void Activate() {
-        CacheComponents();
+        cache_components();
         SetCoords();
         ApplyPieceData();
     }
 
     // =========================================================================
+    // SPRITE — assigned by Game via data sprites
+    // =========================================================================
+
+    public void set_sprite(Sprite s) { _sr.sprite = s; }
+
+    // =========================================================================
     // SETUP
     // =========================================================================
 
-    public int  GetScore()       => score;
-    public void SetScore(int v)  => score = v;
+    public int  GetScore()      => score;
+    public void SetScore(int v) => score = v;
 
-    void ApplyPieceData() {
+    public void ApplyPieceData() {
         bool w = (player_color == 0);
 
         if (evolved == 0) {
             switch (piece_type) {
-                case 4: _sr.sprite = w ? white_queen  : black_queen;  score = 9; score_to_envo = 15; unitType = PieceType.Core;   break;
-                case 5: _sr.sprite = w ? white_king   : black_king;   score = 0; score_to_envo = 7;  unitType = PieceType.Core;   break;
-                case 1: _sr.sprite = w ? white_rook   : black_rook;   score = 5; score_to_envo = 10; unitType = PieceType.RHeavy; break;
-                case 2: _sr.sprite = w ? white_knight : black_knight; score = 3; score_to_envo = 5;  unitType = PieceType.KHeavy; break;
-                case 3: _sr.sprite = w ? white_bishop : black_bishop; score = 3; score_to_envo = 5;  unitType = PieceType.BHeavy; break;
-                case 0: _sr.sprite = w ? white_pawn   : black_pawn;   score = 1; score_to_envo = 4;  unitType = PieceType.Light;  break;
+                case 4: set_sprite(w ? data.mem.wp_queen  : data.mem.bp_queen);  score = 9; score_to_envo = 15; unitType = PieceType.Core;   break;
+                case 5: set_sprite(w ? data.mem.wp_king   : data.mem.bp_king);   score = 0; score_to_envo = 7;  unitType = PieceType.Core;   break;
+                case 1: set_sprite(w ? data.mem.wp_rook   : data.mem.bp_rook);   score = 5; score_to_envo = 10; unitType = PieceType.RHeavy; break;
+                case 2: set_sprite(w ? data.mem.wp_knight : data.mem.bp_knight); score = 3; score_to_envo = 5;  unitType = PieceType.KHeavy; break;
+                case 3: set_sprite(w ? data.mem.wp_bishop : data.mem.bp_bishop); score = 3; score_to_envo = 5;  unitType = PieceType.BHeavy; break;
+                case 0: set_sprite(w ? data.mem.wp_pawn   : data.mem.bp_pawn);   score = 1; score_to_envo = 4;  unitType = PieceType.Light;  break;
             }
         } else {
             switch (piece_type) {
-                case 4: _sr.sprite = w ? e_white_queen  : e_black_queen;  unitType = PieceType.Core;   break;
-                case 5: _sr.sprite = w ? e_white_king   : e_black_king;   unitType = PieceType.Core;   break;
-                case 1: _sr.sprite = w ? e_white_rook   : e_black_rook;   unitType = PieceType.RHeavy; break;
-                case 2: _sr.sprite = w ? e_white_knight : e_black_knight; unitType = PieceType.KHeavy; break;
-                case 3: _sr.sprite = w ? e_white_bishop : e_black_bishop; unitType = PieceType.BHeavy; break;
+                case 4: set_sprite(w ? data.mem.wp_e_queen  : data.mem.bp_e_queen);  unitType = PieceType.Core;   break;
+                case 5: set_sprite(w ? data.mem.wp_e_king   : data.mem.bp_e_king);   unitType = PieceType.Core;   break;
+                case 1: set_sprite(w ? data.mem.wp_e_rook   : data.mem.bp_e_rook);   unitType = PieceType.RHeavy; break;
+                case 2: set_sprite(w ? data.mem.wp_e_knight : data.mem.bp_e_knight); unitType = PieceType.KHeavy; break;
+                case 3: set_sprite(w ? data.mem.wp_e_bishop : data.mem.bp_e_bishop); unitType = PieceType.BHeavy; break;
                 case 0:
-                    if      (evolved_type == 2) _sr.sprite = w ? e_white_pawn_rook   : e_black_pawn_rook;
-                    else if (evolved_type == 0) _sr.sprite = w ? e_white_pawn_knight : e_black_pawn_knight;
-                    else if (evolved_type == 1) _sr.sprite = w ? e_white_pawn_bishop : e_black_pawn_bishop;
+                    if      (evolved_type == 2) set_sprite(w ? data.mem.wp_e_pawn_rook   : data.mem.bp_e_pawn_rook);
+                    else if (evolved_type == 0) set_sprite(w ? data.mem.wp_e_pawn_knight : data.mem.bp_e_pawn_knight);
+                    else if (evolved_type == 1) set_sprite(w ? data.mem.wp_e_pawn_bishop : data.mem.bp_e_pawn_bishop);
                     unitType = PieceType.ELight;
                     break;
             }
@@ -100,16 +95,16 @@ public class Chessman : MonoBehaviour {
     }
 
     // =========================================================================
-    // INPUT — flags only, Game.Update() reads them
+    // INPUT
     // =========================================================================
 
-    void OnMouseEnter()      { mouse_hover = 1; }
-    void OnMouseExit()       { mouse_hover = 0; }
-    void OnMouseDown()       { mouse_click = 1; }
-    void OnMouseUp()         { mouse_unclick = 1; }
+    void OnMouseEnter() { mouse_hover = 1; }
+    void OnMouseExit()  { mouse_hover = 0; }
+    void OnMouseDown()  { mouse_click = 1; }
+    void OnMouseUp()    { mouse_unclick = 1; }
 
     // =========================================================================
-    // CAN MOVE TO — used by check detection, stays here
+    // CAN MOVE TO
     // =========================================================================
 
     public bool CanMoveTo(int tx, int ty) {
@@ -120,12 +115,12 @@ public class Chessman : MonoBehaviour {
 
         bool baseMove = false;
         switch (piece_type) {
-            case 0: baseMove = IsPawnMoveValid(tx, ty);                                    break;
-            case 1: baseMove = IsLineMoveValid(tx, ty);                                    break;
-            case 2: baseMove = IsKnightMoveValid(tx, ty);                                  break;
-            case 3: baseMove = IsDiagonalMoveValid(tx, ty);                                break;
-            case 4: baseMove = IsLineMoveValid(tx, ty) || IsDiagonalMoveValid(tx, ty);    break;
-            case 5: baseMove = IsKingMoveValid(tx, ty);                                    break;
+            case 0: baseMove = IsPawnMoveValid(tx, ty);                                 break;
+            case 1: baseMove = IsLineMoveValid(tx, ty);                                 break;
+            case 2: baseMove = IsKnightMoveValid(tx, ty);                               break;
+            case 3: baseMove = IsDiagonalMoveValid(tx, ty);                             break;
+            case 4: baseMove = IsLineMoveValid(tx, ty) || IsDiagonalMoveValid(tx, ty); break;
+            case 5: baseMove = IsKingMoveValid(tx, ty);                                 break;
         }
 
         if (evolved == 0) return baseMove;
@@ -218,7 +213,7 @@ public class Chessman : MonoBehaviour {
     void Evolve(Vector3 pos) {
         if (evolved == 1) return;
         evolved = 1;
-        Activate();
+        ApplyPieceData();
         Camera.main.GetComponent<CameraControl>().ZoomInTarget(pos, 1f);
         Debug.Log($"<color=green>{piece_type} HAS EVOLVED!</color>");
     }
@@ -226,7 +221,7 @@ public class Chessman : MonoBehaviour {
     void DeEvolve() {
         if (evolved == 0) return;
         evolved = 0;
-        Activate();
+        ApplyPieceData();
         Debug.Log($"<color=red>{piece_type} de-evolved!</color>");
     }
 
@@ -234,7 +229,7 @@ public class Chessman : MonoBehaviour {
         evolved = 1;
         unitType = PieceType.ELight;
         evolved_type = weapon == PieceType.KHeavy ? 0 : weapon == PieceType.BHeavy ? 1 : 2;
-        Activate();
+        ApplyPieceData();
         Camera.main.GetComponent<CameraControl>().ZoomInTarget(pos, 1f);
     }
 }
