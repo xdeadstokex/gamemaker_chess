@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 
 public class CameraControl : MonoBehaviour
@@ -15,7 +16,22 @@ public class CameraControl : MonoBehaviour
         defaultSize = cam.orthographicSize;
         defaultPos = transform.position; // Đây là vị trí bàn cờ chuẩn
     }
+    [ContextMenu("Chụp màn hình")]
+    public void TakeScreenshot()
+    {
+        // Tạo tên file dựa trên thời gian thực để không bị trùng (ví dụ: Screenshot_20260402_0930.png)
+        string timeStamp = System.DateTime.Now.ToString("yyyyMMdd_HHmmss");
+        string fileName = "Screenshot_" + timeStamp + ".png";
+        
+        // Đường dẫn lưu file (Trong Unity Editor sẽ lưu ở thư mục gốc Project)
+        // Trên máy tính sau khi build sẽ lưu cùng thư mục với file .exe
+        string fullPath = Path.Combine(Application.dataPath, fileName);
 
+        ScreenCapture.CaptureScreenshot(fileName);
+        
+        Debug.Log("<color=cyan>Đã chụp màn hình: </color>" + fileName);
+        // Lưu ý: CaptureScreenshot hoạt động bất đồng bộ, ảnh sẽ xuất hiện sau 1-2 khung hình.
+    }   
     public void ZoomInTarget(Vector3 targetPos, float duration)
     {
         if (!isZooming)
