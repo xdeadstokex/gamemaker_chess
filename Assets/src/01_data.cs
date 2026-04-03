@@ -6,35 +6,49 @@ public enum PieceType { Light, ELight, KHeavy, BHeavy, RHeavy, Core }
 
 public class data : MonoBehaviour {
     public static data mem;
+    // =========================================================================
+    // BOARD CELL
+    // =========================================================================
 
-    public struct MoveData {
-        public GameObject piece;
-        public int targetX;
-        public int targetY;
-        public int score;
+    public struct board_cell {
+        public int     valid;        // 0 = hole, 1 = usable
+        public int     has_piece;    // 0 = empty, 1 = occupied
+        public int     piece_color;
+        public int     piece_index;
+        public rect_2d tile;         // visual tile for this cell
+        public Sprite  tile_sprite;  // ref to light or dark tile sprite
     }
 
     // =========================================================================
-    // CHESS PIECE STRUCT
+    // CHESS PIECE
     // =========================================================================
 
     public struct chess_piece {
         public rect_2d   rect;
+
+        // flat sprite refs — point at global pool, no copy
+        public Sprite    normal_sprite;
+        public Sprite    evo_sprite0;
+        public Sprite    evo_sprite1;
+        public Sprite    evo_sprite2;
+
         public int       x;
         public int       y;
         public int       player_color;
         public int       score;
         public int       score_to_envo;
         public PieceType unitType;
-        public int       piece_type;      // 0=Pawn 1=Rook 2=Knight 3=Bishop 4=Queen 5=King
-        public int       evolved;         // 0=normal 1=evolved
-        public int       evolved_type;    // 0=Knight 1=Bishop 2=Rook
+        public int       piece_type;    // 0=Pawn 1=Rook 2=Knight 3=Bishop 4=Queen 5=King
+        public int       evolved;       // 0=normal 1=evolved
+        public int       evolved_type;  // 0=Knight 1=Bishop 2=Rook , pawn only
         public int       selected;
         public int       hovered;
+        public float     hover_sprite_scale;
+        public float     normal_sprite_scale;
     }
 
     // =========================================================================
-    // MOVE PLATE STRUCT
+    // MOVE PLATE
     // =========================================================================
 
     public struct move_plate {
@@ -42,68 +56,113 @@ public class data : MonoBehaviour {
         public bool    attack;
         public int     mat_x;
         public int     mat_y;
-        public int     piece_index;  // index into white_pieces or black_pieces
-        public int     piece_color;  // 0=white 1=black
+        public int     piece_index;
+        public int     piece_color;
+        public float   hover_sprite_scale;
+        public float   normal_sprite_scale;
     }
 
     // =========================================================================
-    // BOARD DATA
+    // ARMY DATA — pure data
     // =========================================================================
 
-    public GameObject chesspiece;
-    public GameObject movePlatePrefab;  // kept, remove when deps clear
+    public class army_data {
+        public int           color;
+        public chess_piece[] troop_list  = new chess_piece[16];
+        public int           troop_count = 0;
 
-    // old — keep until all deps gone
-    public GameObject[,] positions    = new GameObject[8, 8];
-    public GameObject[]  playerBlack  = new GameObject[16];
-    public GameObject[]  playerWhite  = new GameObject[16];
+        public army_data(int color) { this.color = color; }
+    }
 
-    // new
-    public chess_piece[,] board       = new chess_piece[8, 8];
-    public chess_piece[]  white_pieces = new chess_piece[16];
-    public chess_piece[]  black_pieces = new chess_piece[16];
+    // =========================================================================
+    // BOARD
+    // =========================================================================
 
-    public List<move_plate> move_plate_list = new List<move_plate>(); // switched to struct list
+    public int          board_w;
+    public int          board_h;
+    public board_cell[] board;   // flat, access: board[x + y * board_w]
 
-    public bool gameOver = false;
-    public int current_player_color = 0;  // 0=white 1=black
-	public int selected_a_piece = 0; // use to check whether any piece is selected
+    public army_data white_army;
+    public army_data black_army;
 
-    // --- sprites normal ---
-    public Sprite wp_pawn,   wp_rook,   wp_knight,   wp_bishop,   wp_queen,   wp_king;
-    public Sprite bp_pawn,   bp_rook,   bp_knight,   bp_bishop,   bp_queen,   bp_king;
+    public army_data get_army(int color)  => color == 0 ? white_army : black_army;
+    public army_data get_enemy(int color) => color == 0 ? black_army : white_army;
 
-    // --- sprites evolved ---
-    public Sprite wp_e_rook,   wp_e_knight,   wp_e_bishop,   wp_e_queen,   wp_e_king;
-    public Sprite wp_e_pawn_rook, wp_e_pawn_knight, wp_e_pawn_bishop;
-    public Sprite bp_e_rook,   bp_e_knight,   bp_e_bishop,   bp_e_queen,   bp_e_king;
-    public Sprite bp_e_pawn_rook, bp_e_pawn_knight, bp_e_pawn_bishop;
+    // =========================================================================
+    // GAME STATE
+    // =========================================================================
 
-    // --- move plate sprites ---
-    public Sprite mp_normal;
-    public Sprite mp_attack;  // add this in Inspector for red attack plate sprite
+    public List<move_plate> move_plate_list     = new List<move_plate>();
+    public bool             gameOver            = false;
+    public int              current_player_color = 0;
+    public int              selected_a_piece    = 0;
 
-    // --- audio ---
-    public AudioSource audioSource;
-    public AudioClip moveSound;
-    public AudioClip captureSound;
-    public AudioClip checkSound;
-    public AudioClip startSound;
-    public AudioClip endSound;
-    public AudioClip timeLess;
-
-    // --- cards ---
-    public List<Card> allCards;
-    public List<Card> whiteHand = new List<Card>();
-    public List<Card> blackHand = new List<Card>();
-    public GameObject cardPrefab;
-
-    //----AI data----
+    // =========================================================================
+    // AI DATA
+    // =========================================================================
     public struct AIMove {
         public int piece_index;
         public int targetX;
         public int targetY;
         public bool isAttack;
     }
-    void Awake() { mem = this; }
+    public bool isVsAI = true;
+    public int aiColor = 1;
+    public bool isAIThinking = false;
+
+    // =========================================================================
+    // GLOBAL SPRITE POOL — Inspector entry point
+    // =========================================================================
+
+    // board tiles — assign your RPG tile sprites here
+    public Sprite board_tile0;   // light square
+    public Sprite board_tile1;    // dark square
+    public Sprite board_tile2;   // light square
+    public Sprite board_tile3;    // dark square
+    // normal pieces
+    public Sprite wp_pawn,   wp_rook,   wp_knight,   wp_bishop,   wp_queen,   wp_king;
+    public Sprite bp_pawn,   bp_rook,   bp_knight,   bp_bishop,   bp_queen,   bp_king;
+
+    // evolved pieces
+    public Sprite wp_e_rook,   wp_e_knight,   wp_e_bishop,   wp_e_queen,   wp_e_king;
+    public Sprite bp_e_rook,   bp_e_knight,   bp_e_bishop,   bp_e_queen,   bp_e_king;
+
+    // evolved pawn variants
+    public Sprite wp_e_pawn_knight, wp_e_pawn_bishop, wp_e_pawn_rook;
+    public Sprite bp_e_pawn_knight, bp_e_pawn_bishop, bp_e_pawn_rook;
+
+    // move plates
+    public Sprite mp_normal;
+    public Sprite mp_attack;
+
+    // =========================================================================
+    // AUDIO
+    // =========================================================================
+
+    public AudioSource audioSource;
+    public AudioClip   moveSound;
+    public AudioClip   captureSound;
+    public AudioClip   checkSound;
+    public AudioClip   startSound;
+    public AudioClip   endSound;
+    public AudioClip   timeLess;
+
+    // =========================================================================
+    // CARDS
+    // =========================================================================
+
+    public List<Card> allCards;
+    public List<Card> whiteHand = new List<Card>();
+    public List<Card> blackHand = new List<Card>();
+    public GameObject cardPrefab;
+
+    // =========================================================================
+    // INIT
+    // =========================================================================
+
+    void Awake() {
+        mem        = this;
+        white_army = new army_data(0);
+        black_army = new army_data(1);
+    }
 }
