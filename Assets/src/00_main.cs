@@ -123,9 +123,43 @@ public class Game : MonoBehaviour {
     }
 
     void ClearCell(int x, int y) {
-        Cell(x, y).has_piece = 0;
+        // ref data.board_cell cell = ref Cell(x, y);
+        // ref data.chess_piece cp = ref PieceAt(x, y);
+        // // Nếu là DQueen (piece_type = 6) thì thực hiện hàm A()
+        // if (cp.piece_type == 6) {
+        //     DQueenSkill(ref cp, x, y);
+
+        // }
+        // else
+        // {
+            Cell(x, y).has_piece = 0;
+        // }
+    }
+    void DQueenSkill(ref data.chess_piece dQueen, int targetX, int targetY) {
+        // 1. Xóa vị trí cũ của DQueen trên board
+        Cell(dQueen.x, dQueen.y).has_piece = 0;
+
+        // 2. Cập nhật tọa độ mới (vị trí kẻ địch vừa đứng)
+        dQueen.x = targetX;
+        dQueen.y = targetY;
+
+        // 3. Cập nhật vị trí hiển thị (Sprite)
+        dQueen.rect.move_to_board(targetX, targetY, -1f);
+
+        // 4. Ghi đè DQueen vào ô mới trên mảng Board
+        SetCell(targetX, targetY, dQueen.player_color, FindPieceIndex(ref dQueen));
+        
+        Debug.Log("<color=purple>DQueen phản đòn và chiếm giữ vị trí của kẻ địch!</color>");
     }
 
+    // Helper để tìm index chính xác của quân cờ trong danh sách quân
+    int FindPieceIndex(ref data.chess_piece cp) {
+        data.army_data army = data.mem.get_army(cp.player_color);
+        for (int i = 0; i < army.troop_count; i++) {
+            if (System.Object.ReferenceEquals(army.troop_list[i].rect, cp.rect)) return i;
+        }
+        return -1;
+    }
     // =========================================================================
     // PIECE INPUT
     // =========================================================================
@@ -376,6 +410,25 @@ public class Game : MonoBehaviour {
         data.army_data       enemy  = data.mem.get_army(cell.piece_color);
         ref data.chess_piece target = ref enemy.troop_list[cell.piece_index];
 
+        //dqueen start
+        if (target.piece_type == 6) {
+            // 1. Lưu lại vị trí cũ của kẻ tấn công
+            int oldAttackerX = attacker.x;
+            int oldAttackerY = attacker.y;
+
+            // 2. Tiêu diệt kẻ tấn công (Phản đòn)
+            attacker.rect.self_destroy();
+            attacker.rect = null;
+            // Xóa kẻ tấn công khỏi ô cờ cũ của nó
+            Cell(oldAttackerX, oldAttackerY).has_piece = 0; 
+
+            // 3. Kích hoạt kỹ năng dịch chuyển của DQueen
+            DQueenSkill(ref target, oldAttackerX, oldAttackerY);
+            
+            PlaySound(data.mem.captureSound);
+            return; // Kết thúc hàm sớm, không xóa DQueen
+        }
+        //dqueen end
         AbsorbPoints(ref attacker, ref target, pos);
         PlaySound(data.mem.captureSound);
 
@@ -410,15 +463,16 @@ public class Game : MonoBehaviour {
         cp.y                   = y;
         cp.piece_type          = piece_type;
         cp.player_color        = army.color;
-        cp.score               = 0;
+        cp.score               = 1;
         cp.score_to_envo       = 0;
-        cp.unitType            = PieceType.Light;
+        cp.unitType            = PieceType.Light; // =_= ...
         cp.evolved             = 0;
         cp.evolved_type        = 0;
         cp.selected            = 0;
         cp.hovered             = 0;
         cp.hover_sprite_scale  = 1.2f;
         cp.normal_sprite_scale = 0.8f;
+        cp.shield              = 0;
 
         switch (piece_type) {
             case 0: cp.normal_sprite = w ? data.mem.wp_pawn   : data.mem.bp_pawn;
@@ -441,6 +495,8 @@ public class Game : MonoBehaviour {
             case 5: cp.normal_sprite = w ? data.mem.wp_king   : data.mem.bp_king;
                     cp.evo_sprite0   = w ? data.mem.wp_e_king  : data.mem.bp_e_king;
                     cp.evo_sprite1   = null; cp.evo_sprite2 = null; break;
+            case 6: cp.normal_sprite = w ? data.mem.wp_e_dqueen : data.mem.bp_e_dqueen;
+                    cp.evo_sprite0   = null; cp.evo_sprite1 = null; cp.evo_sprite2 = null; break;
             default:cp.normal_sprite = null;
                     cp.evo_sprite0   = null;
                     cp.evo_sprite1   = null;
@@ -459,11 +515,12 @@ public class Game : MonoBehaviour {
             cp.rect.set_sprite(cp.normal_sprite);
             switch (cp.piece_type) {
                 case 4: cp.score = 9; cp.score_to_envo = 15; cp.unitType = PieceType.Core;   break;
-                case 5: cp.score = 0; cp.score_to_envo = 7;  cp.unitType = PieceType.Core;   break;
-                case 1: cp.score = 5; cp.score_to_envo = 10; cp.unitType = PieceType.RHeavy; break;
+                case 5: cp.score = 0; cp.score_to_envo = 5;  cp.unitType = PieceType.Core;   break;
+                case 1: cp.score = 5; cp.score_to_envo = 7; cp.unitType = PieceType.RHeavy; break;
                 case 2: cp.score = 3; cp.score_to_envo = 5;  cp.unitType = PieceType.KHeavy; break;
                 case 3: cp.score = 3; cp.score_to_envo = 5;  cp.unitType = PieceType.BHeavy; break;
                 case 0: cp.score = 1; cp.score_to_envo = 4;  cp.unitType = PieceType.Light;  break;
+                case 6: cp.score = 0; cp.score_to_envo = 0;  cp.unitType = PieceType.Core;   break;
             }
         } else {
             Sprite evo = cp.piece_type == 0
@@ -477,6 +534,7 @@ public class Game : MonoBehaviour {
                 case 2: cp.unitType = PieceType.KHeavy; break;
                 case 3: cp.unitType = PieceType.BHeavy; break;
                 case 0: cp.unitType = PieceType.ELight; break;
+                case 6: cp.unitType = PieceType.Core; cp.shield = 4;   break; //added shield to dqueen
             }
         }
         cp.rect.fit_collider_to_sprite(cp.rect.sprite);
@@ -563,13 +621,19 @@ public class Game : MonoBehaviour {
     // =========================================================================
 
     public void AbsorbPoints(ref data.chess_piece cp, ref data.chess_piece victim, Vector3 pos) {
+        if(cp.piece_type == 5) cp.score = 0; // king thường ko nhận điểm
         if (cp.evolved == 1) return;
 
         cp.score += victim.score;
-        if (cp.score < 0) cp.score = 0;
-
+        if (cp.score < 0) cp.score = 1;
+        if (cp.piece_type == 7 || cp.score >= cp.score_to_envo) //king có súng nhận điểm tích đạn
+        {
+            cp.score = 0; // cap score at evo threshold for king to prevent overleveling
+            // thêm đạn cho súng của vua
+            return;
+        } 
         if (cp.unitType == PieceType.Light) {
-            bool inEnemyHalf = (cp.player_color == 0) ? cp.y >= 4 : cp.y <= 3;
+            bool inEnemyHalf = (cp.player_color == 0) ? cp.y >= 3 : cp.y <= 4; // not half enough but whatever
             bool ateHeavy    = victim.unitType == PieceType.KHeavy || victim.unitType == PieceType.BHeavy || victim.unitType == PieceType.RHeavy;
             if (inEnemyHalf && ateHeavy) { EvolveWithWeapon(ref cp, victim.unitType, pos); return; }
         }
@@ -588,7 +652,10 @@ public class Game : MonoBehaviour {
     void EvolveWithWeapon(ref data.chess_piece cp, PieceType weapon, Vector3 pos) {
         cp.evolved      = 1;
         cp.unitType     = PieceType.ELight;
-        cp.evolved_type = weapon == PieceType.KHeavy ? 0 : weapon == PieceType.BHeavy ? 1 : 2;
+        // cp.evolved_type = weapon == PieceType.KHeavy ? 0 : weapon == PieceType.BHeavy ? 1 : 2;
+        if (weapon == PieceType.KHeavy) cp.evolved_type = 0;
+        else if (weapon == PieceType.BHeavy) cp.evolved_type = 1;
+        else if (weapon == PieceType.RHeavy) cp.evolved_type = 2;
         ApplyPieceData(ref cp);
         Camera.main.GetComponent<CameraControl>().ZoomInTarget(pos, 1f);
     }
@@ -626,6 +693,79 @@ public class Game : MonoBehaviour {
         Debug.LogError("King not found for color: " + color);
         return -1;
     }
+    // =========================================================================
+    // CARD
+    // =========================================================================
+
+    public void UseCardOnBoard(data.Card card, Vector2 screenPos) {
+        // 1. Chuyển tọa độ màn hình (UI) sang tọa độ thế giới (World Space)
+        Vector3 worldPos = Camera.main.ScreenToWorldPoint(new Vector3(screenPos.x, screenPos.y, 10f));
+
+        // 2. Chuyển đổi tọa độ thế giới sang chỉ số ô cờ (x, y)
+        // Dựa trên hàm BoardToWorld gốc: v * 1.28f - 4.48f
+        int tx = Mathf.RoundToInt((worldPos.x + 4.48f) / 1.28f);
+        int ty = Mathf.RoundToInt((worldPos.y + 4.48f) / 1.28f);
+
+        // 3. Kiểm tra xem ô đó có nằm trên bàn cờ và có quân cờ không
+        if (OnBoard(tx, ty)) {
+            ref data.board_cell cell = ref Cell(tx, ty);
+            if (cell.has_piece == 1) {
+                // Lấy tham chiếu quân cờ mục tiêu
+                data.army_data army = data.mem.get_army(cell.piece_color);
+                ref data.chess_piece target = ref army.troop_list[cell.piece_index];
+
+                // 4. Thực thi logic thẻ bài trực tiếp
+                ApplyCardEffect(card, ref target, worldPos);
+                
+                // Xóa MovePlates nếu đang hiện để tránh lỗi hiển thị
+                ClearMovePlates();
+            }
+        }
+    }
+
+    private void ApplyCardEffect(data.Card card, ref data.chess_piece target, Vector3 effectPos) {
+        switch (card.type) {
+            case CardType.Buff:
+                target.score += card.value;
+                Debug.Log($"{target.piece_type} được Buff! Score: {target.score}");
+                // Kiểm tra tiến hóa sau khi tăng điểm
+                if (target.score >= target.score_to_envo) Evolve(ref target, effectPos);
+                break;
+
+            case CardType.Debuff:
+                target.score -= card.value;
+                if (target.score < 0) target.score = 1;
+                break;
+
+            case CardType.GodQueen:
+                // Logic đặc biệt: Hồi sinh hoặc nâng cấp lên Queen
+                if (target.piece_type != 5) { // Không áp dụng lên King
+                    target.piece_type = 4;
+                    target.evolved = 1;
+                    ApplyPieceData(ref target);
+                }
+                break;
+            case CardType.DemonQueen:
+                if (target.piece_type == 4) { // Không áp dụng lên King
+                    target.piece_type = 6;
+                    target.evolved = 1;
+                    ApplyPieceData(ref target);
+                }
+                break;
+            case CardType.Item:
+                if(target.piece_type == 5)
+                {
+                    target.piece_type = 7; //king cầm súng
+                    target.evolved = 1;
+                    ApplyPieceData(ref target);
+                }
+                break;
+            case CardType.Event:
+                break;
+        }
+        PlaySound(data.mem.startSound); // Âm thanh hiệu ứng
+    }
+
 
     // =========================================================================
     // AI
