@@ -1,53 +1,38 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using System.Data.Common;
+﻿using System.Collections.Generic;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class Game : MonoBehaviour {
-    //---AI variable---
-    public bool isVsAI = true;
-    public int aiColor = 1;
-    private bool isAIThinking = false;
-    data dataScript;
-
     // =========================================================================
     // LIFECYCLE
     // =========================================================================
 
-    public void Awake() {
-        dataScript = GameObject.FindGameObjectWithTag("GameController").GetComponent<data>();
-    }
-
     public void Start() {
-        data.mem.white_pieces = new data.chess_piece[] {
-            CreatePiece(0, 0, 1, 0), // Rook
-            CreatePiece(1, 0, 2, 0), // Knight
-            CreatePiece(2, 0, 3, 0), // Bishop
-            CreatePiece(3, 0, 4, 0), // Queen
-            CreatePiece(4, 0, 5, 0), // King
-            CreatePiece(5, 0, 3, 0), // Bishop
-            CreatePiece(6, 0, 2, 0), // Knight
-            CreatePiece(7, 0, 1, 0), // Rook
-            CreatePiece(0, 1, 0, 0), CreatePiece(1, 1, 0, 0), CreatePiece(2, 1, 0, 0), CreatePiece(3, 1, 0, 0),
-            CreatePiece(4, 1, 0, 0), CreatePiece(5, 1, 0, 0), CreatePiece(6, 1, 0, 0), CreatePiece(7, 1, 0, 0)
-        };
+        InitBoard(16, 16);
+		for(int y = 3; y < 7; y += 1){
+		for(int x = 10; x < 14; x += 1){
+		    SetCellInvalid(x, y);
+		}
+		}
 
-        data.mem.black_pieces = new data.chess_piece[] {
-            CreatePiece(0, 7, 1, 1), // Rook
-            CreatePiece(1, 7, 2, 1), // Knight
-            CreatePiece(2, 7, 3, 1), // Bishop
-            CreatePiece(3, 7, 4, 1), // Queen
-            CreatePiece(4, 7, 5, 1), // King
-            CreatePiece(5, 7, 3, 1), // Bishop
-            CreatePiece(6, 7, 2, 1), // Knight
-            CreatePiece(7, 7, 1, 1), // Rook
-            CreatePiece(0, 6, 0, 1), CreatePiece(1, 6, 0, 1), CreatePiece(2, 6, 0, 1), CreatePiece(3, 6, 0, 1),
-            CreatePiece(4, 6, 0, 1), CreatePiece(5, 6, 0, 1), CreatePiece(6, 6, 0, 1), CreatePiece(7, 6, 0, 1)
-        };
+        data.army_data w = data.mem.white_army;
+        data.army_data b = data.mem.black_army;
 
-        PlaySound(dataScript.startSound);
+        // white back row
+        CreatePiece(0,0, 1, w); CreatePiece(1,0, 2, w); CreatePiece(2,0, 3, w);
+        CreatePiece(3,0, 4, w); CreatePiece(4,0, 5, w);
+        CreatePiece(5,0, 3, w); CreatePiece(6,0, 2, w); CreatePiece(7,0, 1, w);
+        for (int i = 0; i < 8; i++) CreatePiece(i, 1, 0, w);
+
+        // black back row
+        CreatePiece(0,7, 1, b); CreatePiece(1,7, 2, b); CreatePiece(2,7, 3, b);
+        CreatePiece(3,7, 4, b); CreatePiece(4,7, 5, b);
+        CreatePiece(5,7, 3, b); CreatePiece(6,7, 2, b); CreatePiece(7,7, 1, b);
+        for (int i = 0; i < 8; i++) CreatePiece(i, 6, 0, b);
+
+        PlaySound(data.mem.startSound);
     }
 
     public void Update() {
@@ -56,13 +41,10 @@ public class Game : MonoBehaviour {
             SceneManager.LoadScene("Game");
             return;
         }
-        
-        //random ai turn
-        if(isVsAI && data.mem.current_player_color == aiColor)
-        {
-            if (!isAIThinking)
-            {
-                StartCoroutine(PlayRandomAI());
+
+        if (data.mem.isVsAI && data.mem.current_player_color == data.mem.aiColor) {
+            if (!data.mem.isAIThinking) {
+                StartCoroutine(PlayAITurn());
             }
             return;
         }
@@ -72,136 +54,177 @@ public class Game : MonoBehaviour {
     }
 
     // =========================================================================
+    // BOARD INIT
+    // =========================================================================
+
+    void InitBoard(int w, int h) {
+        data.mem.board_w = w;
+        data.mem.board_h = h;
+        data.mem.board   = new data.board_cell[w * h];
+
+        for (int y = 0; y < h; y++) {
+            for (int x = 0; x < w; x++) {
+                ref data.board_cell cell = ref Cell(x, y);
+                cell.valid     = 1;
+                cell.has_piece = 0;
+
+                // assign tile sprite — checkerboard pattern
+				if(y < w / 2){
+                bool light     = (x + y) % 2 == 0;
+                cell.tile_sprite = light ? data.mem.board_tile0 : data.mem.board_tile1;
+				}
+				else{
+                bool light     = (x + y) % 2 == 0;
+                cell.tile_sprite = light ? data.mem.board_tile2 : data.mem.board_tile3;
+				}
+                // spawn tile rect — z=0, behind pieces at z=-1
+                cell.tile = rect_2d.create(BoardToWorld(x), BoardToWorld(y), 0f);
+                cell.tile.set_sprite(cell.tile_sprite);
+                cell.tile.set_sprite_scale(1f, 1f);
+                // tile has no collider interaction needed — disable it
+                cell.tile.col.enabled = false;
+            }
+        }
+    }
+
+    // punch a hole — marks cell invalid and destroys its tile
+    void SetCellInvalid(int x, int y) {
+        ref data.board_cell cell = ref Cell(x, y);
+        cell.valid = 0;
+        if (cell.tile != null) { cell.tile.self_destroy(); cell.tile = null; }
+    }
+
+    // =========================================================================
+    // BOARD HELPERS
+    // =========================================================================
+
+    bool OnBoard(int x, int y) {
+        if (x < 0 || y < 0 || x >= data.mem.board_w || y >= data.mem.board_h) return false;
+        return Cell(x, y).valid == 1;
+    }
+
+    ref data.board_cell Cell(int x, int y) {
+        return ref data.mem.board[x + y * data.mem.board_w];
+    }
+
+    data.chess_piece _empty_piece;
+
+    ref data.chess_piece PieceAt(int x, int y) {
+        ref data.board_cell cell = ref Cell(x, y);
+        if (cell.has_piece == 0) return ref _empty_piece;
+        return ref data.mem.get_army(cell.piece_color).troop_list[cell.piece_index];
+    }
+
+    void SetCell(int x, int y, int color, int idx) {
+        ref data.board_cell cell = ref Cell(x, y);
+        cell.has_piece   = 1;
+        cell.piece_color = color;
+        cell.piece_index = idx;
+    }
+
+    void ClearCell(int x, int y) {
+        Cell(x, y).has_piece = 0;
+    }
+
+    // =========================================================================
     // PIECE INPUT
     // =========================================================================
 
-	void HandlePieceInput() {
-		int hovered_i = -1, hovered_color = -1;
+    void HandlePieceInput() {
+        int hovered_i     = -1;
+        int hovered_color = -1;
 
-		for (int color = 0; color <= 1; color++) {
-			data.chess_piece[] arr = (color == 0) ? data.mem.white_pieces : data.mem.black_pieces;
+        for (int color = 0; color <= 1; color++) {
+            data.army_data army = data.mem.get_army(color);
 
-			for (int i = 0; i < arr.Length; i++) {
-				ref data.chess_piece cp = ref arr[i];
-				if (cp.rect == null) continue;
+            for (int i = 0; i < army.troop_count; i++) {
+                ref data.chess_piece cp = ref army.troop_list[i];
+                if (cp.rect == null) continue;
 
-				bool isCurrent = cp.player_color == data.mem.current_player_color;
+                bool isCurrent = cp.player_color == data.mem.current_player_color;
 
-				// --- SELECT / UNSELECT ---
-				if (cp.rect.mouse_unclick == 1) {
-					cp.rect.mouse_unclick = 0;
+                if (cp.rect.mouse_unclick == 1) {
+                    cp.rect.mouse_unclick = 0;
 
-					if (isCurrent) {
-						if (cp.selected == 1) {
-							// unselect same piece
-							cp.selected = 0;
-							data.mem.selected_a_piece = 0;
-							ClearMovePlates();
-						} else {
-							// unselect ALL first
-							for (int c2 = 0; c2 <= 1; c2++) {
-								data.chess_piece[] arr2 = (c2 == 0) ? data.mem.white_pieces : data.mem.black_pieces;
-								for (int j = 0; j < arr2.Length; j++) {
-									if (arr2[j].rect == null) continue;
-									arr2[j].selected = 0;
-									arr2[j].hovered = 0;
-								}
-							}
+                    if (isCurrent) {
+                        if (cp.selected == 1) {
+                            cp.selected = 0;
+                            data.mem.selected_a_piece = 0;
+                            ClearMovePlates();
+                        } else {
+                            UnselectAll();
+                            data.mem.selected_a_piece = 1;
+                            cp.selected = 1;
+                            ClearMovePlates();
+                            SpawnMovePlates(ref cp, i, color);
+                        }
+                    }
+                }
 
-							// select this one
-							data.mem.selected_a_piece = 1;
-							cp.selected = 1;
+                if (data.mem.selected_a_piece == 1) { cp.hovered = 0; continue; }
+                if (cp.rect.mouse_hover == 0 && cp.hovered == 1) cp.hovered = 0;
+                if (cp.rect.mouse_hover == 1 && cp.selected == 0 && isCurrent && cp.hovered == 0) {
+                    hovered_i     = i;
+                    hovered_color = color;
+                }
+            }
+        }
 
-							ClearMovePlates();
-							SpawnMovePlates(ref cp, i, color);
-						}
-					}
-				}
+        if (data.mem.selected_a_piece == 0 && hovered_i >= 0) {
+            data.army_data src = data.mem.get_army(hovered_color);
+            src.troop_list[hovered_i].hovered = 1;
+            ClearMovePlates();
+            SpawnMovePlates(ref src.troop_list[hovered_i], hovered_i, hovered_color);
+        }
 
-				// --- block hover if selected exists ---
-				if (data.mem.selected_a_piece == 1) {
-					cp.hovered = 0;
-					continue;
-				}
-
-				if (cp.rect.mouse_hover == 0 && cp.hovered == 1) cp.hovered = 0;
-
-				if (cp.rect.mouse_hover == 1 && cp.selected == 0 && isCurrent && cp.hovered == 0) {
-					hovered_i = i;
-					hovered_color = color;
-				}
-			}
-		}
-
-		// --- hover logic ---
-		if (data.mem.selected_a_piece == 0 && hovered_i >= 0) {
-			data.chess_piece[] src = (hovered_color == 0) ? data.mem.white_pieces : data.mem.black_pieces;
-			src[hovered_i].hovered = 1;
-
-			ClearMovePlates();
-			SpawnMovePlates(ref src[hovered_i], hovered_i, hovered_color);
-		}
-
-		// --- scale (visual reset always applied) ---
-		for (int color = 0; color <= 1; color++) {
-			data.chess_piece[] arr = (color == 0) ? data.mem.white_pieces : data.mem.black_pieces;
-
-			for (int i = 0; i < arr.Length; i++) {
-				ref data.chess_piece cp = ref arr[i];
-				if (cp.rect == null) continue;
-
-				float s = (cp.selected == 1) ? 1.2f : (cp.hovered == 1 ? 1.15f : 1f);
-				cp.rect.set_sprite_scale(s, s);
-			}
-		}
-	}
+        // scale pass
+        for (int color = 0; color <= 1; color++) {
+            data.army_data army = data.mem.get_army(color);
+            for (int i = 0; i < army.troop_count; i++) {
+                ref data.chess_piece cp = ref army.troop_list[i];
+                if (cp.rect == null) continue;
+                float s = (cp.selected == 1 || cp.hovered == 1) ? cp.hover_sprite_scale : cp.normal_sprite_scale;
+                cp.rect.set_sprite_scale(s, s);
+            }
+        }
+    }
 
     // =========================================================================
     // MOVEPLATE INPUT
     // =========================================================================
 
-	void HandleMovePlateInput() {
-		for (int i = 0; i < data.mem.move_plate_list.Count; i++) {
-			data.move_plate mp = data.mem.move_plate_list[i];
-			if (mp.rect == null) continue;
+    void HandleMovePlateInput() {
+        for (int i = 0; i < data.mem.move_plate_list.Count; i++) {
+            data.move_plate mp = data.mem.move_plate_list[i];
+            if (mp.rect == null) continue;
 
-			Color base_color = mp.attack ? Color.red : Color.white;
-			bool hovered = mp.rect.mouse_hover == 1;
-			mp.rect.set_color(hovered ? base_color + new Color(0.4f, 0.4f, 0.4f, 0f) : base_color);
-			mp.rect.set_sprite_scale(hovered ? 1.15f : 1f, hovered ? 1.15f : 1f);
+            Color base_color = mp.attack ? Color.red : Color.white;
+            bool  hovered    = mp.rect.mouse_hover == 1;
+            mp.rect.set_color(hovered ? base_color + new Color(0.4f, 0.4f, 0.4f, 0f) : base_color);
+            float sc = hovered ? mp.hover_sprite_scale : mp.normal_sprite_scale;
+            mp.rect.set_sprite_scale(sc, sc);
 
-			if (mp.rect.mouse_unclick == 1) {
-				mp.rect.mouse_unclick = 0;
+            if (mp.rect.mouse_unclick == 1) {
+                mp.rect.mouse_unclick = 0;
 
-				data.chess_piece[] arr = (mp.piece_color == 0) ? data.mem.white_pieces : data.mem.black_pieces;
-				ref data.chess_piece attacker = ref arr[mp.piece_index];
+                data.army_data army = data.mem.get_army(mp.piece_color);
+                ref data.chess_piece attacker = ref army.troop_list[mp.piece_index];
 
-				if (mp.attack) {
-					HandleAttack(ref attacker, mp.mat_x, mp.mat_y, mp.rect.obj.transform.position);
-				} else {
-					PlaySound(dataScript.moveSound);
-				}
+                if (mp.attack)
+                    HandleAttack(ref attacker, mp.mat_x, mp.mat_y, mp.rect.obj.transform.position);
+                else
+                    PlaySound(data.mem.moveSound);
 
-				MovePiece(ref attacker, mp.mat_x, mp.mat_y);
+                MovePiece(ref attacker, mp.piece_index, mp.piece_color, mp.mat_x, mp.mat_y);
 
-				// --- FULL UNSELECT ALL ---
-				data.mem.selected_a_piece = 0;
-				for (int c = 0; c <= 1; c++) {
-					data.chess_piece[] arr2 = (c == 0) ? data.mem.white_pieces : data.mem.black_pieces;
-					for (int j = 0; j < arr2.Length; j++) {
-						if (arr2[j].rect == null) continue;
-						arr2[j].selected = 0;
-						arr2[j].hovered = 0;
-						arr2[j].rect.set_sprite_scale(1f, 1f);
-					}
-				}
-
-				NextTurn();
-				ClearMovePlates();
-				return;
-			}
-		}
-	}
+                data.mem.selected_a_piece = 0;
+                UnselectAll();
+                NextTurn();
+                ClearMovePlates();
+                return;
+            }
+        }
+    }
 
     // =========================================================================
     // MOVEPLATE SPAWN
@@ -211,100 +234,124 @@ public class Game : MonoBehaviour {
         int pawnDir = (cp.player_color == 0) ? 1 : -1;
 
         switch (cp.piece_type) {
-            case 0: PawnPlates(ref cp, idx, color, cp.x, cp.y + pawnDir); break;
-            case 1: RookPlates(ref cp, idx, color);   break;
-            case 2: KnightPlates(ref cp, idx, color); break;
-            case 3: BishopPlates(ref cp, idx, color); break;
-            case 4: QueenPlates(ref cp, idx, color);  break;
-            case 5: KingPlates(ref cp, idx, color);   break;
+            case 0: SpawnPawnPlates(ref cp, idx, color, pawnDir);  break;
+            case 1: SpawnLinePlates(ref cp, idx, color);            break;
+            case 2: SpawnKnightPlates(ref cp, idx, color);          break;
+            case 3: SpawnDiagPlates(ref cp, idx, color);            break;
+            case 4: SpawnLinePlates(ref cp, idx, color);
+                    SpawnDiagPlates(ref cp, idx, color);            break;
+            case 5: SpawnKingPlates(ref cp, idx, color);            break;
         }
 
         if (cp.evolved == 0) return;
 
         switch (cp.piece_type) {
             case 0:
-                if      (cp.evolved_type == 2) RookPlates(ref cp, idx, color);
-                else if (cp.evolved_type == 0) KnightPlates(ref cp, idx, color);
-                else if (cp.evolved_type == 1) BishopPlates(ref cp, idx, color);
+                if      (cp.evolved_type == 2) SpawnLinePlates(ref cp, idx, color);
+                else if (cp.evolved_type == 0) SpawnKnightPlates(ref cp, idx, color);
+                else if (cp.evolved_type == 1) SpawnDiagPlates(ref cp, idx, color);
                 break;
-            case 2: EvolvedKnightAddon(ref cp, idx, color); break;
-            case 3: KingPlates(ref cp, idx, color);         break;
-            case 5: QueenPlates(ref cp, idx, color);        break;
+            case 2: SpawnEvoKnightPlates(ref cp, idx, color); break;
+            case 3: SpawnKingPlates(ref cp, idx, color);      break;
+            case 5: SpawnLinePlates(ref cp, idx, color);
+                    SpawnDiagPlates(ref cp, idx, color);      break;
         }
     }
 
-    void QueenPlates (ref data.chess_piece cp, int i, int c) { RookPlates(ref cp,i,c); BishopPlates(ref cp,i,c); }
-    void RookPlates  (ref data.chess_piece cp, int i, int c) { LinePlates(ref cp,i,c, 1,0); LinePlates(ref cp,i,c,-1,0); LinePlates(ref cp,i,c,0,1); LinePlates(ref cp,i,c,0,-1); }
-    void BishopPlates(ref data.chess_piece cp, int i, int c) { LinePlates(ref cp,i,c, 1,1); LinePlates(ref cp,i,c,1,-1); LinePlates(ref cp,i,c,-1,1); LinePlates(ref cp,i,c,-1,-1); }
-
-    void KnightPlates(ref data.chess_piece cp, int i, int c) {
-        PointPlate(ref cp,i,c, cp.x+1,cp.y+2); PointPlate(ref cp,i,c, cp.x-1,cp.y+2);
-        PointPlate(ref cp,i,c, cp.x+2,cp.y+1); PointPlate(ref cp,i,c, cp.x+2,cp.y-1);
-        PointPlate(ref cp,i,c, cp.x+1,cp.y-2); PointPlate(ref cp,i,c, cp.x-1,cp.y-2);
-        PointPlate(ref cp,i,c, cp.x-2,cp.y+1); PointPlate(ref cp,i,c, cp.x-2,cp.y-1);
+    void SpawnLinePlates(ref data.chess_piece cp, int i, int c) {
+        RayPlates(ref cp,i,c,  1, 0, 8,1);
+        RayPlates(ref cp,i,c, -1, 0, 8,1);
+        RayPlates(ref cp,i,c,  0, 1, 8,1);
+        RayPlates(ref cp,i,c,  0,-1, 8,1);
     }
 
-    void EvolvedKnightAddon(ref data.chess_piece cp, int i, int c) {
-        PointPlate(ref cp,i,c, cp.x-2,cp.y); PointPlate(ref cp,i,c, cp.x+2,cp.y);
-        PointPlate(ref cp,i,c, cp.x,cp.y+2); PointPlate(ref cp,i,c, cp.x,cp.y-2);
+    void SpawnDiagPlates(ref data.chess_piece cp, int i, int c) {
+        RayPlates(ref cp,i,c,  1, 1, 8,1);
+        RayPlates(ref cp,i,c,  1,-1, 8,1);
+        RayPlates(ref cp,i,c, -1, 1, 8,1);
+        RayPlates(ref cp,i,c, -1,-1, 8,1);
     }
 
-    void KingPlates(ref data.chess_piece cp, int i, int c) {
-        PointPlate(ref cp,i,c, cp.x,  cp.y+1); PointPlate(ref cp,i,c, cp.x,  cp.y-1);
-        PointPlate(ref cp,i,c, cp.x-1,cp.y  ); PointPlate(ref cp,i,c, cp.x+1,cp.y  );
-        PointPlate(ref cp,i,c, cp.x-1,cp.y-1); PointPlate(ref cp,i,c, cp.x-1,cp.y+1);
-        PointPlate(ref cp,i,c, cp.x+1,cp.y-1); PointPlate(ref cp,i,c, cp.x+1,cp.y+1);
+    void SpawnKingPlates(ref data.chess_piece cp, int i, int c) {
+        RayPlates(ref cp,i,c,  1, 0, 1,1); RayPlates(ref cp,i,c, -1, 0, 1,1);
+        RayPlates(ref cp,i,c,  0, 1, 1,1); RayPlates(ref cp,i,c,  0,-1, 1,1);
+        RayPlates(ref cp,i,c,  1, 1, 1,1); RayPlates(ref cp,i,c,  1,-1, 1,1);
+        RayPlates(ref cp,i,c, -1, 1, 1,1); RayPlates(ref cp,i,c, -1,-1, 1,1);
     }
 
-    void LinePlates(ref data.chess_piece cp, int i, int c, int dx, int dy) {
-        int x = cp.x + dx, y = cp.y + dy;
-        while (OnBoard(x, y) && data.mem.board[x, y].rect == null) {
-            SpawnPlate(i, c, x, y, false);
-            x += dx; y += dy;
+    void SpawnKnightPlates(ref data.chess_piece cp, int i, int c) {
+        RayPlates(ref cp,i,c,  1, 2, 1,1, skip_obs:true);
+        RayPlates(ref cp,i,c, -1, 2, 1,1, skip_obs:true);
+        RayPlates(ref cp,i,c,  2, 1, 1,1, skip_obs:true);
+        RayPlates(ref cp,i,c,  2,-1, 1,1, skip_obs:true);
+        RayPlates(ref cp,i,c,  1,-2, 1,1, skip_obs:true);
+        RayPlates(ref cp,i,c, -1,-2, 1,1, skip_obs:true);
+        RayPlates(ref cp,i,c, -2, 1, 1,1, skip_obs:true);
+        RayPlates(ref cp,i,c, -2,-1, 1,1, skip_obs:true);
+    }
+
+    void SpawnEvoKnightPlates(ref data.chess_piece cp, int i, int c) {
+        RayPlates(ref cp,i,c,  1, 0, 1,2, skip_obs:true);
+        RayPlates(ref cp,i,c, -1, 0, 1,2, skip_obs:true);
+        RayPlates(ref cp,i,c,  0, 1, 1,2, skip_obs:true);
+        RayPlates(ref cp,i,c,  0,-1, 1,2, skip_obs:true);
+    }
+
+    void SpawnPawnPlates(ref data.chess_piece cp, int i, int c, int dir) {
+        int startRow = (cp.player_color == 0) ? 1 : 6;
+        int steps    = (cp.y == startRow) ? 2 : 1;
+        RayPlates(ref cp,i,c,  0, dir, steps, 1, skip_obs:false, capture:false);
+        RayPlates(ref cp,i,c,  1, dir, 1,     1, skip_obs:false, capture_only:true);
+        RayPlates(ref cp,i,c, -1, dir, 1,     1, skip_obs:false, capture_only:true);
+    }
+
+    // =========================================================================
+    // CORE RAY
+    // =========================================================================
+
+    void RayPlates(ref data.chess_piece cp, int idx, int color,
+                   int dir_x, int dir_y, int step_count, int step_jump,
+                   bool skip_obs = false, bool capture = true, bool capture_only = false) {
+
+        int x = cp.x + dir_x * step_jump;
+        int y = cp.y + dir_y * step_jump;
+
+        for (int s = 0; s < step_count; s++) {
+            if (!OnBoard(x, y)) break;
+
+            ref data.board_cell cell = ref Cell(x, y);
+
+            if (cell.has_piece == 1) {
+                ref data.chess_piece target = ref data.mem.get_army(cell.piece_color).troop_list[cell.piece_index];
+                if (!skip_obs) {
+                    if (capture && target.player_color != cp.player_color)
+                        SpawnPlate(idx, color, x, y, true);
+                    break;
+                }
+                if (target.player_color != cp.player_color)
+                    SpawnPlate(idx, color, x, y, true);
+            } else {
+                if (!capture_only)
+                    SpawnPlate(idx, color, x, y, false);
+            }
+
+            x += dir_x * step_jump;
+            y += dir_y * step_jump;
         }
-        if (OnBoard(x, y) && data.mem.board[x, y].player_color != cp.player_color)
-            SpawnPlate(i, c, x, y, true);
-    }
-
-    void PointPlate(ref data.chess_piece cp, int i, int c, int x, int y) {
-        if (!OnBoard(x, y)) return;
-        ref data.chess_piece target = ref data.mem.board[x, y];
-        if (target.rect == null)
-            SpawnPlate(i, c, x, y, false);
-        else if (target.player_color != cp.player_color)
-            SpawnPlate(i, c, x, y, true);
-    }
-
-    void PawnPlates(ref data.chess_piece cp, int i, int c, int x, int y) {
-        int dir = (cp.player_color == 0) ? 1 : -1;
-        if (OnBoard(x, y) && data.mem.board[x, y].rect == null) {
-            SpawnPlate(i, c, x, y, false);
-            int startRow = (cp.player_color == 0) ? 1 : 6;
-            if (cp.y == startRow && OnBoard(x, y + dir) && data.mem.board[x, y + dir].rect == null)
-                SpawnPlate(i, c, x, y + dir, false);
-        }
-        DiagCapture(ref cp, i, c, x + 1, y);
-        DiagCapture(ref cp, i, c, x - 1, y);
-    }
-
-    void DiagCapture(ref data.chess_piece cp, int i, int c, int x, int y) {
-        if (!OnBoard(x, y)) return;
-        ref data.chess_piece target = ref data.mem.board[x, y];
-        if (target.rect != null && target.player_color != cp.player_color)
-            SpawnPlate(i, c, x, y, true);
     }
 
     void SpawnPlate(int piece_index, int piece_color, int mx, int my, bool isAttack) {
         Sprite sprite = (isAttack && data.mem.mp_attack != null) ? data.mem.mp_attack : data.mem.mp_normal;
 
         data.move_plate mp;
-        mp.rect        = rect_2d.create(BoardToWorld(mx), BoardToWorld(my), -3f);
-        mp.attack      = isAttack;
-        mp.piece_index = piece_index;
-        mp.piece_color = piece_color;
-        mp.mat_x       = mx;
-        mp.mat_y       = my;
-
+        mp.rect                = rect_2d.create(BoardToWorld(mx), BoardToWorld(my), -2f); // z=-2, above tile z=0 below piece z=-1
+        mp.attack              = isAttack;
+        mp.piece_index         = piece_index;
+        mp.piece_color         = piece_color;
+        mp.mat_x               = mx;
+        mp.mat_y               = my;
+        mp.hover_sprite_scale  = 1.2f;
+        mp.normal_sprite_scale = 0.8f;
         mp.rect.set_sprite(sprite);
         mp.rect.set_color(isAttack ? Color.red : Color.white);
         if (sprite != null) mp.rect.col.size = sprite.bounds.size;
@@ -323,133 +370,155 @@ public class Game : MonoBehaviour {
     // =========================================================================
 
     void HandleAttack(ref data.chess_piece attacker, int tx, int ty, Vector3 pos) {
-        ref data.chess_piece target = ref data.mem.board[tx, ty];
-        if (target.rect == null) return;
+        ref data.board_cell cell = ref Cell(tx, ty);
+        if (cell.has_piece == 0) return;
+
+        data.army_data       enemy  = data.mem.get_army(cell.piece_color);
+        ref data.chess_piece target = ref enemy.troop_list[cell.piece_index];
 
         AbsorbPoints(ref attacker, ref target, pos);
-        PlaySound(dataScript.captureSound);
+        PlaySound(data.mem.captureSound);
 
         if (target.piece_type == 5)
             Winner(target.player_color == 0 ? "black" : "white");
 
         target.rect.self_destroy();
-
-        // also null it out in the piece array
-        data.chess_piece[] arr = (target.player_color == 0) ? data.mem.white_pieces : data.mem.black_pieces;
-        for (int i = 0; i < arr.Length; i++) {
-            if (arr[i].x == tx && arr[i].y == ty) { arr[i] = default; break; }
-        }
-
-        data.mem.board[tx, ty] = default;
+        target.rect = null;
+        ClearCell(tx, ty);
     }
 
-    void MovePiece(ref data.chess_piece cp, int tx, int ty) {
-        data.mem.board[cp.x, cp.y] = default;
+    void MovePiece(ref data.chess_piece cp, int idx, int color, int tx, int ty) {
+        ClearCell(cp.x, cp.y);
         cp.x = tx;
         cp.y = ty;
         cp.rect.move_to_board(tx, ty, -1f);
-        data.mem.board[tx, ty] = cp;
+        SetCell(tx, ty, color, idx);
     }
 
     // =========================================================================
-    // PIECE — COORDS / SPRITE
+    // PIECE — CREATE / SPRITE
     // =========================================================================
 
     float BoardToWorld(int v) => v * 1.28f - 4.48f;
 
-    data.chess_piece CreatePiece(int x, int y, int piece_type, int player_color) {
+    void CreatePiece(int x, int y, int piece_type, data.army_data army) {
+        bool w = army.color == 0;
+
         data.chess_piece cp;
-        cp.rect         = rect_2d.create(BoardToWorld(x), BoardToWorld(y), -1f);
-        cp.x            = x;
-        cp.y            = y;
-        cp.piece_type   = piece_type;
-        cp.player_color = player_color;
-        cp.score        = 0;
-        cp.score_to_envo = 0;
-        cp.unitType     = PieceType.Light;
-        cp.evolved      = 0;
-        cp.evolved_type = 0;
-        cp.selected     = 0;
-        cp.hovered      = 0;
+        cp.rect                = rect_2d.create(BoardToWorld(x), BoardToWorld(y), -1f);
+        cp.x                   = x;
+        cp.y                   = y;
+        cp.piece_type          = piece_type;
+        cp.player_color        = army.color;
+        cp.score               = 0;
+        cp.score_to_envo       = 0;
+        cp.unitType            = PieceType.Light;
+        cp.evolved             = 0;
+        cp.evolved_type        = 0;
+        cp.selected            = 0;
+        cp.hovered             = 0;
+        cp.hover_sprite_scale  = 1.2f;
+        cp.normal_sprite_scale = 0.8f;
+
+        switch (piece_type) {
+            case 0: cp.normal_sprite = w ? data.mem.wp_pawn   : data.mem.bp_pawn;
+                    cp.evo_sprite0   = w ? data.mem.wp_e_pawn_knight : data.mem.bp_e_pawn_knight;
+                    cp.evo_sprite1   = w ? data.mem.wp_e_pawn_bishop : data.mem.bp_e_pawn_bishop;
+                    cp.evo_sprite2   = w ? data.mem.wp_e_pawn_rook   : data.mem.bp_e_pawn_rook;
+                    break;
+            case 1: cp.normal_sprite = w ? data.mem.wp_rook   : data.mem.bp_rook;
+                    cp.evo_sprite0   = w ? data.mem.wp_e_rook  : data.mem.bp_e_rook;
+                    cp.evo_sprite1   = null; cp.evo_sprite2 = null; break;
+            case 2: cp.normal_sprite = w ? data.mem.wp_knight : data.mem.bp_knight;
+                    cp.evo_sprite0   = w ? data.mem.wp_e_knight: data.mem.bp_e_knight;
+                    cp.evo_sprite1   = null; cp.evo_sprite2 = null; break;
+            case 3: cp.normal_sprite = w ? data.mem.wp_bishop : data.mem.bp_bishop;
+                    cp.evo_sprite0   = w ? data.mem.wp_e_bishop: data.mem.bp_e_bishop;
+                    cp.evo_sprite1   = null; cp.evo_sprite2 = null; break;
+            case 4: cp.normal_sprite = w ? data.mem.wp_queen  : data.mem.bp_queen;
+                    cp.evo_sprite0   = w ? data.mem.wp_e_queen : data.mem.bp_e_queen;
+                    cp.evo_sprite1   = null; cp.evo_sprite2 = null; break;
+            case 5: cp.normal_sprite = w ? data.mem.wp_king   : data.mem.bp_king;
+                    cp.evo_sprite0   = w ? data.mem.wp_e_king  : data.mem.bp_e_king;
+                    cp.evo_sprite1   = null; cp.evo_sprite2 = null; break;
+            default:cp.normal_sprite = null;
+                    cp.evo_sprite0   = null;
+                    cp.evo_sprite1   = null;
+                    cp.evo_sprite2   = null; break;
+        }
 
         ApplyPieceData(ref cp);
-        data.mem.board[x, y] = cp;
-        return cp;
+
+        int idx = army.troop_count;
+        army.troop_list[army.troop_count++] = cp;
+        SetCell(x, y, army.color, idx);
     }
 
-
-
-
-	void ApplyPieceData(ref data.chess_piece cp){
-		bool w = (cp.player_color == 0);
-
-		if (cp.evolved == 0){
-			switch (cp.piece_type){
-				case 4: cp.rect.set_sprite(w ? data.mem.wp_queen : data.mem.bp_queen); cp.score = 9; cp.score_to_envo = 15; cp.unitType = PieceType.Core; break;
-				case 5: cp.rect.set_sprite(w ? data.mem.wp_king : data.mem.bp_king); cp.score = 0; cp.score_to_envo = 7; cp.unitType = PieceType.Core; break;
-				case 1: cp.rect.set_sprite(w ? data.mem.wp_rook : data.mem.bp_rook); cp.score = 5; cp.score_to_envo = 10; cp.unitType = PieceType.RHeavy; break;
-				case 2: cp.rect.set_sprite(w ? data.mem.wp_knight : data.mem.bp_knight); cp.score = 3; cp.score_to_envo = 5; cp.unitType = PieceType.KHeavy; break;
-				case 3: cp.rect.set_sprite(w ? data.mem.wp_bishop : data.mem.bp_bishop); cp.score = 3; cp.score_to_envo = 5; cp.unitType = PieceType.BHeavy; break;
-				case 0: cp.rect.set_sprite(w ? data.mem.wp_pawn : data.mem.bp_pawn); cp.score = 1; cp.score_to_envo = 4; cp.unitType = PieceType.Light; break;
-			}
-		}
-		else{
-			switch (cp.piece_type){
-				case 4: cp.rect.set_sprite(w ? data.mem.wp_e_queen : data.mem.bp_e_queen); cp.unitType = PieceType.Core; break;
-				case 5: cp.rect.set_sprite(w ? data.mem.wp_e_king : data.mem.bp_e_king); cp.unitType = PieceType.Core; break;
-				case 1: cp.rect.set_sprite(w ? data.mem.wp_e_rook : data.mem.bp_e_rook); cp.unitType = PieceType.RHeavy; break;
-				case 2: cp.rect.set_sprite(w ? data.mem.wp_e_knight : data.mem.bp_e_knight); cp.unitType = PieceType.KHeavy; break;
-				case 3: cp.rect.set_sprite(w ? data.mem.wp_e_bishop : data.mem.bp_e_bishop); cp.unitType = PieceType.BHeavy; break;
-				case 0:
-					if (cp.evolved_type == 2) cp.rect.set_sprite(w ? data.mem.wp_e_pawn_rook : data.mem.bp_e_pawn_rook);
-					else if (cp.evolved_type == 0) cp.rect.set_sprite(w ? data.mem.wp_e_pawn_knight : data.mem.bp_e_pawn_knight);
-					else if (cp.evolved_type == 1) cp.rect.set_sprite(w ? data.mem.wp_e_pawn_bishop : data.mem.bp_e_pawn_bishop);
-					cp.unitType = PieceType.ELight;
-					break;
-			}
-		}
-
-		cp.rect.fit_collider_to_sprite(cp.rect.sprite);
-	}
-
-
+    void ApplyPieceData(ref data.chess_piece cp) {
+        if (cp.evolved == 0) {
+            cp.rect.set_sprite(cp.normal_sprite);
+            switch (cp.piece_type) {
+                case 4: cp.score = 9; cp.score_to_envo = 15; cp.unitType = PieceType.Core;   break;
+                case 5: cp.score = 0; cp.score_to_envo = 7;  cp.unitType = PieceType.Core;   break;
+                case 1: cp.score = 5; cp.score_to_envo = 10; cp.unitType = PieceType.RHeavy; break;
+                case 2: cp.score = 3; cp.score_to_envo = 5;  cp.unitType = PieceType.KHeavy; break;
+                case 3: cp.score = 3; cp.score_to_envo = 5;  cp.unitType = PieceType.BHeavy; break;
+                case 0: cp.score = 1; cp.score_to_envo = 4;  cp.unitType = PieceType.Light;  break;
+            }
+        } else {
+            Sprite evo = cp.piece_type == 0
+                ? (cp.evolved_type == 0 ? cp.evo_sprite0 : cp.evolved_type == 1 ? cp.evo_sprite1 : cp.evo_sprite2)
+                : cp.evo_sprite0;
+            cp.rect.set_sprite(evo);
+            switch (cp.piece_type) {
+                case 4: cp.unitType = PieceType.Core;   break;
+                case 5: cp.unitType = PieceType.Core;   break;
+                case 1: cp.unitType = PieceType.RHeavy; break;
+                case 2: cp.unitType = PieceType.KHeavy; break;
+                case 3: cp.unitType = PieceType.BHeavy; break;
+                case 0: cp.unitType = PieceType.ELight; break;
+            }
+        }
+        cp.rect.fit_collider_to_sprite(cp.rect.sprite);
+    }
 
     // =========================================================================
-    // PIECE — MOVE VALIDATION
+    // MOVE VALIDATION
     // =========================================================================
 
     bool CanMoveTo(ref data.chess_piece cp, int tx, int ty) {
         if (!OnBoard(tx, ty)) return false;
+        ref data.board_cell cell = ref Cell(tx, ty);
+        if (cell.has_piece == 1 && data.mem.get_army(cell.piece_color).troop_list[cell.piece_index].player_color == cp.player_color) return false;
 
-        ref data.chess_piece target = ref data.mem.board[tx, ty];
-        if (target.rect != null && target.player_color == cp.player_color) return false;
-
+        int  dir      = (cp.player_color == 0) ? 1 : -1;
         bool baseMove = false;
+
         switch (cp.piece_type) {
-            case 0: baseMove = IsPawnMoveValid(ref cp, tx, ty);                                         break;
-            case 1: baseMove = IsLineMoveValid(ref cp, tx, ty);                                         break;
-            case 2: baseMove = IsKnightMoveValid(ref cp, tx, ty);                                       break;
-            case 3: baseMove = IsDiagonalMoveValid(ref cp, tx, ty);                                     break;
-            case 4: baseMove = IsLineMoveValid(ref cp, tx, ty) || IsDiagonalMoveValid(ref cp, tx, ty); break;
-            case 5: baseMove = IsKingMoveValid(ref cp, tx, ty);                                         break;
+            case 0: baseMove = ValidatePawn(ref cp, tx, ty, dir);                             break;
+            case 1: baseMove = ValidateLine(ref cp, tx, ty);                                  break;
+            case 2: baseMove = ValidateKnight(ref cp, tx, ty);                                break;
+            case 3: baseMove = ValidateDiag(ref cp, tx, ty);                                  break;
+            case 4: baseMove = ValidateLine(ref cp, tx, ty) || ValidateDiag(ref cp, tx, ty); break;
+            case 5: baseMove = ValidateKing(ref cp, tx, ty);                                  break;
         }
 
         if (cp.evolved == 0) return baseMove;
 
         switch (cp.piece_type) {
-            case 2: return baseMove || AdditionalIsKnightMoveValid(ref cp, tx, ty);
-            case 3: return baseMove || IsKingMoveValid(ref cp, tx, ty);
-            case 5: return IsLineMoveValid(ref cp, tx, ty) || IsDiagonalMoveValid(ref cp, tx, ty);
+            case 2: return baseMove || ValidateEvoKnight(ref cp, tx, ty);
+            case 3: return baseMove || ValidateKing(ref cp, tx, ty);
+            case 5: return ValidateLine(ref cp, tx, ty) || ValidateDiag(ref cp, tx, ty);
             default: return baseMove;
         }
     }
 
-    bool IsLineMoveValid(ref data.chess_piece cp, int tx, int ty) {
+    bool ValidateLine(ref data.chess_piece cp, int tx, int ty) {
         if (tx != cp.x && ty != cp.y) return false;
         return !IsBlocked(ref cp, tx, ty);
     }
 
-    bool IsDiagonalMoveValid(ref data.chess_piece cp, int tx, int ty) {
+    bool ValidateDiag(ref data.chess_piece cp, int tx, int ty) {
         if (Mathf.Abs(tx - cp.x) != Mathf.Abs(ty - cp.y)) return false;
         return !IsBlocked(ref cp, tx, ty);
     }
@@ -458,47 +527,39 @@ public class Game : MonoBehaviour {
         int sx = System.Math.Sign(tx - cp.x), sy = System.Math.Sign(ty - cp.y);
         int cx = cp.x + sx, cy = cp.y + sy;
         while (cx != tx || cy != ty) {
-            if (data.mem.board[cx, cy].rect != null) return true;
+            if (!OnBoard(cx, cy)) return true;
+            if (Cell(cx, cy).has_piece == 1) return true;
             cx += sx; cy += sy;
         }
         return false;
     }
 
-    bool IsKnightMoveValid(ref data.chess_piece cp, int tx, int ty) {
+    bool ValidateKnight(ref data.chess_piece cp, int tx, int ty) {
         int dx = Mathf.Abs(tx - cp.x), dy = Mathf.Abs(ty - cp.y);
         return (dx == 1 && dy == 2) || (dx == 2 && dy == 1);
     }
 
-    bool AdditionalIsKnightMoveValid(ref data.chess_piece cp, int tx, int ty) {
+    bool ValidateEvoKnight(ref data.chess_piece cp, int tx, int ty) {
         int dx = Mathf.Abs(tx - cp.x), dy = Mathf.Abs(ty - cp.y);
-        if ((dx == 2 && dy == 0) || (dx == 0 && dy == 2)) {
-            ref data.chess_piece t = ref data.mem.board[tx, ty];
-            return t.rect == null || t.player_color != cp.player_color;
-        }
-        return false;
+        return (dx == 2 && dy == 0) || (dx == 0 && dy == 2);
     }
 
-    bool IsPawnMoveValid(ref data.chess_piece cp, int tx, int ty) {
-        int dir = (cp.player_color == 0) ? 1 : -1;
+    bool ValidatePawn(ref data.chess_piece cp, int tx, int ty, int dir) {
         int dx = tx - cp.x, dy = ty - cp.y;
         if (Mathf.Abs(dx) == 1 && dy == dir) {
-            ref data.chess_piece t = ref data.mem.board[tx, ty];
-            return t.rect != null && t.player_color != cp.player_color;
+            ref data.board_cell cell = ref Cell(tx, ty);
+            return cell.has_piece == 1 && data.mem.get_army(cell.piece_color).troop_list[cell.piece_index].player_color != cp.player_color;
         }
         return false;
     }
 
-    bool IsKingMoveValid(ref data.chess_piece cp, int tx, int ty) {
+    bool ValidateKing(ref data.chess_piece cp, int tx, int ty) {
         int dx = Mathf.Abs(tx - cp.x), dy = Mathf.Abs(ty - cp.y);
-        if (dx <= 1 && dy <= 1 && (dx + dy > 0)) {
-            ref data.chess_piece t = ref data.mem.board[tx, ty];
-            return t.rect == null || t.player_color != cp.player_color;
-        }
-        return false;
+        return dx <= 1 && dy <= 1 && (dx + dy > 0);
     }
 
     // =========================================================================
-    // PIECE — EVOLUTION
+    // EVOLUTION
     // =========================================================================
 
     public void AbsorbPoints(ref data.chess_piece cp, ref data.chess_piece victim, Vector3 pos) {
@@ -539,7 +600,7 @@ public class Game : MonoBehaviour {
     public void NextTurn() {
         data.mem.current_player_color = (data.mem.current_player_color == 0) ? 1 : 0;
         if (!data.mem.gameOver && IsKingInCheck(data.mem.current_player_color)) {
-            PlaySound(dataScript.checkSound);
+            PlaySound(data.mem.checkSound);
             Debug.Log("p" + data.mem.current_player_color + " is in CHECK!");
         }
     }
@@ -548,43 +609,41 @@ public class Game : MonoBehaviour {
         int king_i = FindKing(kingColor);
         if (king_i < 0) return false;
 
-        data.chess_piece[] kings_arr = (kingColor == 0) ? data.mem.white_pieces : data.mem.black_pieces;
-        ref data.chess_piece king    = ref kings_arr[king_i];
+        ref data.chess_piece king    = ref data.mem.get_army(kingColor).troop_list[king_i];
+        data.army_data       enemies = data.mem.get_enemy(kingColor);
 
-        data.chess_piece[] enemies = (kingColor == 0) ? data.mem.black_pieces : data.mem.white_pieces;
-        for (int i = 0; i < enemies.Length; i++) {
-            ref data.chess_piece e = ref enemies[i];
+        for (int i = 0; i < enemies.troop_count; i++) {
+            ref data.chess_piece e = ref enemies.troop_list[i];
             if (e.rect != null && CanMoveTo(ref e, king.x, king.y)) return true;
         }
         return false;
     }
 
     int FindKing(int color) {
-        data.chess_piece[] arr = (color == 0) ? data.mem.white_pieces : data.mem.black_pieces;
-        for (int i = 0; i < arr.Length; i++)
-            if (arr[i].piece_type == 5 && arr[i].rect != null) return i;
+        data.army_data army = data.mem.get_army(color);
+        for (int i = 0; i < army.troop_count; i++)
+            if (army.troop_list[i].piece_type == 5 && army.troop_list[i].rect != null) return i;
         Debug.LogError("King not found for color: " + color);
         return -1;
     }
 
-    //---AI Random---
-    List<data.AIMove> GenerateAllValidMoves(int color){
+    // =========================================================================
+    // AI
+    // =========================================================================
+    List<data.AIMove> GenerateAllValidMoves(int color) {
         List<data.AIMove> moves = new List<data.AIMove>();
-        data.chess_piece[] arr = (color == 0) ? data.mem.white_pieces : data.mem.black_pieces; //choose pieces array
-        for(int i = 0; i < arr.Length; i++)
-        {
-            ref data.chess_piece cp = ref arr[i];
-            if(cp.rect == null) continue;
+        data.army_data army = data.mem.get_army(color);
+
+        for (int i = 0; i < army.troop_count; i++) {
+            ref data.chess_piece cp = ref army.troop_list[i];
             
-            for(int tx = 0; tx < 8; tx++)
-            {
-                for(int ty = 0; ty < 8; ty++)
-                {
-                    if(CanMoveTo(ref cp, tx, ty))
-                    {
-                        bool isAttack = data.mem.board[tx, ty].rect != null;
-                        moves.Add(new data.AIMove
-                        {
+            if (cp.rect == null) continue;
+
+            for (int tx = 0; tx < data.mem.board_w; tx++) {
+                for (int ty = 0; ty < data.mem.board_h; ty++) {
+                    if (CanMoveTo(ref cp, tx, ty)) {
+                        bool isAttack = Cell(tx, ty).has_piece == 1;
+                        moves.Add(new data.AIMove {
                             piece_index = i,
                             targetX = tx,
                             targetY = ty,
@@ -593,104 +652,95 @@ public class Game : MonoBehaviour {
                     }
                 }
             }
-
         }
         return moves;
     }
 
-    void ExecuteAIMove(data.AIMove move)
-    {
-        data.chess_piece[] arr = (aiColor == 0) ? data.mem.white_pieces : data.mem.black_pieces;
-        ref data.chess_piece attacker = ref arr[move.piece_index];
+    void ExecuteAIMove(data.AIMove move) {
+        data.army_data army = data.mem.get_army(data.mem.aiColor);
+        ref data.chess_piece attacker = ref army.troop_list[move.piece_index];
 
-        if (move.isAttack)
-        {
-            Vector3 targetPos = data.mem.board[move.targetX, move.targetY].rect.obj.transform.position;
+        if (move.isAttack) {
+            Vector3 targetPos = Cell(move.targetX, move.targetY).tile.obj.transform.position;
             HandleAttack(ref attacker, move.targetX, move.targetY, targetPos);
+        } else {
+            PlaySound(data.mem.moveSound);
         }
-        else
-        {
-            PlaySound(dataScript.moveSound);
-        }
-        MovePiece(ref attacker, move.targetX, move.targetY);
+
+        MovePiece(ref attacker, move.piece_index, data.mem.aiColor, move.targetX, move.targetY);
 
         data.mem.selected_a_piece = 0;
-        for(int c = 0; c <= 1; c++) 
-        {
-            data.chess_piece[] arr2 = (c == 0) ? data.mem.white_pieces : data.mem.black_pieces;
-            for(int j = 0; j < arr2.Length; j++) 
-            {
-                if(arr2[j].rect == null) continue;
-                arr2[j].selected = 0;
-                arr2[j].hovered = 0;
-                arr2[j].rect.set_sprite_scale(1f, 1f);
-            }
-        }
-
+        UnselectAll();
         ClearMovePlates();
         NextTurn();
     }
-    
-    IEnumerator PlayRandomAI()
-    {
-        isAIThinking = true;
-        yield return new WaitForSeconds(0.5f); //wait 0.5s
-        List<data.AIMove> validMoves = GenerateAllValidMoves(aiColor);
 
-        if(validMoves.Count > 0 && !data.mem.gameOver)
-        {
-            //list eatable move
-            List<data.AIMove> attackMoves = new List<data.AIMove>();
-            foreach(var move in validMoves)
-            {
-                if (move.isAttack) attackMoves.Add(move);
-            }
-            data.AIMove selectedMove = default;
+    data.AIMove CalculateGreedyMove(int color) {
+        List<data.AIMove> validMoves = GenerateAllValidMoves(color);
+        
+        if (validMoves.Count == 0) return new data.AIMove { piece_index = -1 };
 
-            if(attackMoves.Count > 0)
-            {
-                int maxScore = -1;
-                List<data.AIMove> bestAttacks = new  List<data.AIMove>();
-                foreach(var move in attackMoves)
-                {
-                    data.chess_piece target = data.mem.board[move.targetX, move.targetY];
-                    int targetScore = (target.piece_type == 5) ? 1000 : target.score;
-                    if(targetScore > maxScore)
-                    {
-                        maxScore = targetScore;
-                        bestAttacks.Clear();
-                        bestAttacks.Add(move);
-                    }
-                    else if (targetScore == maxScore)
-                    {
-                        bestAttacks.Add(move);
-                    }
+        List<data.AIMove> attackMoves = new List<data.AIMove>();
+        foreach (var move in validMoves) {
+            if (move.isAttack) attackMoves.Add(move);
+        }
+
+        if (attackMoves.Count > 0) {
+            int maxScore = -1;
+            List<data.AIMove> bestAttacks = new List<data.AIMove>();
+
+            foreach (var move in attackMoves) {
+                ref data.board_cell cell = ref Cell(move.targetX, move.targetY);
+                data.chess_piece target = data.mem.get_army(cell.piece_color).troop_list[cell.piece_index];
+                
+                int targetScore = (target.piece_type == 5) ? 1000 : target.score;
+
+                if (targetScore > maxScore) {
+                    maxScore = targetScore;
+                    bestAttacks.Clear();
+                    bestAttacks.Add(move);
+                } else if (targetScore == maxScore) {
+                    bestAttacks.Add(move);
                 }
-                selectedMove = bestAttacks[Random.Range(0, bestAttacks.Count)];
             }
-            else
-            {
-                selectedMove = validMoves[Random.Range(0, validMoves.Count)];
-            }
-            ExecuteAIMove(selectedMove);
+            return bestAttacks[Random.Range(0, bestAttacks.Count)];
         }
-        else if (!data.mem.gameOver)
-        {
-            Debug.Log("ai so stupid and defeat");
-            Winner(aiColor == 0 ? "back" : "white");
-        }
-        isAIThinking = false;
+
+        return validMoves[Random.Range(0, validMoves.Count)];
     }
+
+    IEnumerator PlayAITurn() {
+        data.mem.isAIThinking = true;
+        
+        yield return new WaitForSeconds(0.5f);
+
+        data.AIMove chosenMove = CalculateGreedyMove(data.mem.aiColor);
+
+        if (chosenMove.piece_index != -1 && !data.mem.gameOver) {
+            ExecuteAIMove(chosenMove);
+        } else if (!data.mem.gameOver) {
+            Debug.Log("AI so stupid and defeat");
+            Winner(data.mem.aiColor == 0 ? "black" : "white");
+        }
+        data.mem.isAIThinking = false;
+    }
+
 
     // =========================================================================
     // HELPERS
     // =========================================================================
 
-    bool OnBoard(int x, int y) => x >= 0 && y >= 0 && x < 8 && y < 8;
-
-    public void PlaySound(AudioClip clip) {
-        dataScript.audioSource.PlayOneShot(clip);
+    void UnselectAll() {
+        for (int color = 0; color <= 1; color++) {
+            data.army_data army = data.mem.get_army(color);
+            for (int i = 0; i < army.troop_count; i++) {
+                army.troop_list[i].selected = 0;
+                army.troop_list[i].hovered  = 0;
+            }
+        }
     }
+
+    public void PlaySound(AudioClip clip) { data.mem.audioSource.PlayOneShot(clip); }
 
     public void Winner(string playerWinner) {
         data.mem.gameOver = true;
