@@ -559,6 +559,7 @@ public class Game : MonoBehaviour {
             case 3: baseMove = ValidateDiag(ref cp, tx, ty);                                  break;
             case 4: baseMove = ValidateLine(ref cp, tx, ty) || ValidateDiag(ref cp, tx, ty); break;
             case 5: baseMove = ValidateKing(ref cp, tx, ty);                                  break;
+            case 6: baseMove = ValidateLine(ref cp, tx, ty) || ValidateDiag(ref cp, tx, ty) || ValidateKnight(ref cp, tx, ty);                                  break;
         }
 
         if (cp.evolved == 0) return baseMove;
@@ -567,6 +568,7 @@ public class Game : MonoBehaviour {
             case 2: return baseMove || ValidateEvoKnight(ref cp, tx, ty);
             case 3: return baseMove || ValidateKing(ref cp, tx, ty);
             case 5: return ValidateLine(ref cp, tx, ty) || ValidateDiag(ref cp, tx, ty);
+            case 6: return baseMove || ValidateKnight(ref cp, tx, ty); 
             default: return baseMove;
         }
     }

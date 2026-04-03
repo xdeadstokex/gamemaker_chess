@@ -2188,6 +2188,9 @@ MonoBehaviour:
   gameOver: 0
   current_player_color: 0
   selected_a_piece: 0
+  isVsAI: 1
+  aiColor: 1
+  isAIThinking: 0
   board_tile0: {fileID: -2714327965727882766, guid: f129aafcbd04af3d682697f19e2b5e91, type: 3}
   board_tile1: {fileID: -321054337486970125, guid: 0a1e4428ba599b3888eb4075b7c32436, type: 3}
   board_tile2: {fileID: -2845123107130222339, guid: 2589ea6c1e955f989a6477bf85c14a98, type: 3}
@@ -2209,11 +2212,13 @@ MonoBehaviour:
   wp_e_bishop: {fileID: -55767092894854732, guid: 04674cf6970d7a740ab15583d8b9ad7c, type: 3}
   wp_e_queen: {fileID: 7127983344833431581, guid: 85b32a69d4d0a4145a2cd683ccd0da84, type: 3}
   wp_e_king: {fileID: -3581966908914899875, guid: 79188ec0870d904489c6a859d253fdf5, type: 3}
+  wp_e_dqueen: {fileID: 760511584772968748, guid: 3d4afa780a743d747809ebadd5319442, type: 3}
   bp_e_rook: {fileID: -3293129491534371161, guid: 25648415e7cbe254e94c7c1400c50a2c, type: 3}
   bp_e_knight: {fileID: 7448040370718626997, guid: 4a1a704be09dca246b2e8effeb5e5af7, type: 3}
   bp_e_bishop: {fileID: -4531309202314977159, guid: 1f8416ccb9526ba46b1e45f934b3704c, type: 3}
   bp_e_queen: {fileID: 987628164968182631, guid: 2e296e6f99517c0958cb0c454cce274f, type: 3}
   bp_e_king: {fileID: -4589850335571620270, guid: d052ced392d9f584f965309b658f9426, type: 3}
+  bp_e_dqueen: {fileID: 2138915649195830975, guid: b862b716b904b5446a6fdce450d445b9, type: 3}
   wp_e_pawn_knight: {fileID: 3307824522922170136, guid: 0a3902c51ce6899469e33777cba66d67, type: 3}
   wp_e_pawn_bishop: {fileID: -545874090106461107, guid: e5af85553b67d904780ccb6f2c7c05dd, type: 3}
   wp_e_pawn_rook: {fileID: 5223401505290445284, guid: f501bee6c8abfd340a5b3f0d710256a5, type: 3}
@@ -2229,9 +2234,6 @@ MonoBehaviour:
   startSound: {fileID: 8300000, guid: c3774de02d88a2840bf7b3672546b812, type: 3}
   endSound: {fileID: 8300000, guid: 8b43868e6f5a0704cb3e13eaf8976a6c, type: 3}
   timeLess: {fileID: 8300000, guid: 98d41c6a4a5e4264aa7597930c2043a1, type: 3}
-  allCards: []
-  whiteHand: []
-  blackHand: []
   cardPrefab: {fileID: 0}
 --- !u!4 &1239710108
 Transform:
