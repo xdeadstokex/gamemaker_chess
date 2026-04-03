@@ -111,6 +111,7 @@ public class data : MonoBehaviour {
     // =========================================================================
     // AI DATA
     // =========================================================================
+    //random
     public struct AIMove {
         public int piece_index;
         public int targetX;
@@ -120,6 +121,22 @@ public class data : MonoBehaviour {
     public bool isVsAI = true;
     public int aiColor = 1;
     public bool isAIThinking = false;
+
+    //monte
+    public class MCTSNode {
+        public AIMove move;
+        public MCTSNode parent;
+        public List<MCTSNode> children = new List<MCTSNode>();
+        public float wins = 0;
+        public int visits = 0;
+        public int colorToMove; 
+        public List<AIMove> untriedMoves;
+    }
+
+    // --- MCTS Backup Variables ---
+    public board_cell[] real_board;
+    public army_data real_white;
+    public army_data real_black;
 
     // =========================================================================
     // GLOBAL SPRITE POOL — Inspector entry point
