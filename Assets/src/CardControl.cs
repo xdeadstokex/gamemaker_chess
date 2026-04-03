@@ -39,9 +39,8 @@ public class DragDrop : MonoBehaviour, IDragHandler, IEndDragHandler, IBeginDrag
         int ty = Mathf.RoundToInt((mouseWorldPos.y + 4.48f) / 1.28f);
 
         Debug.Log("Drag ended");
-        if (gameScript.OnBoard(tx, ty)) {
-            // Gọi hàm xử lý thẻ bài trong Game.cs
-            gameScript.UseCardOnBoard(cardData, Input.mousePosition);
+        if (board_util.on_board(tx, ty)) {
+            card_util.use_card_on_board(cardData, Input.mousePosition);
             
             // Xóa thẻ sau khi sử dụng thành công
             Destroy(gameObject, 0.1f);

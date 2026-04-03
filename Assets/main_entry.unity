@@ -2185,9 +2185,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   board_w: 0
   board_h: 0
+  main_screen_gui: {fileID: 0}
+  pvp_button: {fileID: 0}
   gameOver: 0
   current_player_color: 0
   selected_a_piece: 0
+  at_main_screen: 1
+  at_pvp_2: 0
   isVsAI: 1
   aiColor: 1
   isAIThinking: 0
@@ -2227,6 +2231,7 @@ MonoBehaviour:
   bp_e_pawn_rook: {fileID: -705458621286082977, guid: bc4262fc57ad68741b7d0b81cf018ae8, type: 3}
   mp_normal: {fileID: -1642050057519057660, guid: e173589c72f9aad418c543d2e790db5d, type: 3}
   mp_attack: {fileID: 0}
+  rect_2d_sprite: {fileID: 7445137717605717678, guid: 8003d2d75acc314108cb0715d82c902f, type: 3}
   audioSource: {fileID: 1239710109}
   moveSound: {fileID: 8300000, guid: 266c44e1c47ca8f44893ed02df9cab69, type: 3}
   captureSound: {fileID: 8300000, guid: 584405cb601b9774ca469a080e56a564, type: 3}
