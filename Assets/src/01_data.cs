@@ -98,5 +98,12 @@ public class data : MonoBehaviour {
     public List<Card> blackHand = new List<Card>();
     public GameObject cardPrefab;
 
+    //----AI data----
+    public struct AIMove {
+        public int piece_index;
+        public int targetX;
+        public int targetY;
+        public bool isAttack;
+    }
     void Awake() { mem = this; }
 }
