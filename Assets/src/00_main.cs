@@ -626,7 +626,7 @@ public class Game : MonoBehaviour {
 
         cp.score += victim.score;
         if (cp.score < 0) cp.score = 1;
-        if (cp.piece_type == 7 || cp.score >= cp.score_to_envo) //king có súng nhận điểm tích đạn
+        if (cp.piece_type == 7 && cp.score >= cp.score_to_envo) //king có súng nhận điểm tích đạn
         {
             cp.score = 0; // cap score at evo threshold for king to prevent overleveling
             // thêm đạn cho súng của vua
