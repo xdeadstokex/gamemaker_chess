@@ -1,10 +1,15 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Data.Common;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class Game : MonoBehaviour {
+    //---AI variable---
+    public bool isVsAI = true;
+    public int aiColor = 1;
+    private bool isAIThinking = false;
     data dataScript;
 
     // =========================================================================
@@ -51,6 +56,17 @@ public class Game : MonoBehaviour {
             SceneManager.LoadScene("Game");
             return;
         }
+        
+        //random ai turn
+        if(isVsAI && data.mem.current_player_color == aiColor)
+        {
+            if (!isAIThinking)
+            {
+                StartCoroutine(PlayRandomAI());
+            }
+            return;
+        }
+
         HandlePieceInput();
         HandleMovePlateInput();
     }
@@ -549,6 +565,121 @@ public class Game : MonoBehaviour {
             if (arr[i].piece_type == 5 && arr[i].rect != null) return i;
         Debug.LogError("King not found for color: " + color);
         return -1;
+    }
+
+    //---AI Random---
+    List<data.AIMove> GenerateAllValidMoves(int color){
+        List<data.AIMove> moves = new List<data.AIMove>();
+        data.chess_piece[] arr = (color == 0) ? data.mem.white_pieces : data.mem.black_pieces; //choose pieces array
+        for(int i = 0; i < arr.Length; i++)
+        {
+            ref data.chess_piece cp = ref arr[i];
+            if(cp.rect == null) continue;
+            
+            for(int tx = 0; tx < 8; tx++)
+            {
+                for(int ty = 0; ty < 8; ty++)
+                {
+                    if(CanMoveTo(ref cp, tx, ty))
+                    {
+                        bool isAttack = data.mem.board[tx, ty].rect != null;
+                        moves.Add(new data.AIMove
+                        {
+                            piece_index = i,
+                            targetX = tx,
+                            targetY = ty,
+                            isAttack = isAttack
+                        });
+                    }
+                }
+            }
+
+        }
+        return moves;
+    }
+
+    void ExecuteAIMove(data.AIMove move)
+    {
+        data.chess_piece[] arr = (aiColor == 0) ? data.mem.white_pieces : data.mem.black_pieces;
+        ref data.chess_piece attacker = ref arr[move.piece_index];
+
+        if (move.isAttack)
+        {
+            Vector3 targetPos = data.mem.board[move.targetX, move.targetY].rect.obj.transform.position;
+            HandleAttack(ref attacker, move.targetX, move.targetY, targetPos);
+        }
+        else
+        {
+            PlaySound(dataScript.moveSound);
+        }
+        MovePiece(ref attacker, move.targetX, move.targetY);
+
+        data.mem.selected_a_piece = 0;
+        for(int c = 0; c <= 1; c++) 
+        {
+            data.chess_piece[] arr2 = (c == 0) ? data.mem.white_pieces : data.mem.black_pieces;
+            for(int j = 0; j < arr2.Length; j++) 
+            {
+                if(arr2[j].rect == null) continue;
+                arr2[j].selected = 0;
+                arr2[j].hovered = 0;
+                arr2[j].rect.set_sprite_scale(1f, 1f);
+            }
+        }
+
+        ClearMovePlates();
+        NextTurn();
+    }
+    
+    IEnumerator PlayRandomAI()
+    {
+        isAIThinking = true;
+        yield return new WaitForSeconds(0.5f); //wait 0.5s
+        List<data.AIMove> validMoves = GenerateAllValidMoves(aiColor);
+
+        if(validMoves.Count > 0 && !data.mem.gameOver)
+        {
+            //list eatable move
+            List<data.AIMove> attackMoves = new List<data.AIMove>();
+            foreach(var move in validMoves)
+            {
+                if (move.isAttack) attackMoves.Add(move);
+            }
+            data.AIMove selectedMove = default;
+
+            if(attackMoves.Count > 0)
+            {
+                int maxScore = -1;
+                List<data.AIMove> bestAttacks = new  List<data.AIMove>();
+                foreach(var move in attackMoves)
+                {
+                    data.chess_piece target = data.mem.board[move.targetX, move.targetY];
+                    int targetScore = (target.piece_type == 5) ? 1000 : target.score;
+                    if(targetScore > maxScore)
+                    {
+                        maxScore = targetScore;
+                        bestAttacks.Clear();
+                        bestAttacks.Add(move);
+                    }
+                    else if (targetScore == maxScore)
+                    {
+                        bestAttacks.Add(move);
+                    }
+                }
+                selectedMove = bestAttacks[Random.Range(0, bestAttacks.Count)];
+            }
+            else
+            {
+                selectedMove = validMoves[Random.Range(0, validMoves.Count)];
+            }
+            ExecuteAIMove(selectedMove);
+        }
+        else if (!data.mem.gameOver)
+        {
+            Debug.Log("ai so stupid and defeat");
+            Winner(aiColor == 0 ? "back" : "white");
+        }
+        isAIThinking = false;
     }
 
     // =========================================================================
