@@ -21,7 +21,7 @@ public class Game : MonoBehaviour {
         data.army_data b = data.mem.black_army;
 
         // white back row
-        CreatePiece(0,0, 1, w); CreatePiece(1,0, 2, w); CreatePiece(2,0, 3, w);
+        CreatePiece(0,0, 7, w); CreatePiece(1,0, 2, w); CreatePiece(2,0, 3, w);
         CreatePiece(3,0, 4, w); CreatePiece(4,0, 5, w);
         CreatePiece(5,0, 3, w); CreatePiece(6,0, 2, w); CreatePiece(7,0, 1, w);
         for (int i = 0; i < 8; i++) CreatePiece(i, 1, 0, w);
@@ -98,7 +98,7 @@ public class Game : MonoBehaviour {
     // BOARD HELPERS
     // =========================================================================
 
-    bool OnBoard(int x, int y) {
+    public bool OnBoard(int x, int y) {
         if (x < 0 || y < 0 || x >= data.mem.board_w || y >= data.mem.board_h) return false;
         return Cell(x, y).valid == 1;
     }
@@ -244,12 +244,15 @@ public class Game : MonoBehaviour {
                 data.army_data army = data.mem.get_army(mp.piece_color);
                 ref data.chess_piece attacker = ref army.troop_list[mp.piece_index];
 
-                if (mp.attack)
-                    HandleAttack(ref attacker, mp.mat_x, mp.mat_y, mp.rect.obj.transform.position);
-                else
-                    PlaySound(data.mem.moveSound);
+                if (!mp.attack)
+                    {PlaySound(data.mem.moveSound);
+                    MovePiece(ref attacker, mp.piece_index, mp.piece_color, mp.mat_x, mp.mat_y);}
 
+                else
+                    HandleAttack(ref attacker, mp.mat_x, mp.mat_y, mp.rect.obj.transform.position);
+                if (attacker.piece_type != 7){
                 MovePiece(ref attacker, mp.piece_index, mp.piece_color, mp.mat_x, mp.mat_y);
+                }
 
                 data.mem.selected_a_piece = 0;
                 UnselectAll();
@@ -275,6 +278,10 @@ public class Game : MonoBehaviour {
             case 4: SpawnLinePlates(ref cp, idx, color);
                     SpawnDiagPlates(ref cp, idx, color);            break;
             case 5: SpawnKingPlates(ref cp, idx, color);            break;
+            case 6: SpawnLinePlates(ref cp, idx, color);
+                    SpawnDiagPlates(ref cp, idx, color);
+                    SpawnKnightPlates(ref cp, idx, color);          break;
+            case 7: SpawnGunKingPlates(ref cp, idx, color);     break;
         }
 
         if (cp.evolved == 0) return;
@@ -287,8 +294,7 @@ public class Game : MonoBehaviour {
                 break;
             case 2: SpawnEvoKnightPlates(ref cp, idx, color); break;
             case 3: SpawnKingPlates(ref cp, idx, color);      break;
-            case 5: SpawnLinePlates(ref cp, idx, color);
-                    SpawnDiagPlates(ref cp, idx, color);      break;
+            case 5: SpawnKingPlates(ref cp, idx, color);     break;
         }
     }
 
@@ -312,7 +318,33 @@ public class Game : MonoBehaviour {
         RayPlates(ref cp,i,c,  1, 1, 1,1); RayPlates(ref cp,i,c,  1,-1, 1,1);
         RayPlates(ref cp,i,c, -1, 1, 1,1); RayPlates(ref cp,i,c, -1,-1, 1,1);
     }
+    void SpawnGunKingPlates(ref data.chess_piece cp, int i, int c) {
+        // Quét vùng 5x5 xung quanh (từ -2 đến +2)
+        for (int xOffset = -2; xOffset <= 2; xOffset++) {
+            for (int yOffset = -2; yOffset <= 2; yOffset++) {
+                if (xOffset == 0 && yOffset == 0) continue; // Bỏ qua ô trung tâm
 
+                int targetX = cp.x + xOffset;
+                int targetY = cp.y + yOffset;
+
+                if (OnBoard(targetX, targetY)) {
+                    ref data.board_cell cell = ref Cell(targetX, targetY);
+                    if (cell.has_piece == 1) {
+                        ref data.chess_piece target = ref PieceAt(targetX, targetY);
+                        // Nếu là kẻ địch thì hiện Plate tấn công
+                        if (target.player_color != cp.player_color) {
+                            SpawnPlate(i, c, targetX, targetY, true);
+                        }
+                    } else {
+                        // Tùy chọn: Vẫn cho phép di chuyển như King bình thường trong 1 ô
+                        if (Mathf.Abs(xOffset) <= 1 && Mathf.Abs(yOffset) <= 1) {
+                            SpawnPlate(i, c, targetX, targetY, false);
+                        }
+                    }
+                }
+            }
+        }
+    }
     void SpawnKnightPlates(ref data.chess_piece cp, int i, int c) {
         RayPlates(ref cp,i,c,  1, 2, 1,1, skip_obs:true);
         RayPlates(ref cp,i,c, -1, 2, 1,1, skip_obs:true);
@@ -497,6 +529,8 @@ public class Game : MonoBehaviour {
                     cp.evo_sprite1   = null; cp.evo_sprite2 = null; break;
             case 6: cp.normal_sprite = w ? data.mem.wp_e_dqueen : data.mem.bp_e_dqueen;
                     cp.evo_sprite0   = null; cp.evo_sprite1 = null; cp.evo_sprite2 = null; break;
+            case 7: cp.normal_sprite = w ? data.mem.wp_e_king : data.mem.bp_e_king;
+                    cp.evo_sprite0   = null; cp.evo_sprite1 = null; cp.evo_sprite2 = null; break;
             default:cp.normal_sprite = null;
                     cp.evo_sprite0   = null;
                     cp.evo_sprite1   = null;
@@ -511,11 +545,12 @@ public class Game : MonoBehaviour {
     }
 
     void ApplyPieceData(ref data.chess_piece cp) {
+    
         if (cp.evolved == 0) {
             cp.rect.set_sprite(cp.normal_sprite);
             switch (cp.piece_type) {
                 case 4: cp.score = 9; cp.score_to_envo = 15; cp.unitType = PieceType.Core;   break;
-                case 5: cp.score = 0; cp.score_to_envo = 5;  cp.unitType = PieceType.Core;   break;
+                case 5: cp.score = 0; cp.score_to_envo = 1;  cp.unitType = PieceType.Core;   break;
                 case 1: cp.score = 5; cp.score_to_envo = 7; cp.unitType = PieceType.RHeavy; break;
                 case 2: cp.score = 3; cp.score_to_envo = 5;  cp.unitType = PieceType.KHeavy; break;
                 case 3: cp.score = 3; cp.score_to_envo = 5;  cp.unitType = PieceType.BHeavy; break;
@@ -567,7 +602,6 @@ public class Game : MonoBehaviour {
         switch (cp.piece_type) {
             case 2: return baseMove || ValidateEvoKnight(ref cp, tx, ty);
             case 3: return baseMove || ValidateKing(ref cp, tx, ty);
-            case 5: return ValidateLine(ref cp, tx, ty) || ValidateDiag(ref cp, tx, ty);
             case 6: return baseMove || ValidateKnight(ref cp, tx, ty); 
             default: return baseMove;
         }
@@ -623,12 +657,12 @@ public class Game : MonoBehaviour {
     // =========================================================================
 
     public void AbsorbPoints(ref data.chess_piece cp, ref data.chess_piece victim, Vector3 pos) {
-        if(cp.piece_type == 5) cp.score = 0; // king thường ko nhận điểm
         if (cp.evolved == 1) return;
 
         cp.score += victim.score;
+        Debug.Log($"<color=blue>Absorbed {victim.score} points!</color> Total score: {cp.score}");
         if (cp.score < 0) cp.score = 1;
-        if (cp.piece_type == 7 || cp.score >= cp.score_to_envo) //king có súng nhận điểm tích đạn
+        if (cp.piece_type == 7 && cp.score >= cp.score_to_envo) //king có súng nhận điểm tích đạn
         {
             cp.score = 0; // cap score at evo threshold for king to prevent overleveling
             // thêm đạn cho súng của vua
@@ -639,12 +673,14 @@ public class Game : MonoBehaviour {
             bool ateHeavy    = victim.unitType == PieceType.KHeavy || victim.unitType == PieceType.BHeavy || victim.unitType == PieceType.RHeavy;
             if (inEnemyHalf && ateHeavy) { EvolveWithWeapon(ref cp, victim.unitType, pos); return; }
         }
-
         if (cp.score >= cp.score_to_envo) Evolve(ref cp, pos);
     }
 
-    void Evolve(ref data.chess_piece cp, Vector3 pos) {
-        if (cp.evolved == 1) return;
+    void Evolve(ref data.chess_piece cp, Vector3 pos) {     
+        if(cp.piece_type == 5) {
+            cp.piece_type = 7; 
+            cp.score = 0;
+        }
         cp.evolved = 1;
         ApplyPieceData(ref cp);
         Camera.main.GetComponent<CameraControl>().ZoomInTarget(pos, 1f);
