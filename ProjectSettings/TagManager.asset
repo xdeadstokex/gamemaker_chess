@@ -7,6 +7,7 @@ TagManager:
   - MovePlate
   - Chessman
   - WinnerText
+  - CardAdder
   layers:
   - Default
   - TransparentFX

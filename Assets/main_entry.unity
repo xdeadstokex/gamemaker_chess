@@ -3032,7 +3032,7 @@ GameObject:
   - component: {fileID: 1728710304}
   m_Layer: 0
   m_Name: 00_main
-  m_TagString: Untagged
+  m_TagString: GameController
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -3608,6 +3608,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1118971647}
     m_Modifications:
+    - target: {fileID: 2734391705563368398, guid: b958bd9d00294544caf50a41ccf3ad48, type: 3}
+      propertyPath: m_Name
+      value: Gun
+      objectReference: {fileID: 0}
     - target: {fileID: 6340252608658188002, guid: b958bd9d00294544caf50a41ccf3ad48, type: 3}
       propertyPath: m_Name
       value: CardSlot
