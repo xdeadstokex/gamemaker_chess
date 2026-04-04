@@ -253,6 +253,9 @@ public static class piece_util {
         card_util.add_card(opponentColor, selectedPowerUp);
     }
 
+		data.mem.evolving_signal = 1;
+		data.mem.evolving_pos = pos; // STORE POSITION
+	}
 
     // =========================================================================
     // ATTACK / MOVE

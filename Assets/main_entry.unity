@@ -1568,6 +1568,7 @@ GameObject:
   - component: {fileID: 1239710108}
   - component: {fileID: 1239710107}
   - component: {fileID: 1239710109}
+  - component: {fileID: 1239710110}
   m_Layer: 0
   m_Name: 01_data
   m_TagString: Untagged
@@ -2684,7 +2685,6 @@ PrefabInstance:
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
-  - {fileID: 519420032}
   - {fileID: 1239710108}
   - {fileID: 1728710305}
   - {fileID: 609339474}

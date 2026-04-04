@@ -28,9 +28,42 @@ public class Game : MonoBehaviour {
             return;
         }
 
-        HandleMenuInput();
 
-        if (data.mem.game_started == 0) return;
+		if(data.mem.game_started != 0){
+		
+		Debug.Log($"mouse {mouse_util.scroll}\n");
+		//cam_2d.zoom_to_point(mouse_util.scroll, mouse_util.dx, mouse_util.dy);
+		cam_2d.zoom(mouse_util.scroll);
+		// --- DRAG ---
+		if(mouse_util.left.hold == 1){
+			cam_2d.move(-mouse_util.dx * 0.1f, -mouse_util.dy * 0.1f);
+		}
+
+		// --- NORMAL ZOOM ---
+		cam_2d.zoom(mouse_util.scroll);
+		Debug.Log($"mouse {mouse_util.x} {mouse_util.y}\n");
+		}
+
+		if(data.mem.zoom_cross_board == 0){
+		if(data.mem.total_players > 2 || data.mem.bot_count >= 2){
+		data.mem.zoom_cross_board = 1;
+		cam_2d.set_pos(10.5f, 10.5f);
+		cam_2d.scale(3.2f);
+		}
+		}
+
+		zoom_on_evolving_piece();
+
+		// --- GAME OVER ---
+		if (data.mem.gameOver && Input.GetMouseButtonDown(0)) {
+			data.mem.gameOver = false;
+			SceneManager.LoadScene("Game");
+			return;
+		}
+
+		HandleMenuInput();
+
+		if (data.mem.game_started == 0) return;
 
 		if(data.mem.current_player_color != 0 && data.mem.play_against_AI == 1){
             if (!data.mem.isAIThinking) {
@@ -500,4 +533,55 @@ public class Game : MonoBehaviour {
             }
         }
     }
+
+    // =========================================================================
+    // ZOOM ON EVO A PIECE
+    // =========================================================================
+
+	void zoom_on_evolving_piece(){
+
+		// --- TRIGGER ---
+		if (data.mem.evolving_signal == 1){
+			data.mem.evolving_signal = 0;
+
+			data.mem.evoStartX = cam_2d.x;
+			data.mem.evoStartY = cam_2d.y;
+			data.mem.evoStartSize = cam_2d.size;
+
+			cam_2d.set_pos(data.mem.evolving_pos.x, data.mem.evolving_pos.y);
+
+			data.mem.evoTargetSize = cam_2d.size * 0.7f;
+
+			data.mem.evoTimer = 0f;
+			data.mem.evoZoom = 1;
+		}
+
+		// --- UPDATE EFFECT ---
+		if (data.mem.evoZoom == 1){
+			data.mem.evoTimer += Time.deltaTime;
+
+			float t = data.mem.evoTimer / 0.5f;
+
+			if (t <= 1f){
+				cam_2d.size = Mathf.Lerp(data.mem.evoStartSize, data.mem.evoTargetSize, t);
+			}
+			else if (t <= 2f){
+				float k = t - 1f;
+
+				cam_2d.size = Mathf.Lerp(data.mem.evoTargetSize, data.mem.evoStartSize, k);
+
+				cam_2d.x = Mathf.Lerp(data.mem.evolving_pos.x, data.mem.evoStartX, k);
+				cam_2d.y = Mathf.Lerp(data.mem.evolving_pos.y, data.mem.evoStartY, k);
+			}
+			else{
+				cam_2d.size = data.mem.evoStartSize;
+				cam_2d.x = data.mem.evoStartX;
+				cam_2d.y = data.mem.evoStartY;
+
+				data.mem.evoZoom = 0;
+			}
+
+			cam_2d.apply();
+		}
+	}
 }
