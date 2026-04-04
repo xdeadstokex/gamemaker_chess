@@ -130,7 +130,8 @@ TextureImporter:
     edges: []
     weights: []
     secondaryTextures: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      asean_0: 3384485505974468210
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
