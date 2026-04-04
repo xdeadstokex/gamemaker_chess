@@ -7,10 +7,16 @@ public static class piece_util {
     // =========================================================================
     // PIECE — CREATE / SPRITE
     // =========================================================================
-	public static void create_piece(int x, int y, int piece_type, data.army_data army) {
+
+    // pawn_dir_x / pawn_dir_y: the forward direction for this pawn.
+    //   Vertical armies:   (0, +1) faces up,    (0, -1) faces down.
+    //   Horizontal armies: (+1, 0) faces right,  (-1, 0) faces left.
+    // Default (0,+1) matches old 2P white behaviour so existing callers still compile.
+    public static void create_piece(int x, int y, int piece_type, data.army_data army,
+                                    int pawn_dir_x = 0, int pawn_dir_y = 1) {
         bool w = army.color == 0;
 
-	    data.chess_piece cp = new data.chess_piece();
+        data.chess_piece cp = new data.chess_piece();
         cp.rect                = rect_2d.create(board_util.board_to_world(x), board_util.board_to_world(y), -1f);
         cp.x                   = x;
         cp.y                   = y;
@@ -18,7 +24,7 @@ public static class piece_util {
         cp.player_color        = army.color;
         cp.score               = 1;
         cp.score_to_envo       = 0;
-        cp.unitType            = PieceType.Light; // =_= ...
+        cp.unitType            = PieceType.Light;
         cp.evolved             = 0;
         cp.evolved_type        = 0;
         cp.selected            = 0;
@@ -26,6 +32,8 @@ public static class piece_util {
         cp.hover_sprite_scale  = 1.2f;
         cp.normal_sprite_scale = 0.8f;
         cp.shield              = 0;
+        cp.pawn_dir_x          = pawn_dir_x;
+        cp.pawn_dir_y          = pawn_dir_y;
 
         switch (piece_type) {
             case 0: cp.normal_sprite = w ? data.mem.wp_pawn   : data.mem.bp_pawn;
@@ -65,14 +73,13 @@ public static class piece_util {
         board_util.set_cell(x, y, army.color, idx);
     }
 
-	public static void apply_piece_data(ref data.chess_piece cp){
-    
+    public static void apply_piece_data(ref data.chess_piece cp) {
         if (cp.evolved == 0) {
             cp.rect.set_sprite(cp.normal_sprite);
             switch (cp.piece_type) {
                 case 4: cp.score = 9; cp.score_to_envo = 15; cp.unitType = PieceType.Core;   break;
                 case 5: cp.score = 0; cp.score_to_envo = 1;  cp.unitType = PieceType.Core;   break;
-                case 1: cp.score = 5; cp.score_to_envo = 7; cp.unitType = PieceType.RHeavy; break;
+                case 1: cp.score = 5; cp.score_to_envo = 7;  cp.unitType = PieceType.RHeavy; break;
                 case 2: cp.score = 3; cp.score_to_envo = 5;  cp.unitType = PieceType.KHeavy; break;
                 case 3: cp.score = 3; cp.score_to_envo = 5;  cp.unitType = PieceType.BHeavy; break;
                 case 0: cp.score = 1; cp.score_to_envo = 4;  cp.unitType = PieceType.Light;  break;
@@ -90,7 +97,7 @@ public static class piece_util {
                 case 2: cp.unitType = PieceType.KHeavy; break;
                 case 3: cp.unitType = PieceType.BHeavy; break;
                 case 0: cp.unitType = PieceType.ELight; break;
-                case 6: cp.unitType = PieceType.Core; cp.shield = 4;   break; //added shield to dqueen
+                case 6: cp.unitType = PieceType.Core; cp.shield = 4; break;
             }
         }
         cp.rect.fit_collider_to_sprite(cp.rect.sprite);
@@ -100,21 +107,21 @@ public static class piece_util {
     // =========================================================================
     // MOVE VALIDATION
     // =========================================================================
-    public static bool can_move_to(ref data.chess_piece cp, int tx, int ty){
+
+    public static bool can_move_to(ref data.chess_piece cp, int tx, int ty) {
         if (!board_util.on_board(tx, ty)) return false;
         ref data.board_cell cell = ref board_util.Cell(tx, ty);
         if (cell.has_piece == 1 && data.mem.get_army(cell.piece_color).troop_list[cell.piece_index].player_color == cp.player_color) return false;
 
-        int  dir      = (cp.player_color == 0) ? 1 : -1;
         bool baseMove = false;
 
         switch (cp.piece_type) {
-            case 0: baseMove = piece_util.valid_pawn(ref cp, tx, ty, dir);                             break;
-            case 1: baseMove = piece_util.valid_line(ref cp, tx, ty);                                  break;
-            case 2: baseMove = piece_util.valid_knight(ref cp, tx, ty);                                break;
-            case 3: baseMove = piece_util.valid_diag(ref cp, tx, ty);                                  break;
-            case 4: baseMove = piece_util.valid_line(ref cp, tx, ty) || piece_util.valid_diag(ref cp, tx, ty); break;
-            case 5: baseMove = piece_util.valid_king(ref cp, tx, ty);                                  break;
+            case 0: baseMove = piece_util.valid_pawn(ref cp, tx, ty);                                                                   break;
+            case 1: baseMove = piece_util.valid_line(ref cp, tx, ty);                                                                   break;
+            case 2: baseMove = piece_util.valid_knight(ref cp, tx, ty);                                                                 break;
+            case 3: baseMove = piece_util.valid_diag(ref cp, tx, ty);                                                                   break;
+            case 4: baseMove = piece_util.valid_line(ref cp, tx, ty) || piece_util.valid_diag(ref cp, tx, ty);                          break;
+            case 5: baseMove = piece_util.valid_king(ref cp, tx, ty);                                                                   break;
             case 6: baseMove = piece_util.valid_line(ref cp, tx, ty) || piece_util.valid_diag(ref cp, tx, ty) || piece_util.valid_knight(ref cp, tx, ty); break;
         }
 
@@ -123,15 +130,10 @@ public static class piece_util {
         switch (cp.piece_type) {
             case 2: return baseMove || piece_util.valid_evo_knight(ref cp, tx, ty);
             case 3: return baseMove || piece_util.valid_king(ref cp, tx, ty);
-            case 6: return baseMove || piece_util.valid_knight(ref cp, tx, ty); 
+            case 6: return baseMove || piece_util.valid_knight(ref cp, tx, ty);
             default: return baseMove;
         }
     }
-
-
-
-
-
 
 
     public static bool valid_line(ref data.chess_piece cp, int tx, int ty) {
@@ -165,13 +167,27 @@ public static class piece_util {
         return (dx == 2 && dy == 0) || (dx == 0 && dy == 2);
     }
 
-    public static bool valid_pawn(ref data.chess_piece cp, int tx, int ty, int dir) {
-        int dx = tx - cp.x, dy = ty - cp.y;
-        if (Mathf.Abs(dx) == 1 && dy == dir) {
-            ref data.board_cell cell = ref board_util.Cell(tx, ty);
-            return cell.has_piece == 1 && data.mem.get_army(cell.piece_color).troop_list[cell.piece_index].player_color != cp.player_color;
-        }
-        return false;
+    // Pawn attacks diagonally one step forward.
+    // "Forward" is defined by cp.pawn_dir_x / cp.pawn_dir_y stored at spawn time.
+    // Works for all 4 orientations on a cross board.
+    public static bool valid_pawn(ref data.chess_piece cp, int tx, int ty) {
+        int dx  = tx - cp.x;
+        int dy  = ty - cp.y;
+
+        // How far along the forward axis?
+        int fwd  = dx * cp.pawn_dir_x + dy * cp.pawn_dir_y;
+
+        // How far along the perpendicular axis?
+        // Because pawn_dir is always an axis-aligned unit vector,
+        // the perpendicular component is simply the other axis.
+        int perp = Mathf.Abs(cp.pawn_dir_x == 0 ? dx : dy);
+
+        // Must be exactly 1 step forward and 1 step sideways.
+        if (fwd != 1 || perp != 1) return false;
+
+        ref data.board_cell cell = ref board_util.Cell(tx, ty);
+        return cell.has_piece == 1 &&
+               data.mem.get_army(cell.piece_color).troop_list[cell.piece_index].player_color != cp.player_color;
     }
 
     public static bool valid_king(ref data.chess_piece cp, int tx, int ty) {
@@ -189,48 +205,43 @@ public static class piece_util {
         cp.score += victim.score;
         Debug.Log($"<color=blue>Absorbed {victim.score} points!</color> Total score: {cp.score}");
         if (cp.score < 0) cp.score = 1;
-        if (cp.piece_type == 7 && cp.score >= cp.score_to_envo) //king có súng nhận điểm tích đạn
-        {
-            cp.score = 0; // cap score at evo threshold for king to prevent overleveling
-            // thêm đạn cho súng của vua
+        if (cp.piece_type == 7 && cp.score >= cp.score_to_envo) {
+            cp.score = 0;
             return;
-        } 
+        }
         if (cp.unitType == PieceType.Light) {
-            bool inEnemyHalf = (cp.player_color == 0) ? cp.y >= 3 : cp.y <= 4; // not half enough but whatever
+            // "enemy half" check is direction-aware: positive forward progress past midpoint.
+            int progress = cp.x * cp.pawn_dir_x + cp.y * cp.pawn_dir_y;
+            int mid      = (cp.pawn_dir_x == 0 ? data.mem.board_h : data.mem.board_w) / 2;
+            bool inEnemyHalf = progress >= mid;
             bool ateHeavy    = victim.unitType == PieceType.KHeavy || victim.unitType == PieceType.BHeavy || victim.unitType == PieceType.RHeavy;
             if (inEnemyHalf && ateHeavy) { piece_util.evo_with_weapon(ref cp, victim.unitType, pos); return; }
         }
         if (cp.score >= cp.score_to_envo) piece_util.evo(ref cp, pos);
     }
 
-	public static void evo(ref data.chess_piece cp, Vector3 pos){
-		if(cp.piece_type == 5) {
-			cp.piece_type = 7; 
-			cp.score = 0;
-		}
+    public static void evo(ref data.chess_piece cp, Vector3 pos) {
+        if (cp.piece_type == 5) {
+            cp.piece_type = 7;
+            cp.score = 0;
+        }
+        cp.evolved = 1;
+        piece_util.apply_piece_data(ref cp);
+        data.mem.evolving_signal = 1;
+        data.mem.evolving_pos    = pos;
+        Debug.Log($"<color=green>{cp.piece_type} HAS EVOLVED!</color>");
+    }
 
-		cp.evolved = 1;
-		piece_util.apply_piece_data(ref cp);
-
-		data.mem.evolving_signal = 1;
-		data.mem.evolving_pos = pos; // STORE POSITION
-
-		Debug.Log($"<color=green>{cp.piece_type} HAS EVOLVED!</color>");
-	}
-
-	public static void evo_with_weapon(ref data.chess_piece cp, PieceType weapon, Vector3 pos){
-		cp.evolved  = 1;
-		cp.unitType = PieceType.ELight;
-
-		if (weapon == PieceType.KHeavy) cp.evolved_type = 0;
-		else if (weapon == PieceType.BHeavy) cp.evolved_type = 1;
-		else if (weapon == PieceType.RHeavy) cp.evolved_type = 2;
-
-		piece_util.apply_piece_data(ref cp);
-
-		data.mem.evolving_signal = 1;
-		data.mem.evolving_pos = pos; // STORE POSITION
-	}
+    public static void evo_with_weapon(ref data.chess_piece cp, PieceType weapon, Vector3 pos) {
+        cp.evolved  = 1;
+        cp.unitType = PieceType.ELight;
+        if      (weapon == PieceType.KHeavy) cp.evolved_type = 0;
+        else if (weapon == PieceType.BHeavy) cp.evolved_type = 1;
+        else if (weapon == PieceType.RHeavy) cp.evolved_type = 2;
+        piece_util.apply_piece_data(ref cp);
+        data.mem.evolving_signal = 1;
+        data.mem.evolving_pos    = pos;
+    }
 
     // =========================================================================
     // ATTACK / MOVE
@@ -243,30 +254,20 @@ public static class piece_util {
         data.army_data       enemy  = data.mem.get_army(cell.piece_color);
         ref data.chess_piece target = ref enemy.troop_list[cell.piece_index];
 
-        //dqueen start
+        // DQueen counter-attack: attacker dies, DQueen teleports to attacker's old cell.
         if (target.piece_type == 6) {
-            // 1. Lưu lại vị trí cũ của kẻ tấn công
-            int oldAttackerX = attacker.x;
-            int oldAttackerY = attacker.y;
-
-            // 2. Tiêu diệt kẻ tấn công (Phản đòn)
+            int oldX = attacker.x;
+            int oldY = attacker.y;
             attacker.rect.self_destroy();
             attacker.rect = null;
-            // Xóa kẻ tấn công khỏi ô cờ cũ của nó
-            board_util.Cell(oldAttackerX, oldAttackerY).has_piece = 0; 
-
-            // 3. Kích hoạt kỹ năng dịch chuyển của DQueen
-            DQueenSkill(ref target, oldAttackerX, oldAttackerY);
-            
+            board_util.Cell(oldX, oldY).has_piece = 0;
+            DQueenSkill(ref target, oldX, oldY);
             sound_util.play_sound(data.mem.captureSound);
-            return; // Kết thúc hàm sớm, không xóa DQueen
+            return;
         }
-        //dqueen end
+
         piece_util.absorb_point(ref attacker, ref target, pos);
         sound_util.play_sound(data.mem.captureSound);
-
-        //if (target.piece_type == 5) Winner(target.player_color == 0 ? "black" : "white");
-
         target.rect.self_destroy();
         target.rect = null;
         board_util.clear_cell(tx, ty);
@@ -280,24 +281,14 @@ public static class piece_util {
         board_util.set_cell(tx, ty, color, idx);
     }
 
-
     public static void DQueenSkill(ref data.chess_piece dQueen, int targetX, int targetY) {
-        // 1. Xóa vị trí cũ của DQueen trên board
         board_util.Cell(dQueen.x, dQueen.y).has_piece = 0;
-
-        // 2. Cập nhật tọa độ mới (vị trí kẻ địch vừa đứng)
         dQueen.x = targetX;
         dQueen.y = targetY;
-
-        // 3. Cập nhật vị trí hiển thị (Sprite)
         dQueen.rect.move_to_board(targetX, targetY, -1f);
-
-        // 4. Ghi đè DQueen vào ô mới trên mảng Board
         board_util.set_cell(targetX, targetY, dQueen.player_color, FindPieceIndex(ref dQueen));
-        
-        Debug.Log("<color=purple>DQueen phản đòn và chiếm giữ vị trí của kẻ địch!</color>");
+        Debug.Log("<color=purple>DQueen counter-attack: teleported to attacker's cell!</color>");
     }
-	
 
     public static ref data.chess_piece get_piece_in_board(int x, int y) {
         ref data.board_cell cell = ref board_util.Cell(x, y);
@@ -305,9 +296,6 @@ public static class piece_util {
         return ref data.mem.get_army(cell.piece_color).troop_list[cell.piece_index];
     }
 
-
-
-    // Helper để tìm index chính xác của quân cờ trong danh sách quân
     public static int FindPieceIndex(ref data.chess_piece cp) {
         data.army_data army = data.mem.get_army(cp.player_color);
         for (int i = 0; i < army.troop_count; i++) {
@@ -315,10 +303,10 @@ public static class piece_util {
         }
         return -1;
     }
-	
 
-    public static void unselect_all_piece(){
-        for (int color = 0; color <= 1; color++) {
+    // Loops all active armies, not just 0 and 1.
+    public static void unselect_all_piece() {
+        for (int color = 0; color < data.mem.total_players; color++) {
             data.army_data army = data.mem.get_army(color);
             for (int i = 0; i < army.troop_count; i++) {
                 army.troop_list[i].selected = 0;
