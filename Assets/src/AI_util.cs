@@ -36,8 +36,8 @@ public static class AI_util {
         return moves;
     }
 
-    public static void ExecuteAIMove(data.AIMove move) {
-        data.army_data army = data.mem.get_army(data.mem.aiColor);
+    public static void ExecuteAIMove(data.AIMove move, int colorToMove) {
+        data.army_data army = data.mem.get_army(colorToMove);
         ref data.chess_piece attacker = ref army.troop_list[move.piece_index];
 
         if (move.isAttack) {
@@ -47,7 +47,7 @@ public static class AI_util {
             sound_util.play_sound(data.mem.moveSound);
         }
 
-        piece_util.move_piece(ref attacker, move.piece_index, data.mem.aiColor, move.targetX, move.targetY);
+        piece_util.move_piece(ref attacker, move.piece_index, colorToMove, move.targetX, move.targetY);
 
         data.mem.selected_a_piece = 0;
         piece_util.unselect_all_piece();
@@ -92,25 +92,29 @@ public static class AI_util {
     public static IEnumerator PlayAITurn() {
         data.mem.isAIThinking = true;
         
-        //Random
-        // yield return new WaitForSeconds(0.5f);
-        // data.AIMove chosenMove = CalculateGreedyMove(data.mem.aiColor);
+        int currentColor = data.mem.current_player_color;
 
         //Monte Carlo
         yield return new WaitForSeconds(0.1f);
-        data.AIMove chosenMove = CalculateMCTSMove(data.mem.aiColor);
-
+        data.AIMove chosenMove = CalculateMCTSMove(currentColor);
 
         if (chosenMove.piece_index != -1 && !data.mem.gameOver) {
-            ExecuteAIMove(chosenMove);
-        } else if (!data.mem.gameOver) {
-            //Debug.Log("AI so stupid and defeat");
-            //Winner(data.mem.aiColor == 0 ? "black" : "white");
-        }
+            ExecuteAIMove(chosenMove, currentColor);
+        } 
         data.mem.isAIThinking = false;
     }
     
     //MONTE CARLO
+    public static int GetNextActiveColor(int currentColor) {
+        int n = data.mem.total_players;
+        int next = (currentColor + 1) % n;
+        for (int i = 0; i < n; i++) {
+            if (data.mem.armies[next].troop_count > 0) break;
+            next = (next + 1) % n;
+        }
+        return next;
+    }
+
     public static data.army_data CloneArmy(data.army_data original) {
         data.army_data clone = new data.army_data(original.color);
         clone.troop_count = original.troop_count;
@@ -120,14 +124,17 @@ public static class AI_util {
 
     public static void BackupRealState() {
         data.mem.real_board = (data.board_cell[])data.mem.board.Clone();
-        data.mem.real_white = CloneArmy(data.mem.white_army);
-        data.mem.real_black = CloneArmy(data.mem.black_army);
+        data.mem.real_armies = new data.army_data[data.mem.total_players];
+        for (int i = 0; i < data.mem.total_players; i++) {
+            data.mem.real_armies[i] = CloneArmy(data.mem.armies[i]);
+        }
     }
 
     public static void RestoreRealState() {
         data.mem.board = (data.board_cell[])data.mem.real_board.Clone();
-        data.mem.white_army = CloneArmy(data.mem.real_white);
-        data.mem.black_army = CloneArmy(data.mem.real_black);
+        for (int i = 0; i < data.mem.total_players; i++) {
+            data.mem.armies[i] = CloneArmy(data.mem.real_armies[i]);
+        }
     }
 
     //func that simulate move without ui/sound
@@ -145,7 +152,7 @@ public static class AI_util {
             target.rect = null; 
             board_util.clear_cell(move.targetX, move.targetY);
 
-            if (target.piece_type == 5) return 1; //note that this team win
+            if (target.piece_type == 5 || target.piece_type == 7) return 1; 
         }
 
         board_util.clear_cell(attacker.x, attacker.y);
@@ -178,7 +185,7 @@ public static class AI_util {
                     if (ucb > bestUCB) { bestUCB = ucb; bestChild = child; }
                 }
                 node = bestChild;
-                SimulateMoveDataOnly(node.move, 1 - node.colorToMove);
+                SimulateMoveDataOnly(node.move, GetNextActiveColor(node.parent.colorToMove));
             }
 
             // 2. EXPANSION
@@ -190,7 +197,7 @@ public static class AI_util {
                 data.MCTSNode child = new data.MCTSNode {
                     move = move,
                     parent = node,
-                    colorToMove = 1 - node.colorToMove
+                    colorToMove = GetNextActiveColor(node.colorToMove) 
                 };
                 node.children.Add(child);
                 
@@ -215,7 +222,8 @@ public static class AI_util {
                     result = (currentSimColor == ai_color) ? 1 : -1;
                     break;
                 }
-                currentSimColor = 1 - currentSimColor;
+                
+                currentSimColor = GetNextActiveColor(currentSimColor);
                 depth++;
             }
 
@@ -240,5 +248,4 @@ public static class AI_util {
         
         return CalculateGreedyMove(ai_color);
     }
-
 }

@@ -26,10 +26,12 @@ public class Game : MonoBehaviour {
         if (data.mem.game_started == 0) return;
 
 		if(data.mem.current_player_color != 0 && data.mem.play_against_AI == 1){
-			Debug.Log("AI\n");
-			AI_util.PlayAITurn();
-			return;
-		}
+            if (!data.mem.isAIThinking) {
+                Debug.Log($"AI {data.mem.current_player_color} Thinking...\n");
+                StartCoroutine(AI_util.PlayAITurn());
+            }
+            return;
+        }
 		
         HandlePieceInput();
         HandleMovePlateInput();
@@ -47,8 +49,8 @@ public class Game : MonoBehaviour {
         data.mem.main_screen_gui.set_sprite_size(20f, 12f);
         data.mem.main_screen_gui.set_collider_size(20f, 12f);
 
-        data.mem.pvp_button = gui_util.make_button( 2f, 0f, Color.cyan);
-        data.mem.pve_button = gui_util.make_button(-2f, 0f, Color.yellow);
+        data.mem.pvp_button = gui_util.make_button( 2.5f, 0f, Color.cyan, "PvP");
+        data.mem.pve_button = gui_util.make_button(-2.5f, 0f, Color.yellow, "PvE");
 
         data.mem.menu_state = data.MenuState.Main;
     }
@@ -64,15 +66,15 @@ public class Game : MonoBehaviour {
 
         if (is_pve) {
             // pick number of bots: 1 / 2 / 3
-            data.mem.btn_count1 = gui_util.make_button( 3f, 0f, Color.red); // 1 bot
-            data.mem.btn_count2 = gui_util.make_button( 0f, 0f, Color.cyan); // 2 bot
-            data.mem.btn_count3 = gui_util.make_button(-3f, 0f, Color.green); // 3 bot
+            data.mem.btn_count1 = gui_util.make_button( 3f, 0f, Color.red, "1 vs 1"); 
+            data.mem.btn_count2 = gui_util.make_button( 0f, 0f, Color.cyan, "1 vs 2"); 
+            data.mem.btn_count3 = gui_util.make_button(-3f, 0f, Color.green, "1 vs 3");
             data.mem.menu_state = data.MenuState.PickBotCount;
         } else {
             // pick number of players: 2 / 3 / 4
-            data.mem.btn_count1 = gui_util.make_button( 3f, 0f, Color.red); // 2p
-            data.mem.btn_count2 = gui_util.make_button( 0f, 0f, Color.cyan); // 3p
-            data.mem.btn_count3 = gui_util.make_button(-3f, 0f, Color.green); // 4p
+            data.mem.btn_count1 = gui_util.make_button( 3f, 0f, Color.red, "2 Players"); 
+            data.mem.btn_count2 = gui_util.make_button( 0f, 0f, Color.cyan, "3 Players"); 
+            data.mem.btn_count3 = gui_util.make_button(-3f, 0f, Color.green, "4 Players"); 
             data.mem.menu_state = data.MenuState.PickPlayerCount;
         }
 
@@ -107,7 +109,7 @@ public class Game : MonoBehaviour {
                 if (gui_util.clicked(data.mem.btn_count2)) StartGame(3, 2); // 1 human + 2 bots
                 if (gui_util.clicked(data.mem.btn_count3)) StartGame(4, 3); // 1 human + 3 bots
                 if (gui_util.clicked(data.mem.back_button)) ShowMainMenu();
-                else{ data.mem.play_against_AI = 1; }
+                // else{ data.mem.play_against_AI = 1; }
 				break;
         }
     }
@@ -124,6 +126,8 @@ public class Game : MonoBehaviour {
         data.mem.current_player_color = 0;
         data.mem.game_started      = 1;
         data.mem.menu_state        = data.MenuState.None;
+
+        data.mem.play_against_AI   = (bot_count > 0) ? 1 : 0;
 
         // init armies for each player
         data.mem.armies = new data.army_data[total_players];

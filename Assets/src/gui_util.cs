@@ -3,17 +3,33 @@
 // Helpers for building and destroying menu GUI elements.
 public static class gui_util {
 
-    const float BTN_W = 1.8f;
+    const float BTN_W = 2.5f;
     const float BTN_H = 0.8f;
 
     // Create a labelled button rect and register it for bulk destroy.
-    public static rect_2d make_button(float x, float y, Color color){
+    public static rect_2d make_button(float x, float y, Color color, string text = ""){
         rect_2d btn = rect_2d.create(x, y, -1f);
         btn.set_sprite(data.mem.rect_2d_sprite);
         btn.set_sprite_size(BTN_W, BTN_H);
         btn.set_collider_size(BTN_W, BTN_H);
         btn.set_color(color);
         data.mem.menu_rects.Add(btn);
+
+        //text
+        if (!string.IsNullOrEmpty(text) && btn.obj != null) {
+            GameObject textObj = new GameObject("ButtonText");
+            textObj.transform.SetParent(btn.obj.transform);
+            textObj.transform.localPosition = new Vector3(0, 0, -0.1f);
+            
+            TextMesh tm = textObj.AddComponent<TextMesh>();
+            tm.text = text;
+            tm.characterSize = 0.15f; 
+            tm.fontSize = 40;         
+            tm.anchor = TextAnchor.MiddleCenter;
+            tm.alignment = TextAlignment.Center;
+            tm.color = Color.black;   
+        }
+
         return btn;
     }
 
