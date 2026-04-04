@@ -164,8 +164,7 @@ public class data : MonoBehaviour {
     public int        aiColor     = 1;
     public bool       isAIThinking= false;
     public board_cell[] real_board;
-    public army_data    real_white;
-    public army_data    real_black;
+    public army_data[]  real_armies;
 
     // =========================================================================
     // SPRITES
