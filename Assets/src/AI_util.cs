@@ -9,7 +9,48 @@ public static class AI_util {
     // =========================================================================
     // AI
     // =========================================================================
-    //RANDOM AI
+    //MAIN FUNC
+    public static IEnumerator PlayAITurn() {
+        data.mem.isAIThinking = true;
+        int currentColor = data.mem.current_player_color;
+        yield return new WaitForSeconds(0.1f);
+        data.AIMove chosenMove = new data.AIMove { piece_index = -1 };
+
+        switch (data.mem.ai_difficulty) {
+            case AIDifficulty.Baby:
+                List<data.AIMove> validMoves = GenerateAllValidMoves(currentColor);
+                if (validMoves.Count > 0) {
+                    chosenMove = validMoves[Random.Range(0, validMoves.Count)];
+                }
+                break;
+            case AIDifficulty.Easy:
+                chosenMove = CalculateMCTSMove(currentColor);
+                break;
+            case AIDifficulty.Normal:
+                // TODO: CalculateMinimaxMove()
+                //chosenMove = CalculateMinimaxMove(currentColor);
+                
+                //call greedy (just demo)
+                chosenMove = CalculateGreedyMove(currentColor);
+                break;
+            case AIDifficulty.Asean:
+                // TODO: ML
+                //chosenMove = CalculateMachineLearningMove(currentColor);
+                
+                //call monte(just demo)
+                chosenMove = CalculateMCTSMove(currentColor);
+                break;
+        }
+
+        if (chosenMove.piece_index != -1 && !data.mem.gameOver) {
+            ExecuteAIMove(chosenMove, currentColor);
+        }   
+        data.mem.isAIThinking = false;
+    }
+    
+    // =========================================================================
+    // RANDOM AI
+    // =========================================================================
     public static List<data.AIMove> GenerateAllValidMoves(int color) {
         List<data.AIMove> moves = new List<data.AIMove>();
         data.army_data army = data.mem.get_army(color);
@@ -34,25 +75,6 @@ public static class AI_util {
             }
         }
         return moves;
-    }
-
-    public static void ExecuteAIMove(data.AIMove move, int colorToMove) {
-        data.army_data army = data.mem.get_army(colorToMove);
-        ref data.chess_piece attacker = ref army.troop_list[move.piece_index];
-
-        if (move.isAttack) {
-            Vector3 targetPos = board_util.Cell(move.targetX, move.targetY).tile.obj.transform.position;
-            piece_util.piece_attack(ref attacker, move.targetX, move.targetY, targetPos);
-        } else {
-            sound_util.play_sound(data.mem.moveSound);
-        }
-
-        piece_util.move_piece(ref attacker, move.piece_index, colorToMove, move.targetX, move.targetY);
-
-        data.mem.selected_a_piece = 0;
-        piece_util.unselect_all_piece();
-        move_plate_util.clear_move_plate();
-        pvp_util.next_player_turn();
     }
 
     public static data.AIMove CalculateGreedyMove(int color) {
@@ -88,23 +110,10 @@ public static class AI_util {
 
         return validMoves[Random.Range(0, validMoves.Count)];
     }
-
-    public static IEnumerator PlayAITurn() {
-        data.mem.isAIThinking = true;
-        
-        int currentColor = data.mem.current_player_color;
-
-        //Monte Carlo
-        yield return new WaitForSeconds(0.1f);
-        data.AIMove chosenMove = CalculateMCTSMove(currentColor);
-
-        if (chosenMove.piece_index != -1 && !data.mem.gameOver) {
-            ExecuteAIMove(chosenMove, currentColor);
-        } 
-        data.mem.isAIThinking = false;
-    }
     
-    //MONTE CARLO
+    // =========================================================================
+    // MONTE CARLO
+    // =========================================================================
     public static int GetNextActiveColor(int currentColor) {
         int n = data.mem.total_players;
         int next = (currentColor + 1) % n;
@@ -247,5 +256,27 @@ public static class AI_util {
         if (bestFinalChild != null) return bestFinalChild.move;
         
         return CalculateGreedyMove(ai_color);
+    }
+
+    // =========================================================================
+    // HELPER
+    // =========================================================================
+    public static void ExecuteAIMove(data.AIMove move, int colorToMove) {
+        data.army_data army = data.mem.get_army(colorToMove);
+        ref data.chess_piece attacker = ref army.troop_list[move.piece_index];
+
+        if (move.isAttack) {
+            Vector3 targetPos = board_util.Cell(move.targetX, move.targetY).tile.obj.transform.position;
+            piece_util.piece_attack(ref attacker, move.targetX, move.targetY, targetPos);
+        } else {
+            sound_util.play_sound(data.mem.moveSound);
+        }
+
+        piece_util.move_piece(ref attacker, move.piece_index, colorToMove, move.targetX, move.targetY);
+
+        data.mem.selected_a_piece = 0;
+        piece_util.unselect_all_piece();
+        move_plate_util.clear_move_plate();
+        pvp_util.next_player_turn();
     }
 }

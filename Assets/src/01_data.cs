@@ -3,6 +3,7 @@ using UnityEngine;
 
 public enum CardType { Buff, Debuff, GodQueen, DemonQueen, Event, Item }
 public enum PieceType { Light, ELight, KHeavy, BHeavy, RHeavy, Core }
+public enum AIDifficulty { Baby, Easy, Normal, Asean }
 
 public class data : MonoBehaviour {
     public static data mem;
@@ -11,7 +12,7 @@ public class data : MonoBehaviour {
     // MENU STATE
     // =========================================================================
 
-    public enum MenuState { None, Main, PickPlayerCount, PickBotCount }
+    public enum MenuState { None, Main, PickPlayerCount, PickBotCount, PickBotDifficulty }
     public MenuState menu_state = MenuState.None;
 
     // =========================================================================
@@ -141,6 +142,12 @@ public class data : MonoBehaviour {
     public rect_2d btn_count3;
     public rect_2d back_button;
 
+    //difficult
+    public rect_2d btn_diff1;
+    public rect_2d btn_diff2;
+    public rect_2d btn_diff3;
+    public rect_2d btn_diff4;
+
     // flat list for easy bulk-destroy
     public List<rect_2d> menu_rects = new List<rect_2d>();
 
@@ -156,6 +163,7 @@ public class data : MonoBehaviour {
     public int              total_players        = 2;
     public int              bot_count            = 0;
     public int              play_against_AI      = 0;
+    public AIDifficulty ai_difficulty = AIDifficulty.Baby;
     // =========================================================================
     // AI
     // =========================================================================
