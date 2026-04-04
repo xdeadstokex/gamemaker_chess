@@ -4,7 +4,6 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 
 public static class AI_util {
-
     // =========================================================================
     // AI MAIN FUNC
     // =========================================================================
@@ -27,13 +26,13 @@ public static class AI_util {
                 break;
             case AIDifficulty.Asean:
                 chosenMove = CalculateMCTSMove(currentColor); //Ml after
+
                 break;
         }
 
         if (chosenMove.piece_index != -1 && !data.mem.gameOver) {
             ExecuteAIMove(chosenMove, currentColor);
         } else {
-            // Sửa lỗi treo Freeze game
             data.mem.selected_a_piece = 0;
             piece_util.unselect_all_piece();
             move_plate_util.clear_move_plate();
@@ -43,7 +42,7 @@ public static class AI_util {
     }
     
     // =========================================================================
-    // VALID MOVES & GREEDY
+    // RANDOM / GREEDY AI
     // =========================================================================
     public static List<data.AIMove> GenerateAllValidMoves(int color) {
         List<data.AIMove> moves = new List<data.AIMove>();
@@ -170,7 +169,7 @@ public static class AI_util {
     }
 
     // =========================================================================
-    // RADAR & TACTICS
+    // TACTICS & HEURISTICS
     // =========================================================================
     public static float GetPieceValue(int piece_type, int base_score) {
         if (piece_type == 5 || piece_type == 7) return 1000f; 
@@ -183,8 +182,7 @@ public static class AI_util {
     public static bool IsSquareAttacked(int x, int y, int defenderColor) {
         for (int c = 0; c < data.mem.total_players; c++) {
             if (c == defenderColor) continue; 
-            data.army_data enemyArmy = data.mem.armies[c];
-            
+            data.army_data enemyArmy = data.mem.armies[c];    
             for (int i = 0; i < enemyArmy.troop_count; i++) {
                 ref data.chess_piece enemyPiece = ref enemyArmy.troop_list[i];
                 if (enemyPiece.rect == null) continue;
@@ -362,7 +360,10 @@ public static class AI_util {
         data.MCTSNode bestFinalChild = null;
         int maxVisits = -1;
         foreach (var child in root.children) {
-            if (child.visits > maxVisits) { maxVisits = child.visits; bestFinalChild = child; }
+            if (child.visits > maxVisits) { 
+                maxVisits = child.visits; 
+                bestFinalChild = child; 
+            }
         }
 
         if (bestFinalChild != null) {

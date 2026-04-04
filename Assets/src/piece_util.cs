@@ -7,7 +7,7 @@ public static class piece_util {
     // =========================================================================
     // PIECE — CREATE / SPRITE
     // =========================================================================
-	public static void create_piece(int x, int y, int piece_type, data.army_data army) {
+	public static void create_piece(int x, int y, int piece_type, data.army_data army, int pawn_dir_x = 0, int pawn_dir_y = 0) {
         bool w = army.color == 0;
 
 	    data.chess_piece cp = new data.chess_piece();
@@ -26,6 +26,9 @@ public static class piece_util {
         cp.hover_sprite_scale  = 1.2f;
         cp.normal_sprite_scale = 0.8f;
         cp.shield              = 0;
+
+        cp.pawn_dir_x          = pawn_dir_x;
+        cp.pawn_dir_y          = pawn_dir_y;
 
         switch (piece_type) {
             case 0: cp.normal_sprite = w ? data.mem.wp_pawn   : data.mem.bp_pawn;
@@ -103,10 +106,13 @@ public static class piece_util {
     public static bool can_move_to(ref data.chess_piece cp, int tx, int ty){
         if (!board_util.on_board(tx, ty)) return false;
         ref data.board_cell cell = ref board_util.Cell(tx, ty);
-        if (cell.has_piece == 1 && data.mem.get_army(cell.piece_color).troop_list[cell.piece_index].player_color == cp.player_color) return false;
+        
+        if (cell.has_piece == 1 && data.mem.get_army(cell.piece_color).troop_list[cell.piece_index].player_color == cp.player_color) 
+            return false;
 
         int  dir      = (cp.player_color == 0) ? 1 : -1;
         bool baseMove = false;
+
 
         switch (cp.piece_type) {
             case 0: baseMove = valid_pawn(ref cp, tx, ty, dir);                             break;
