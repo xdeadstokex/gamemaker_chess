@@ -1,0 +1,230 @@
+﻿using System.Collections.Generic;
+using UnityEngine;
+
+public enum CardType { Buff, Debuff, GodQueen, DemonQueen, Event, Item }
+public enum PieceType { Light, ELight, KHeavy, BHeavy, RHeavy, Core }
+public enum AIDifficulty { Baby, Easy, Normal, Asean }
+
+public class data : MonoBehaviour {
+    public static data mem;
+
+    // =========================================================================
+    // MENU STATE
+    // =========================================================================
+
+    public enum MenuState { None, Main, PickPlayerCount, PickBotCount, PickBotDifficulty }
+    public MenuState menu_state = MenuState.None;
+
+    // =========================================================================
+    // BOARD CELL
+    // =========================================================================
+
+    public struct board_cell {
+        public int     valid;
+        public int     has_piece;
+        public int     piece_color;
+        public int     piece_index;
+        public rect_2d tile;
+        public Sprite  tile_sprite;
+    }
+
+    // =========================================================================
+    // CHESS PIECE
+    // =========================================================================
+
+    public struct chess_piece {
+        public rect_2d rect;
+        public Sprite  normal_sprite;
+        public Sprite  evo_sprite0;
+        public Sprite  evo_sprite1;
+        public Sprite  evo_sprite2;
+        public int     x;
+        public int     y;
+        public int     player_color;
+        public int     score;
+        public int     score_to_envo;
+        public PieceType unitType;
+        public int     piece_type;   // 0=Pawn 1=Rook 2=Knight 3=Bishop 4=Queen 5=King 6=DQueen 7=KingWithGun
+        public int     evolved;
+        public int     evolved_type;
+        public int     selected;
+        public int     hovered;
+        public float   hover_sprite_scale;
+        public float   normal_sprite_scale;
+        public int     shield;
+        // direction this piece's pawns advance: (0,+1)=up (0,-1)=down (+1,0)=right (-1,0)=left
+        public int     pawn_dir_x;
+        public int     pawn_dir_y;
+    }
+
+    // =========================================================================
+    // MOVE PLATE
+    // =========================================================================
+
+    public struct move_plate {
+        public rect_2d rect;
+        public bool    attack;
+        public int     mat_x;
+        public int     mat_y;
+        public int     piece_index;
+        public int     piece_color;
+        public float   hover_sprite_scale;
+        public float   normal_sprite_scale;
+    }
+
+    // =========================================================================
+    // ARMY DATA
+    // =========================================================================
+
+    public class army_data {
+        public int           color;
+        public chess_piece[] troop_list  = new chess_piece[32]; // more room for 4P
+        public int           troop_count = 0;
+        public army_data(int color) { this.color = color; }
+    }
+
+    // =========================================================================
+    // CARD / AI  (unchanged)
+    // =========================================================================
+
+    public class Card {
+        public string   cardName;
+        public CardType type;
+        public int      value;
+        public Sprite   artwork;
+        public string   description;
+    }
+
+    public struct AIMove {
+        public int  piece_index;
+        public int  targetX;
+        public int  targetY;
+        public bool isAttack;
+    }
+
+    public class MCTSNode {
+        public AIMove         move;
+        public MCTSNode       parent;
+        public List<MCTSNode> children     = new List<MCTSNode>();
+        public float          wins         = 0;
+        public int            visits       = 0;
+        public int            colorToMove;
+        public List<AIMove>   untriedMoves;
+    }
+
+    // =========================================================================
+    // BOARD
+    // =========================================================================
+
+    public int          board_w;
+    public int          board_h;
+    public board_cell[] board;
+    public chess_piece  void_piece;
+
+    // N-player armies
+    public army_data[]  armies;          // length = total_players
+    // legacy shortcuts
+    public army_data    white_army;
+    public army_data    black_army;
+
+    public army_data get_army(int color)  => armies[color];
+    public army_data get_enemy(int color) => armies[(color + 1) % total_players];
+
+    // =========================================================================
+    // GUI BUTTONS
+    // =========================================================================
+
+    public rect_2d main_screen_gui;
+    public rect_2d pvp_button;
+    public rect_2d pve_button;
+    public rect_2d btn_count1;
+    public rect_2d btn_count2;
+    public rect_2d btn_count3;
+    public rect_2d back_button;
+
+    //difficult
+    public rect_2d btn_diff1;
+    public rect_2d btn_diff2;
+    public rect_2d btn_diff3;
+    public rect_2d btn_diff4;
+
+    // flat list for easy bulk-destroy
+    public List<rect_2d> menu_rects = new List<rect_2d>();
+
+    // =========================================================================
+    // GAME STATE
+    // =========================================================================
+
+    public List<move_plate> move_plate_list      = new List<move_plate>();
+    public bool             gameOver             = false;
+    public int              current_player_color = 0;
+    public int              selected_a_piece     = 0;
+    public int              game_started         = 0;
+    public int              total_players        = 2;
+    public int              bot_count            = 0;
+    public int              play_against_AI      = 0;
+	public int              evolving_signal      = 0;
+	public Vector3          evolving_pos;
+	public float evoTimer = 0f;
+	public int   evoZoom = 0;
+
+	public float evoStartSize;
+	public float evoTargetSize;
+
+	public float evoStartX, evoStartY;
+	public int              zoom_cross_board    = 0;
+    public AIDifficulty ai_difficulty = AIDifficulty.Baby;
+    // =========================================================================
+    // AI
+    // =========================================================================
+
+
+    public int        aiColor     = 1;
+    public bool       isAIThinking= false;
+    public board_cell[] real_board;
+    public army_data[]  real_armies;
+
+    // =========================================================================
+    // SPRITES
+    // =========================================================================
+
+    public Sprite board_tile0, board_tile1, board_tile2, board_tile3;
+
+    public Sprite wp_pawn, wp_rook, wp_knight, wp_bishop, wp_queen, wp_king;
+    public Sprite bp_pawn, bp_rook, bp_knight, bp_bishop, bp_queen, bp_king;
+
+    public Sprite wp_e_rook, wp_e_knight, wp_e_bishop, wp_e_queen, wp_e_king, wp_e_dqueen;
+    public Sprite bp_e_rook, bp_e_knight, bp_e_bishop, bp_e_queen, bp_e_king, bp_e_dqueen;
+
+    public Sprite wp_e_pawn_knight, wp_e_pawn_bishop, wp_e_pawn_rook;
+    public Sprite bp_e_pawn_knight, bp_e_pawn_bishop, bp_e_pawn_rook;
+
+    public Sprite mp_normal, mp_attack, rect_2d_sprite;
+
+    // =========================================================================
+    // AUDIO
+    // =========================================================================
+
+    public AudioSource audioSource;
+    public AudioClip   moveSound, captureSound, checkSound, startSound, endSound, timeLess;
+
+    // =========================================================================
+    // CARDS
+    // =========================================================================
+
+    public List<Card>       allCards;
+    public List<Card>       whiteHand  = new List<Card>();
+    public List<Card>       blackHand  = new List<Card>();
+    public GameObject       cardPrefab;
+
+    // =========================================================================
+    // INIT
+    // =========================================================================
+
+    void Awake() {
+        mem        = this;
+        white_army = new army_data(0);
+        black_army = new army_data(1);
+        armies     = new army_data[] { white_army, black_army };
+    }
+}
