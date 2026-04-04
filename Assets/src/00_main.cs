@@ -69,7 +69,6 @@ public class Game : MonoBehaviour {
         data.mem.pve_button = gui_util.make_button(-2.5f, 0f, Color.yellow, "PvE");
         data.mem.menu_state = data.MenuState.Main;
     }
-
     void ShowPlayerCountMenu(bool is_pve) {
         gui_util.clear_menu();
         MakeMenuBg();
@@ -97,7 +96,6 @@ public class Game : MonoBehaviour {
         data.mem.back_button = gui_util.make_button(0f,   -3f, Color.red,    "Back");
         data.mem.menu_state  = data.MenuState.PickBotDifficulty;
     }
-
     // =========================================================================
     // MENU — INPUT
     // =========================================================================
@@ -163,6 +161,10 @@ public class Game : MonoBehaviour {
 		sound_util.play_sound(data.mem.startSound);
 	}
 
+        sound_util.play_sound(data.mem.startSound);
+        card_util.init_card_table();
+        card_util.refresh_card_visuals(0);
+    }
 
 	// =========================================================================
 	// 2P BOARD

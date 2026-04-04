@@ -154,7 +154,11 @@ public static void handle_card_input(int player_color) {
             case CardType.DemonQueen:
                 // Yêu cầu CÓ lính và PHẢI là quân mình, CHỈ áp dụng lên Queen
                 return (cell.has_piece == 1 && cell.piece_color == myColor && data.mem.get_army(cell.piece_color).troop_list[cell.piece_index].piece_type == 4);
-
+            case CardType.Water:
+                if (cell.has_piece == 1) return false;
+                if (myColor == 0 && ty <= 3) return true;
+                if (myColor == 1 && ty >= 4) return true;
+                return false;
             default:
                 return false;
         }
@@ -199,6 +203,10 @@ public static void add_card(int player_color, CardType type) {
             newCard.cardName = "Lightning";
             newCard.artwork = data.mem.card_expandc;
             break;
+        case CardType.Water:
+            newCard.cardName = "Water";
+            newCard.artwork = data.mem.card_expandc; // Tạm dùng sprite sự kiện cho thẻ nước
+            break;
     }
 
     List<data.Card> targetHand = (player_color == 0) ? data.mem.whiteHand : data.mem.blackHand;
@@ -218,22 +226,46 @@ public static void add_card(int player_color, CardType type) {
 	public static bool apply_card_effect(data.Card card, ref data.chess_piece target, Vector3 effectPos) {
         switch (card.type) {
             case CardType.Buff1:
-                target.score += 1;
-                Debug.Log($"{target.piece_type} được Buff! Score: {target.score}");
-                // Kiểm tra tiến hóa sau khi tăng điểm
-                if (target.score >= target.score_to_envo) piece_util.evo(ref target, effectPos);
+                ref data.chess_piece real2 = ref piece_util.get_piece_in_board(target.x, target.y);
+                real2.score += 1;
+                Debug.Log($"{real2.piece_type} được Buff! Score: {real2.score}");
+                if (real2.score >= real2.score_to_envo) piece_util.evo(ref real2, effectPos);
                 return true;
             case CardType.Buff2:
-                target.score += 2;
-                Debug.Log($"{target.piece_type} được Buff! Score: {target.score}");
-                // Kiểm tra tiến hóa sau khi tăng điểm
-                if (target.score >= target.score_to_envo) piece_util.evo(ref target, effectPos);
+
+                ref data.chess_piece real = ref piece_util.get_piece_in_board(target.x, target.y);
+                real.score += 2;
+                Debug.Log($"{real.piece_type} được Buff! Score: {real.score}");
+                if (real.score >= real.score_to_envo) piece_util.evo(ref real, effectPos);
                 return true;
 
             case CardType.Debuff:
-                target.score -= 3;
-                if (target.score < 0) target.score = 1;
-                return true;
+                int minhchau = target.piece_type;
+                if (minhchau != 6 && minhchau != 7) {
+                    
+                    int tx = target.x;
+                    int ty = target.y;
+                    int color = target.player_color;
+                    
+                    data.army_data army = data.mem.get_army(color);
+                    if (target.rect != null) {
+                        target.rect.self_destroy();
+                    }
+                    board_util.clear_cell(tx, ty);
+
+                    piece_util.create_piece(tx, ty, minhchau, army); 
+
+                    ref data.chess_piece downgradedPiece = ref piece_util.get_piece_in_board(tx, ty);
+                    
+                    downgradedPiece.evolved = 0;
+                    downgradedPiece.score_to_envo = 100;
+                    downgradedPiece.score = 0;
+                    
+                    piece_util.apply_piece_data(ref downgradedPiece);
+
+                    return true; // Trả về true để xóa lá bài sau khi dùng
+                }
+                return false; // Trả về false nếu mục tiêu không hợp lệ (để người chơi không mất bài vô ích)
 
             case CardType.GodQueen:
                 // Logic đặc biệt: Hồi sinh hoặc nâng cấp lên Queen
@@ -272,14 +304,45 @@ public static void add_card(int player_color, CardType type) {
             case CardType.Item:
                 if(target.piece_type == 5)
                 {
-                    target.piece_type = 7; //king cầm súng
-                    target.evolved = 1;
-                    piece_util.apply_piece_data(ref target);
+                    int tx = target.x;
+                    int ty = target.y;
+                    int color = target.player_color;
+                    int opponentColor = (color + 1) % 2;
+                    data.army_data army = data.mem.get_army(color);
+
+                    // 2. Xóa quân Hậu cũ khỏi màn hình và bộ nhớ
+                    if (target.rect != null) target.rect.self_destroy();
+                    board_util.clear_cell(tx, ty);
+
+                    piece_util.create_piece(tx, ty, 7, army); 
+                    ref data.chess_piece newKing = ref piece_util.get_piece_in_board(tx, ty);
+                    newKing.evolved = 1; 
+                    piece_util.apply_piece_data(ref newKing);
+                    card_util.add_card(color, CardType.Water); 
+                    card_util.add_card(opponentColor, CardType.Water); 
+
                     return true;
+
                 }
                 return false;
             case CardType.Event:
                 return true;
+            case CardType.Water:
+                int txy = target.x;
+                int tyy = target.y;
+                ref data.board_cell cell = ref board_util.Cell(txy, tyy);
+
+                if (cell.tile != null) {
+
+                    cell.tile.self_destroy(); 
+
+                    cell.tile = null; 
+                    cell.has_piece = -1; 
+
+                    return true;
+                }
+                return false;
+
         }
         sound_util.play_sound(data.mem.startSound); // Âm thanh hiệu ứng
         return false;
