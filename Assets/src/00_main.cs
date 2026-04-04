@@ -15,6 +15,13 @@ public class Game : MonoBehaviour {
     }
 
     public void Update() {
+        if (Input.GetKeyDown(KeyCode.K)) {
+        card_util.draw_debug_card();
+        }
+
+        if (Input.GetKeyDown(KeyCode.L)) {
+            card_util.add_card(1, CardType.DemonQueen); 
+        }
         if (data.mem.gameOver && Input.GetMouseButtonDown(0)) {
             data.mem.gameOver = false;
             SceneManager.LoadScene("Game");
@@ -35,6 +42,9 @@ public class Game : MonoBehaviour {
 		
         HandlePieceInput();
         HandleMovePlateInput();
+        int currentColor = data.mem.current_player_color; 
+
+        card_util.handle_card_input(currentColor);
     }
 
     // =========================================================================
@@ -44,61 +54,103 @@ public class Game : MonoBehaviour {
     void ShowMainMenu() {
         gui_util.clear_menu();
 
-        data.mem.main_screen_gui = rect_2d.create(0f, 0f);
+        // Nền menu
+        data.mem.main_screen_gui = rect_2d.create(0f, 0f, 1f);
         data.mem.main_screen_gui.set_sprite(data.mem.rect_2d_sprite);
         data.mem.main_screen_gui.set_sprite_size(20f, 12f);
-        data.mem.main_screen_gui.set_collider_size(20f, 12f);
 
-        data.mem.pvp_button = gui_util.make_button( 2.5f, 0f, Color.cyan, "PvP");
-        data.mem.pve_button = gui_util.make_button(-2.5f, 0f, Color.yellow, "PvE");
+        // Nút PvP
+        data.mem.pvp_button = gui_util.make_button(2.5f, 0f, Color.white, "");
+        data.mem.pvp_button.set_sprite(data.mem.pvp_btn_sprite); // Dùng sprite thay vì vẽ màu
+        data.mem.pvp_button.set_sprite_size(4f, 2f); // Chỉnh lại size cho vừa mắt
+
+        // Nút PvE
+        data.mem.pve_button = gui_util.make_button(-2.5f, 0f, Color.white, "");
+        data.mem.pve_button.set_sprite(data.mem.pve_btn_sprite);
+        data.mem.pve_button.set_sprite_size(4f, 2f);
 
         data.mem.menu_state = data.MenuState.Main;
     }
-
     void ShowPlayerCountMenu(bool is_pve) {
         gui_util.clear_menu();
 
-        // label / back bg
+        // 1. Nền Menu / Label Background
         data.mem.main_screen_gui = rect_2d.create(0f, 0f);
         data.mem.main_screen_gui.set_sprite(data.mem.rect_2d_sprite);
         data.mem.main_screen_gui.set_sprite_size(20f, 12f);
         data.mem.main_screen_gui.set_collider_size(20f, 12f);
 
         if (is_pve) {
-            // pick number of bots: 1 / 2 / 3
-            data.mem.btn_count1 = gui_util.make_button( 3f, 0f, Color.red, "1 vs 1"); 
-            data.mem.btn_count2 = gui_util.make_button( 0f, 0f, Color.cyan, "1 vs 2"); 
-            data.mem.btn_count3 = gui_util.make_button(-3f, 0f, Color.green, "1 vs 3");
+            // 2. Chế độ chọn số lượng Bot (1 vs 1, 1 vs 2, 1 vs 3)
+            data.mem.btn_count1 = gui_util.make_button(3f, 0f, Color.white, "");
+            data.mem.btn_count1.set_sprite(data.mem.count1_btn_sprite); // Gán Sprite thay vì vẽ Color
+            data.mem.btn_count1.set_sprite_size(4f, 2f);
+            data.mem.btn_count2 = gui_util.make_button(0f, 0f, Color.white, "");
+            data.mem.btn_count2.set_sprite(data.mem.count2_btn_sprite);
+            data.mem.btn_count2.set_sprite_size(4f, 2f);
+
+            data.mem.btn_count3 = gui_util.make_button(-3f, 0f, Color.white, "");
+            data.mem.btn_count3.set_sprite(data.mem.count3_btn_sprite);
+            data.mem.btn_count3.set_sprite_size(4f, 2f);
+
             data.mem.menu_state = data.MenuState.PickBotCount;
         } else {
-            // pick number of players: 2 / 3 / 4
-            data.mem.btn_count1 = gui_util.make_button( 3f, 0f, Color.red, "2 Players"); 
-            data.mem.btn_count2 = gui_util.make_button( 0f, 0f, Color.cyan, "3 Players"); 
-            data.mem.btn_count3 = gui_util.make_button(-3f, 0f, Color.green, "4 Players"); 
+            // 3. Chế độ chọn số lượng người chơi (2, 3, 4 Players)
+            // Bạn có thể dùng chung btn_count hoặc các Sprite riêng cho PvP
+            data.mem.btn_count1 = gui_util.make_button(3f, 0f, Color.white, "");
+            data.mem.btn_count1.set_sprite(data.mem.count1_btn_sprite);
+            data.mem.btn_count1.set_sprite_size(4f, 2f);
+            
+            data.mem.btn_count2 = gui_util.make_button(0f, 0f, Color.white, "");
+            data.mem.btn_count2.set_sprite(data.mem.count2_btn_sprite);
+            data.mem.btn_count2.set_sprite_size(4f, 2f);
+
+            
+            data.mem.btn_count3 = gui_util.make_button(-3f, 0f, Color.white, "");
+            data.mem.btn_count3.set_sprite(data.mem.count3_btn_sprite);
+            data.mem.btn_count3.set_sprite_size(4f, 2f);
+            
             data.mem.menu_state = data.MenuState.PickPlayerCount;
         }
 
-        data.mem.back_button = gui_util.make_button(0f, -3f, Color.red);
+        // 4. Nút Back (Dùng Sprite hình mũi tên hoặc chữ Back đã vẽ sẵn)
+        data.mem.back_button = gui_util.make_button(0f, -3f, Color.white, "");
+        data.mem.back_button.set_sprite(data.mem.back_btn_sprite); // Gán Sprite nút Back
+        data.mem.back_button.set_sprite_size(2f, 1f); // Điều chỉnh kích thước nút Back cho cân đối
     }
 
     void ShowDifficultyMenu() {
         gui_util.clear_menu();
-
-        //label / back bg
+        
+        // Nền
         data.mem.main_screen_gui = rect_2d.create(0f, 0f);
         data.mem.main_screen_gui.set_sprite(data.mem.rect_2d_sprite);
         data.mem.main_screen_gui.set_sprite_size(20f, 12f);
-        data.mem.main_screen_gui.set_collider_size(20f, 12f);
 
-        data.mem.btn_diff1 = gui_util.make_button( 4.5f, 0f, Color.green, "Baby");   
-        data.mem.btn_diff2 = gui_util.make_button( 1.5f, 0f, Color.cyan,  "Easy");  
-        data.mem.btn_diff3 = gui_util.make_button(-1.5f, 0f, Color.yellow,"Normal"); 
-        data.mem.btn_diff4 = gui_util.make_button(-4.5f, 0f, Color.red,   "Asean"); 
+        // Các nút độ khó dùng Sprite riêng
+        data.mem.btn_diff1 = gui_util.make_button(4.5f, 0f, Color.white, "");
+        data.mem.btn_diff1.set_sprite(data.mem.diff1_btn_sprite);
+        data.mem.btn_diff1.set_sprite_size(4f, 2f);
+        
+        data.mem.btn_diff2 = gui_util.make_button(1.5f, 0f, Color.white, "");
+        data.mem.btn_diff2.set_sprite(data.mem.diff2_btn_sprite);
+        data.mem.btn_diff2.set_sprite_size(4f, 2f);
 
-        data.mem.back_button = gui_util.make_button(0f, -3f, Color.red, "Back");
+        data.mem.btn_diff3 = gui_util.make_button(-1.5f, 0f, Color.white, "");
+        data.mem.btn_diff3.set_sprite(data.mem.diff3_btn_sprite);
+        data.mem.btn_diff3.set_sprite_size(4f, 2f);
+
+        data.mem.btn_diff4 = gui_util.make_button(-4.5f, 0f, Color.white, "");
+        data.mem.btn_diff4.set_sprite(data.mem.diff4_btn_sprite);
+        data.mem.btn_diff4.set_sprite_size(4f, 2f);
+
+        // Nút Back
+        data.mem.back_button = gui_util.make_button(0f, -3f, Color.white, "");
+        data.mem.back_button.set_sprite(data.mem.back_btn_sprite);
+        data.mem.back_button.set_sprite_size(2f, 2f);
+
         data.mem.menu_state = data.MenuState.PickBotDifficulty;
     }
-
     // =========================================================================
     // MENU INPUT
     // =========================================================================
@@ -173,6 +225,8 @@ public class Game : MonoBehaviour {
         }
 
         sound_util.play_sound(data.mem.startSound);
+        card_util.init_card_table();
+        card_util.refresh_card_visuals(0);
     }
 
     // =========================================================================
@@ -434,7 +488,7 @@ public class Game : MonoBehaviour {
                     piece_util.move_piece(ref attacker, mp.piece_index, mp.piece_color, mp.mat_x, mp.mat_y);
                 } else {
                     piece_util.piece_attack(ref attacker, mp.mat_x, mp.mat_y, mp.rect.obj.transform.position);
-                    if (attacker.piece_type != 7)
+                    if (attacker.rect != null && attacker.piece_type != 7)
                         piece_util.move_piece(ref attacker, mp.piece_index, mp.piece_color, mp.mat_x, mp.mat_y);
                 }
 
