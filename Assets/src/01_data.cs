@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-public enum CardType { Buff, Debuff, GodQueen, DemonQueen, Event, Item }
+public enum CardType { Buff1, Buff2, Debuff, GodQueen, DemonQueen, Event, Item }
 public enum PieceType { Light, ELight, KHeavy, BHeavy, RHeavy, Core }
 public enum AIDifficulty { Baby, Easy, Normal, Asean }
 
@@ -95,6 +95,21 @@ public class data : MonoBehaviour {
         public string   description;
     }
 
+    public List<Card> whiteHand = new List<Card>();
+    public List<Card> blackHand = new List<Card>();
+    public GameObject cardPrefab;
+
+
+    public class CardHand {
+        public List<rect_2d> card_rects = new List<rect_2d>();
+        public float start_x = -3.2f;  // Vị trí bắt đầu hàng thẻ
+        public float spacing = 2.13f; // Khoảng cách giữa các thẻ
+        public float y_pos = -8f;  // Vị trí Y nằm dưới bàn cờ
+    }
+    public rect_2d card_table_obj;
+    public CardHand white_hand_visual = new CardHand();
+    public CardHand black_hand_visual = new CardHand{y_pos = 8f};
+
     public struct AIMove {
         public int  piece_index;
         public int  targetX;
@@ -133,8 +148,20 @@ public class data : MonoBehaviour {
     // =========================================================================
     // GUI BUTTONS
     // =========================================================================
-
+    [Header("Menu Sprites")]
+    public Sprite pvp_btn_sprite;
+    public Sprite pve_btn_sprite;
+    public Sprite back_btn_sprite;
+    public Sprite count1_btn_sprite;
+    public Sprite count2_btn_sprite;
+    public Sprite count3_btn_sprite;
+    public Sprite diff1_btn_sprite; 
+    public Sprite diff2_btn_sprite;
+    public Sprite diff3_btn_sprite;
+    public Sprite diff4_btn_sprite;
     public rect_2d main_screen_gui;
+
+
     public rect_2d pvp_button;
     public rect_2d pve_button;
     public rect_2d btn_count1;
@@ -150,6 +177,16 @@ public class data : MonoBehaviour {
 
     // flat list for easy bulk-destroy
     public List<rect_2d> menu_rects = new List<rect_2d>();
+    [Header("Card Sprites")]
+    public Sprite Card_board_bg_sprite;
+    public Sprite card_plus1;      
+    public Sprite card_plus2;    
+    public Sprite card_demon;     
+    public Sprite card_expandc;   
+    public Sprite card_expandr;    
+    public Sprite card_god;       
+    public Sprite card_gun;       
+    public Sprite card_thunder;    
 
     // =========================================================================
     // GAME STATE
@@ -212,10 +249,7 @@ public class data : MonoBehaviour {
     // CARDS
     // =========================================================================
 
-    public List<Card>       allCards;
-    public List<Card>       whiteHand  = new List<Card>();
-    public List<Card>       blackHand  = new List<Card>();
-    public GameObject       cardPrefab;
+
 
     // =========================================================================
     // INIT
