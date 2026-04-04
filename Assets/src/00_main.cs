@@ -159,12 +159,10 @@ public class Game : MonoBehaviour {
 			SetupBoard_Cross(total_players);
 
 		sound_util.play_sound(data.mem.startSound);
+		card_util.init_card_table();
+		card_util.refresh_card_visuals(0);
 	}
-
-        sound_util.play_sound(data.mem.startSound);
-        card_util.init_card_table();
-        card_util.refresh_card_visuals(0);
-    }
+    
 
 	// =========================================================================
 	// 2P BOARD
