@@ -221,6 +221,7 @@ public class data : MonoBehaviour {
     public bool       isAIThinking= false;
     public board_cell[] real_board;
     public army_data[]  real_armies;
+    public static AIMove    lastAIMove           = new AIMove { piece_index = -1 };
 
     // =========================================================================
     // SPRITES
