@@ -2,14 +2,11 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-// these include are for List and IEnumerator
 
 public static class AI_util {
-
     // =========================================================================
-    // AI
+    // AI MAIN FUNC
     // =========================================================================
-    //MAIN FUNC
     public static IEnumerator PlayAITurn() {
         data.mem.isAIThinking = true;
         int currentColor = data.mem.current_player_color;
@@ -19,37 +16,32 @@ public static class AI_util {
         switch (data.mem.ai_difficulty) {
             case AIDifficulty.Baby:
                 List<data.AIMove> validMoves = GenerateAllValidMoves(currentColor);
-                if (validMoves.Count > 0) {
-                    chosenMove = validMoves[Random.Range(0, validMoves.Count)];
-                }
+                if (validMoves.Count > 0) chosenMove = validMoves[Random.Range(0, validMoves.Count)];
                 break;
             case AIDifficulty.Easy:
                 chosenMove = CalculateMCTSMove(currentColor);
                 break;
             case AIDifficulty.Normal:
-                // TODO: CalculateMinimaxMove()
-                //chosenMove = CalculateMinimaxMove(currentColor);
-                
-                //call greedy (just demo)
                 chosenMove = CalculateGreedyMove(currentColor);
                 break;
             case AIDifficulty.Asean:
-                // TODO: ML
-                //chosenMove = CalculateMachineLearningMove(currentColor);
-                
-                //call monte(just demo)
                 chosenMove = CalculateMCTSMove(currentColor);
                 break;
         }
 
         if (chosenMove.piece_index != -1 && !data.mem.gameOver) {
             ExecuteAIMove(chosenMove, currentColor);
-        }   
+        } else {
+            data.mem.selected_a_piece = 0;
+            piece_util.unselect_all_piece();
+            move_plate_util.clear_move_plate();
+            pvp_util.next_player_turn();
+        }
         data.mem.isAIThinking = false;
     }
     
     // =========================================================================
-    // RANDOM AI
+    // RANDOM / GREEDY AI
     // =========================================================================
     public static List<data.AIMove> GenerateAllValidMoves(int color) {
         List<data.AIMove> moves = new List<data.AIMove>();
@@ -57,7 +49,6 @@ public static class AI_util {
 
         for (int i = 0; i < army.troop_count; i++) {
             ref data.chess_piece cp = ref army.troop_list[i];
-            
             if (cp.rect == null) continue;
 
             for (int tx = 0; tx < data.mem.board_w; tx++) {
@@ -79,7 +70,6 @@ public static class AI_util {
 
     public static data.AIMove CalculateGreedyMove(int color) {
         List<data.AIMove> validMoves = GenerateAllValidMoves(color);
-        
         if (validMoves.Count == 0) return new data.AIMove { piece_index = -1 };
 
         List<data.AIMove> attackMoves = new List<data.AIMove>();
@@ -94,7 +84,6 @@ public static class AI_util {
             foreach (var move in attackMoves) {
                 ref data.board_cell cell = ref board_util.Cell(move.targetX, move.targetY);
                 data.chess_piece target = data.mem.get_army(cell.piece_color).troop_list[cell.piece_index];
-                
                 int targetScore = (target.piece_type == 5) ? 1000 : target.score;
 
                 if (targetScore > maxScore) {
@@ -107,12 +96,11 @@ public static class AI_util {
             }
             return bestAttacks[Random.Range(0, bestAttacks.Count)];
         }
-
         return validMoves[Random.Range(0, validMoves.Count)];
     }
     
     // =========================================================================
-    // MONTE CARLO
+    // STATE MANAGEMENT & SIMULATION
     // =========================================================================
     public static int GetNextActiveColor(int currentColor) {
         int n = data.mem.total_players;
@@ -146,7 +134,6 @@ public static class AI_util {
         }
     }
 
-    //func that simulate move without ui/sound
     public static int SimulateMoveDataOnly(data.AIMove move, int color) {
         data.army_data army = data.mem.get_army(color);
         ref data.chess_piece attacker = ref army.troop_list[move.piece_index];
@@ -157,7 +144,6 @@ public static class AI_util {
             ref data.chess_piece target = ref enemy.troop_list[cell.piece_index];
 
             attacker.score += target.score;
-            
             target.rect = null; 
             board_util.clear_cell(move.targetX, move.targetY);
 
@@ -169,17 +155,152 @@ public static class AI_util {
         attacker.y = move.targetY;
         board_util.set_cell(move.targetX, move.targetY, color, move.piece_index);
         
-        return 0;//no one win
+        return 0;
     }
 
+    // =========================================================================
+    // TACTICS & HEURISTICS
+    // =========================================================================
+    public static float GetPieceValue(int piece_type, int base_score) {
+        if (piece_type == 5 || piece_type == 7) return 1000f; 
+        if (piece_type == 4 || piece_type == 6) return 90f;   
+        if (piece_type == 1) return 50f;   
+        if (piece_type == 2 || piece_type == 3) return 30f;   
+        return 10f; 
+    }
+
+    // 2. Tầm nhìn: Kiểm tra xem một ô có đang bị địch chĩa mũi giáo vào không
+    public static bool IsSquareAttacked(int x, int y, int defenderColor) {
+        for (int c = 0; c < data.mem.total_players; c++) {
+            if (c == defenderColor) continue; // Bỏ qua quân mình
+            data.army_data enemyArmy = data.mem.armies[c];
+            
+            for (int i = 0; i < enemyArmy.troop_count; i++) {
+                ref data.chess_piece enemyPiece = ref enemyArmy.troop_list[i];
+                if (enemyPiece.rect == null) continue;
+                
+                int dx = Mathf.Abs(x - enemyPiece.x);
+                int dy = Mathf.Abs(y - enemyPiece.y);
+
+                // 1. TỐT: Luôn có vùng đe dọa 2 ô chéo phía trước
+                if (enemyPiece.piece_type == 0 && enemyPiece.evolved == 0) {
+                    int dir = (enemyPiece.player_color == 0) ? 1 : -1;
+                    if (dx == 1 && (y - enemyPiece.y) == dir) return true;
+                } 
+                
+                // 2. VUA SÚNG: Đe dọa toàn bộ vùng 5x5 xung quanh
+                if (enemyPiece.piece_type == 7) {
+                    if (dx <= 2 && dy <= 2 && (dx > 0 || dy > 0)) return true;
+                }
+                
+                // 3. QUÂN MÃ: Fix triệt để điểm mù!
+                // Tính toán trực tiếp tọa độ chữ L đối với Mã, Tốt tiến hóa Mã, và DQueen tiến hóa.
+                bool isKnight = (enemyPiece.piece_type == 2) || 
+                                (enemyPiece.piece_type == 0 && enemyPiece.evolved == 1 && enemyPiece.evolved_type == 0) ||
+                                (enemyPiece.piece_type == 6 && enemyPiece.evolved == 1);
+                
+                if (isKnight) {
+                    if ((dx == 1 && dy == 2) || (dx == 2 && dy == 1)) return true;
+                }
+
+                // 4. Các loại quân còn lại (Xe, Tượng, Hậu...)
+                if (piece_util.can_move_to(ref enemyPiece, x, y)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    // 3. Chấm điểm độ "Ngon" của một nước đi trước khi AI thực sự mô phỏng nó
+    public static float GetMoveHeuristic(data.AIMove move, int color) {
+        float score = 0f;
+        data.army_data army = data.mem.get_army(color);
+        ref data.chess_piece attacker = ref army.troop_list[move.piece_index];
+        float attackerVal = GetPieceValue(attacker.piece_type, attacker.score);
+
+        bool wasAttacked = IsSquareAttacked(attacker.x, attacker.y, color);
+        bool willBeAttacked = IsSquareAttacked(move.targetX, move.targetY, color);
+
+        if (move.isAttack) {
+            ref data.board_cell cell = ref board_util.Cell(move.targetX, move.targetY);
+            data.chess_piece target = data.mem.get_army(cell.piece_color).troop_list[cell.piece_index];
+            float targetVal = GetPieceValue(target.piece_type, target.score);
+
+            score += (targetVal * 10f) - attackerVal; 
+            if (Mathf.Approximately(targetVal, attackerVal)) score += 50f; 
+        }
+
+        // TƯ DUY SINH TỒN MỚI
+        if (willBeAttacked) {
+            // Nhảy vào ô chết -> Phạt cực kỳ nặng để loại trừ ngay lập tức
+            score -= attackerVal * 10f; 
+        } else if (wasAttacked) {
+            // Đang bị uy hiếp mà tìm được ô sống -> Thưởng điểm cực lớn (+900 cho Hậu) để ưu tiên chạy
+            score += attackerVal * 10f; 
+        }
+
+        float centerDx = Mathf.Abs(move.targetX - (data.mem.board_w / 2.0f));
+        float centerDy = Mathf.Abs(move.targetY - (data.mem.board_h / 2.0f));
+        score += (10f - (centerDx + centerDy)) * 0.5f; 
+
+        return score;
+    }
+
+    // =========================================================================
+    // VALUE CALCULATE
+    // =========================================================================
+    private static float EvaluateBoardStatic(int ai_color, int colorToMove) {
+        float aiScore = 0;
+        float enemyScore = 0;
+
+        for (int c = 0; c < data.mem.total_players; c++) {
+            float score = 0;
+            for (int p = 0; p < data.mem.armies[c].troop_count; p++) {
+                ref data.chess_piece cp = ref data.mem.armies[c].troop_list[p];
+                if (cp.rect != null) {
+                    float pieceValue = GetPieceValue(cp.piece_type, cp.score);
+                    
+                    float centerDistanceX = Mathf.Abs(cp.x - (data.mem.board_w / 2.0f));
+                    float centerDistanceY = Mathf.Abs(cp.y - (data.mem.board_h / 2.0f));
+                    float positionalBonus = 1.0f - ((centerDistanceX + centerDistanceY) * 0.05f);
+
+                    if (cp.piece_type == 0) {
+                        int forwardSteps = (cp.player_color == 0) ? cp.y : (data.mem.board_h - 1 - cp.y);
+                        positionalBonus += forwardSteps * 0.1f;
+                    }
+
+                    if (IsSquareAttacked(cp.x, cp.y, c)) {
+                        if (c == colorToMove) {
+                            pieceValue *= 0.6f; 
+                        } else {
+                            pieceValue *= 0.1f; 
+                        }
+                    }
+
+                    score += pieceValue + positionalBonus;
+                }
+            }
+            if (c == ai_color) aiScore += score;
+            else enemyScore += score;
+        }
+        
+        float diff = aiScore - enemyScore;
+        return 0.5f + Mathf.Clamp(diff * 0.002f, -0.48f, 0.48f);
+    }
+
+    // =========================================================================
+    // MCTS 
+    // =========================================================================
     public static data.AIMove CalculateMCTSMove(int ai_color) {
-        BackupRealState(); //backup current state
+        BackupRealState(); 
 
         data.MCTSNode root = new data.MCTSNode();
         root.colorToMove = ai_color;
         root.untriedMoves = GenerateAllValidMoves(ai_color);
+        root.untriedMoves.Sort((a, b) => GetMoveHeuristic(a, ai_color).CompareTo(GetMoveHeuristic(b, ai_color)));
 
-        int maxIterations = 200; 
+        int maxIterations = 1000;
 
         for (int i = 0; i < maxIterations; i++) {
             RestoreRealState(); 
@@ -189,19 +310,33 @@ public static class AI_util {
             while (node.untriedMoves.Count == 0 && node.children.Count > 0) {
                 data.MCTSNode bestChild = null;
                 float bestUCB = -Mathf.Infinity;
+                bool isAITurn = node.colorToMove == ai_color;
+
                 foreach (var child in node.children) {
-                    float ucb = (child.wins / child.visits) + 1.414f * Mathf.Sqrt(Mathf.Log(node.visits) / child.visits);
+                    float exploit = child.wins / child.visits;
+                    if (!isAITurn) exploit = 1f - exploit;
+
+                    if (isAITurn && data.lastAIMove.piece_index == child.move.piece_index) {
+                         exploit -= 0.5f; 
+                    }
+
+                    float explore = 1.414f * Mathf.Sqrt(Mathf.Log(node.visits) / child.visits);
+                    float ucb = exploit + explore;
+
                     if (ucb > bestUCB) { bestUCB = ucb; bestChild = child; }
                 }
                 node = bestChild;
-                SimulateMoveDataOnly(node.move, GetNextActiveColor(node.parent.colorToMove));
+                
+                SimulateMoveDataOnly(node.move, node.parent.colorToMove);
             }
 
-            // 2. EXPANSION
+            // 2. EXPANSION & 3. EVALUATION
+            float nodeValue = 0.5f;
+
             if (node.untriedMoves.Count > 0) {
-                int rIdx = Random.Range(0, node.untriedMoves.Count);
-                data.AIMove move = node.untriedMoves[rIdx];
-                node.untriedMoves.RemoveAt(rIdx);
+                int bestIdx = node.untriedMoves.Count - 1;
+                data.AIMove move = node.untriedMoves[bestIdx];
+                node.untriedMoves.RemoveAt(bestIdx);
 
                 data.MCTSNode child = new data.MCTSNode {
                     move = move,
@@ -210,37 +345,23 @@ public static class AI_util {
                 };
                 node.children.Add(child);
                 
-                SimulateMoveDataOnly(move, node.colorToMove);
+                int moveResult = SimulateMoveDataOnly(move, node.colorToMove);
                 node = child;
-                node.untriedMoves = GenerateAllValidMoves(node.colorToMove);
-            }
-
-            // 3. SIMULATION
-            int currentSimColor = node.colorToMove;
-            int depth = 0;
-            int result = 0; 
-
-            while (depth < 15) { 
-                List<data.AIMove> moves = GenerateAllValidMoves(currentSimColor);
-                if (moves.Count == 0) break; 
-
-                data.AIMove randomMove = moves[Random.Range(0, moves.Count)];
-                int moveResult = SimulateMoveDataOnly(randomMove, currentSimColor);
                 
                 if (moveResult == 1) {
-                    result = (currentSimColor == ai_color) ? 1 : -1;
-                    break;
+                    nodeValue = (node.parent.colorToMove == ai_color) ? 1.0f : 0.0f;
+                } else {
+                    nodeValue = EvaluateBoardStatic(ai_color, node.colorToMove);
                 }
-                
-                currentSimColor = GetNextActiveColor(currentSimColor);
-                depth++;
+
+                node.untriedMoves = GenerateAllValidMoves(node.colorToMove);
+                node.untriedMoves.Sort((a, b) => GetMoveHeuristic(a, node.colorToMove).CompareTo(GetMoveHeuristic(b, node.colorToMove)));
             }
 
             // 4. BACKPROPAGATION
             while (node != null) {
                 node.visits++;
-                if (result == 1) node.wins += 1f;
-                else if (result == 0) node.wins += 0.5f; 
+                node.wins += nodeValue; 
                 node = node.parent;
             }
         }
@@ -250,16 +371,21 @@ public static class AI_util {
         data.MCTSNode bestFinalChild = null;
         int maxVisits = -1;
         foreach (var child in root.children) {
-            if (child.visits > maxVisits) { maxVisits = child.visits; bestFinalChild = child; }
+            if (child.visits > maxVisits) { 
+                maxVisits = child.visits; 
+                bestFinalChild = child; 
+            }
         }
 
-        if (bestFinalChild != null) return bestFinalChild.move;
-        
+        if (bestFinalChild != null) {
+            data.lastAIMove = bestFinalChild.move; 
+            return bestFinalChild.move;
+        }
         return CalculateGreedyMove(ai_color);
     }
 
     // =========================================================================
-    // HELPER
+    // EXECUTION
     // =========================================================================
     public static void ExecuteAIMove(data.AIMove move, int colorToMove) {
         data.army_data army = data.mem.get_army(colorToMove);

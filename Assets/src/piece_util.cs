@@ -103,10 +103,13 @@ public static class piece_util {
     public static bool can_move_to(ref data.chess_piece cp, int tx, int ty){
         if (!board_util.on_board(tx, ty)) return false;
         ref data.board_cell cell = ref board_util.Cell(tx, ty);
-        if (cell.has_piece == 1 && data.mem.get_army(cell.piece_color).troop_list[cell.piece_index].player_color == cp.player_color) return false;
+        
+        if (cell.has_piece == 1 && data.mem.get_army(cell.piece_color).troop_list[cell.piece_index].player_color == cp.player_color) 
+            return false;
 
         int  dir      = (cp.player_color == 0) ? 1 : -1;
         bool baseMove = false;
+
 
         switch (cp.piece_type) {
             case 0: baseMove = piece_util.valid_pawn(ref cp, tx, ty, dir);                             break;
@@ -116,23 +119,30 @@ public static class piece_util {
             case 4: baseMove = piece_util.valid_line(ref cp, tx, ty) || piece_util.valid_diag(ref cp, tx, ty); break;
             case 5: baseMove = piece_util.valid_king(ref cp, tx, ty);                                  break;
             case 6: baseMove = piece_util.valid_line(ref cp, tx, ty) || piece_util.valid_diag(ref cp, tx, ty) || piece_util.valid_knight(ref cp, tx, ty); break;
+            
+            case 7: 
+                baseMove = piece_util.valid_king(ref cp, tx, ty);
+                if (!baseMove && Mathf.Abs(tx - cp.x) <= 2 && Mathf.Abs(ty - cp.y) <= 2) {
+                    baseMove = cell.has_piece == 1 && data.mem.get_army(cell.piece_color).troop_list[cell.piece_index].player_color != cp.player_color;
+                }
+                break;
         }
 
         if (cp.evolved == 0) return baseMove;
 
         switch (cp.piece_type) {
+            case 0: 
+                if (cp.evolved_type == 2) return baseMove || piece_util.valid_line(ref cp, tx, ty);   
+                if (cp.evolved_type == 0) return baseMove || piece_util.valid_knight(ref cp, tx, ty); 
+                if (cp.evolved_type == 1) return baseMove || piece_util.valid_diag(ref cp, tx, ty);   
+                return baseMove;
+                
             case 2: return baseMove || piece_util.valid_evo_knight(ref cp, tx, ty);
             case 3: return baseMove || piece_util.valid_king(ref cp, tx, ty);
             case 6: return baseMove || piece_util.valid_knight(ref cp, tx, ty); 
             default: return baseMove;
         }
     }
-
-
-
-
-
-
 
     public static bool valid_line(ref data.chess_piece cp, int tx, int ty) {
         if (tx != cp.x && ty != cp.y) return false;
@@ -167,9 +177,21 @@ public static class piece_util {
 
     public static bool valid_pawn(ref data.chess_piece cp, int tx, int ty, int dir) {
         int dx = tx - cp.x, dy = ty - cp.y;
+
         if (Mathf.Abs(dx) == 1 && dy == dir) {
             ref data.board_cell cell = ref board_util.Cell(tx, ty);
             return cell.has_piece == 1 && data.mem.get_army(cell.piece_color).troop_list[cell.piece_index].player_color != cp.player_color;
+        }
+
+        if (dx == 0 && dy == dir) {
+            return board_util.Cell(tx, ty).has_piece == 0;
+        }
+
+        int startRow = (cp.player_color == 0) ? 1 : 6;
+        if (dx == 0 && dy == dir * 2 && cp.y == startRow) {
+            bool intermediateEmpty = board_util.Cell(cp.x, cp.y + dir).has_piece == 0;
+            bool destinationEmpty  = board_util.Cell(tx, ty).has_piece == 0;
+            return intermediateEmpty && destinationEmpty;
         }
         return false;
     }
