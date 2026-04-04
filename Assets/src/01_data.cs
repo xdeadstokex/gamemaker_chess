@@ -128,6 +128,22 @@ public class data : MonoBehaviour {
         public List<AIMove>   untriedMoves;
     }
 
+    public struct UndoData {
+        public int attacker_color;
+        public int attacker_idx;
+        public int old_x;
+        public int old_y;
+        public int old_score;
+        
+        public bool is_attack;
+        public int target_color;
+        public int target_idx;
+        public int target_score;
+        public rect_2d target_rect;
+        
+        public bool is_king_dead;
+    }
+
     // =========================================================================
     // BOARD
     // =========================================================================
