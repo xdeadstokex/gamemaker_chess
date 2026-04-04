@@ -203,28 +203,34 @@ public static class piece_util {
         if (cp.score >= cp.score_to_envo) piece_util.evo(ref cp, pos);
     }
 
-    public static void evo(ref data.chess_piece cp, Vector3 pos) {     
-        if(cp.piece_type == 5) {
-            cp.piece_type = 7; 
-            cp.score = 0;
-        }
-        cp.evolved = 1;
-        piece_util.apply_piece_data(ref cp);
-        Camera.main.GetComponent<CameraControl>().ZoomInTarget(pos, 1f);
-        Debug.Log($"<color=green>{cp.piece_type} HAS EVOLVED!</color>");
-    }
+	public static void evo(ref data.chess_piece cp, Vector3 pos){
+		if(cp.piece_type == 5) {
+			cp.piece_type = 7; 
+			cp.score = 0;
+		}
 
-    public static void evo_with_weapon(ref data.chess_piece cp, PieceType weapon, Vector3 pos) {
-        cp.evolved      = 1;
-        cp.unitType     = PieceType.ELight;
-        // cp.evolved_type = weapon == PieceType.KHeavy ? 0 : weapon == PieceType.BHeavy ? 1 : 2;
-        if (weapon == PieceType.KHeavy) cp.evolved_type = 0;
-        else if (weapon == PieceType.BHeavy) cp.evolved_type = 1;
-        else if (weapon == PieceType.RHeavy) cp.evolved_type = 2;
-        piece_util.apply_piece_data(ref cp);
-        Camera.main.GetComponent<CameraControl>().ZoomInTarget(pos, 1f);
-    }
+		cp.evolved = 1;
+		piece_util.apply_piece_data(ref cp);
 
+		data.mem.evolving_signal = 1;
+		data.mem.evolving_pos = pos; // STORE POSITION
+
+		Debug.Log($"<color=green>{cp.piece_type} HAS EVOLVED!</color>");
+	}
+
+	public static void evo_with_weapon(ref data.chess_piece cp, PieceType weapon, Vector3 pos){
+		cp.evolved  = 1;
+		cp.unitType = PieceType.ELight;
+
+		if (weapon == PieceType.KHeavy) cp.evolved_type = 0;
+		else if (weapon == PieceType.BHeavy) cp.evolved_type = 1;
+		else if (weapon == PieceType.RHeavy) cp.evolved_type = 2;
+
+		piece_util.apply_piece_data(ref cp);
+
+		data.mem.evolving_signal = 1;
+		data.mem.evolving_pos = pos; // STORE POSITION
+	}
 
     // =========================================================================
     // ATTACK / MOVE

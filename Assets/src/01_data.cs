@@ -163,6 +163,16 @@ public class data : MonoBehaviour {
     public int              total_players        = 2;
     public int              bot_count            = 0;
     public int              play_against_AI      = 0;
+	public int              evolving_signal      = 0;
+	public Vector3          evolving_pos;
+	public float evoTimer = 0f;
+	public int   evoZoom = 0;
+
+	public float evoStartSize;
+	public float evoTargetSize;
+
+	public float evoStartX, evoStartY;
+	public int              zoom_cross_board    = 0;
     public AIDifficulty ai_difficulty = AIDifficulty.Baby;
     // =========================================================================
     // AI
