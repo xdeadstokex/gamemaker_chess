@@ -81,6 +81,24 @@ public class Game : MonoBehaviour {
         data.mem.back_button = gui_util.make_button(0f, -3f, Color.red);
     }
 
+    void ShowDifficultyMenu() {
+        gui_util.clear_menu();
+
+        //label / back bg
+        data.mem.main_screen_gui = rect_2d.create(0f, 0f);
+        data.mem.main_screen_gui.set_sprite(data.mem.rect_2d_sprite);
+        data.mem.main_screen_gui.set_sprite_size(20f, 12f);
+        data.mem.main_screen_gui.set_collider_size(20f, 12f);
+
+        data.mem.btn_diff1 = gui_util.make_button( 4.5f, 0f, Color.green, "Baby");   
+        data.mem.btn_diff2 = gui_util.make_button( 1.5f, 0f, Color.cyan,  "Easy");  
+        data.mem.btn_diff3 = gui_util.make_button(-1.5f, 0f, Color.yellow,"Normal"); 
+        data.mem.btn_diff4 = gui_util.make_button(-4.5f, 0f, Color.red,   "Asean"); 
+
+        data.mem.back_button = gui_util.make_button(0f, -3f, Color.red, "Back");
+        data.mem.menu_state = data.MenuState.PickBotDifficulty;
+    }
+
     // =========================================================================
     // MENU INPUT
     // =========================================================================
@@ -105,12 +123,20 @@ public class Game : MonoBehaviour {
                 break;
 
             case data.MenuState.PickBotCount:
-                if (gui_util.clicked(data.mem.btn_count1)) StartGame(2, 1); // 1 human + 1 bot
-                if (gui_util.clicked(data.mem.btn_count2)) StartGame(3, 2); // 1 human + 2 bots
-                if (gui_util.clicked(data.mem.btn_count3)) StartGame(4, 3); // 1 human + 3 bots
+                if (gui_util.clicked(data.mem.btn_count1)) { data.mem.total_players = 2; data.mem.bot_count = 1; ShowDifficultyMenu(); }
+                if (gui_util.clicked(data.mem.btn_count2)) { data.mem.total_players = 3; data.mem.bot_count = 2; ShowDifficultyMenu(); }
+                if (gui_util.clicked(data.mem.btn_count3)) { data.mem.total_players = 4; data.mem.bot_count = 3; ShowDifficultyMenu(); }
                 if (gui_util.clicked(data.mem.back_button)) ShowMainMenu();
-                // else{ data.mem.play_against_AI = 1; }
-				break;
+                break;
+
+            case data.MenuState.PickBotDifficulty:
+                if (gui_util.clicked(data.mem.btn_diff1)) { data.mem.ai_difficulty = AIDifficulty.Baby; StartGame(data.mem.total_players, data.mem.bot_count); }
+                if (gui_util.clicked(data.mem.btn_diff2)) { data.mem.ai_difficulty = AIDifficulty.Easy; StartGame(data.mem.total_players, data.mem.bot_count); }
+                if (gui_util.clicked(data.mem.btn_diff3)) { data.mem.ai_difficulty = AIDifficulty.Normal; StartGame(data.mem.total_players, data.mem.bot_count); }
+                if (gui_util.clicked(data.mem.btn_diff4)) { data.mem.ai_difficulty = AIDifficulty.Asean; StartGame(data.mem.total_players, data.mem.bot_count); }
+                
+                if (gui_util.clicked(data.mem.back_button)) ShowPlayerCountMenu(true);
+                break;
         }
     }
 
