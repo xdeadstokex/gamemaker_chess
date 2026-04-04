@@ -33,21 +33,21 @@ public class DragDrop : MonoBehaviour, IDragHandler, IEndDragHandler, IBeginDrag
 
     public void OnEndDrag(PointerEventData eventData)
     {
-        Game gameScript = GameObject.FindGameObjectWithTag("GameController").GetComponent<Game>();
-        Vector3 mouseWorldPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        int tx = Mathf.RoundToInt((mouseWorldPos.x + 4.48f) / 1.28f);
-        int ty = Mathf.RoundToInt((mouseWorldPos.y + 4.48f) / 1.28f);
+        // Game gameScript = GameObject.FindGameObjectWithTag("GameController").GetComponent<Game>();
+        // Vector3 mouseWorldPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        // int tx = Mathf   .RoundToInt((mouseWorldPos.x + 4.48f) / 1.28f);
+        // int ty = Mathf.RoundToInt((mouseWorldPos.y + 4.48f) / 1.28f);
 
-        Debug.Log("Drag ended");
-        if (board_util.on_board(tx, ty)) {
-            card_util.use_card_on_board(cardData, Input.mousePosition);
+        // Debug.Log("Drag ended");
+        // if (board_util.on_board(tx, ty)) {
+        //     card_util.use_card_on_board(cardData, Input.mousePosition);
             
-            // Xóa thẻ sau khi sử dụng thành công
-            Destroy(gameObject, 0.1f);
-        } else {
-            transform.SetParent(parentAfterDrag);
-            image.raycastTarget = true;
-        }
+        //     // Xóa thẻ sau khi sử dụng thành công
+        //     Destroy(gameObject, 0.1f);
+        // } else {
+        //     transform.SetParent(parentAfterDrag);
+        //     image.raycastTarget = true;
+        // }
     }
 
 }   

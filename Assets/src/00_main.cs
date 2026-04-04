@@ -15,7 +15,13 @@ public class Game : MonoBehaviour {
     }
 
 	public void Update() {
+        if (Input.GetKeyDown(KeyCode.K)) {
+        card_util.draw_debug_card();
+        }
 
+        if (Input.GetKeyDown(KeyCode.L)) {
+            card_util.add_card(1, CardType.DemonQueen); 
+        }
 
 		if(data.mem.game_started != 0){
 		
@@ -62,6 +68,9 @@ public class Game : MonoBehaviour {
 
 		HandlePieceInput();
 		HandleMovePlateInput();
+        int currentColor = data.mem.current_player_color; 
+
+        card_util.handle_card_input(currentColor);
 	}
 
     // =========================================================================
