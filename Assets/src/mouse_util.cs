@@ -24,26 +24,41 @@ public class mouse_util : MonoBehaviour {
         o.AddComponent<mouse_util>();
     }
 
-    void Update(){
-        Camera c = Camera.main;
-        if (c == null) return;
+	void Start(){
+		Camera c = Camera.main;
+		if (c == null) return;
 
-        Vector3 cur = c.ScreenToWorldPoint(Input.mousePosition);
+		Vector3 mp = Input.mousePosition;
+		mp.z = -c.transform.position.z;
 
-        x = cur.x;
-        y = cur.y;
+		last = c.ScreenToWorldPoint(mp);
+	}
 
-        dx = cur.x - last.x;
-        dy = cur.y - last.y;
+	void Update(){
+		Camera c = cam_2d.cam; // use your own camera
+		if (c == null) return;
 
-        scroll = Input.GetAxis("Mouse ScrollWheel");
+		// --- world position (for clicking / zoom) ---
+		Vector3 mp = Input.mousePosition;
+		mp.z = -c.transform.position.z;
 
-        update_button(ref left, 0);
-        update_button(ref right, 1);
-        update_button(ref middle, 2);
+		Vector3 cur = c.ScreenToWorldPoint(mp);
 
-        last = cur;
-    }
+		x = cur.x;
+		y = cur.y;
+
+		// --- FIX: use screen-space delta (no feedback loop) ---
+		dx = Input.GetAxis("Mouse X");
+		dy = Input.GetAxis("Mouse Y");
+
+		scroll = Input.GetAxis("Mouse ScrollWheel");
+
+		update_button(ref left, 0);
+		update_button(ref right, 1);
+		update_button(ref middle, 2);
+
+		last = cur; // still useful for other stuff if needed
+	}
 
     void update_button(ref button_signal b, int id){
         b.click   = Input.GetMouseButtonDown(id) ? 1 : 0;

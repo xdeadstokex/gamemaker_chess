@@ -719,111 +719,6 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 4474192150969876591, guid: aa0ce4367a93f8140a3ecc4c88c73c77, type: 3}
   m_PrefabInstance: {fileID: 1660137168}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &519420028
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 519420032}
-  - component: {fileID: 519420031}
-  - component: {fileID: 519420029}
-  - component: {fileID: 519420033}
-  m_Layer: 0
-  m_Name: Main Camera
-  m_TagString: MainCamera
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!81 &519420029
-AudioListener:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 519420028}
-  m_Enabled: 1
---- !u!20 &519420031
-Camera:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 519420028}
-  m_Enabled: 1
-  serializedVersion: 2
-  m_ClearFlags: 2
-  m_BackGroundColor: {r: 0.042442862, g: 0.36477977, b: 0.2538438, a: 0}
-  m_projectionMatrixMode: 1
-  m_GateFitMode: 2
-  m_FOVAxisMode: 0
-  m_Iso: 200
-  m_ShutterSpeed: 0.005
-  m_Aperture: 16
-  m_FocusDistance: 10
-  m_FocalLength: 50
-  m_BladeCount: 5
-  m_Curvature: {x: 2, y: 11}
-  m_BarrelClipping: 0.25
-  m_Anamorphism: 0
-  m_SensorSize: {x: 36, y: 24}
-  m_LensShift: {x: 0, y: 0}
-  m_NormalizedViewPortRect:
-    serializedVersion: 2
-    x: 0
-    y: 0
-    width: 1
-    height: 1
-  near clip plane: 0.3
-  far clip plane: 100
-  field of view: 60
-  orthographic: 1
-  orthographic size: 9
-  m_Depth: -1
-  m_CullingMask:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_RenderingPath: -1
-  m_TargetTexture: {fileID: 0}
-  m_TargetDisplay: 0
-  m_TargetEye: 0
-  m_HDR: 1
-  m_AllowMSAA: 0
-  m_AllowDynamicResolution: 0
-  m_ForceIntoRT: 0
-  m_OcclusionCulling: 0
-  m_StereoConvergence: 10
-  m_StereoSeparation: 0.022
---- !u!4 &519420032
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 519420028}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -5, y: 0, z: -10}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &519420033
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 519420028}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2edc46adbe62b1f4dbc155bc38a5ec04, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!224 &555708461 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 4474192150969876591, guid: aa0ce4367a93f8140a3ecc4c88c73c77, type: 3}
@@ -2164,6 +2059,7 @@ GameObject:
   - component: {fileID: 1239710108}
   - component: {fileID: 1239710107}
   - component: {fileID: 1239710109}
+  - component: {fileID: 1239710110}
   m_Layer: 0
   m_Name: 01_data
   m_TagString: Untagged
@@ -2183,16 +2079,38 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 29cb04e69f637215cbc44a53cbf3c0db, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  menu_state: 0
   board_w: 0
   board_h: 0
   main_screen_gui: {fileID: 0}
   pvp_button: {fileID: 0}
+  pve_button: {fileID: 0}
+  btn_count1: {fileID: 0}
+  btn_count2: {fileID: 0}
+  btn_count3: {fileID: 0}
+  back_button: {fileID: 0}
+  btn_diff1: {fileID: 0}
+  btn_diff2: {fileID: 0}
+  btn_diff3: {fileID: 0}
+  btn_diff4: {fileID: 0}
+  menu_rects: []
   gameOver: 0
   current_player_color: 0
   selected_a_piece: 0
-  at_main_screen: 1
-  at_pvp_2: 0
-  isVsAI: 1
+  game_started: 0
+  total_players: 2
+  bot_count: 0
+  play_against_AI: 0
+  evolving_signal: 0
+  evolving_pos: {x: 0, y: 0, z: 0}
+  evoTimer: 0
+  evoZoom: 0
+  evoStartSize: 0
+  evoTargetSize: 0
+  evoStartX: 0
+  evoStartY: 0
+  zoom_cross_board: 0
+  ai_difficulty: 0
   aiColor: 1
   isAIThinking: 0
   board_tile0: {fileID: -2714327965727882766, guid: f129aafcbd04af3d682697f19e2b5e91, type: 3}
@@ -2352,6 +2270,14 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!81 &1239710110
+AudioListener:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1239710106}
+  m_Enabled: 1
 --- !u!224 &1315362934 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 4474192150969876591, guid: aa0ce4367a93f8140a3ecc4c88c73c77, type: 3}
@@ -3838,7 +3764,6 @@ PrefabInstance:
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
-  - {fileID: 519420032}
   - {fileID: 1239710108}
   - {fileID: 1728710305}
   - {fileID: 609339474}
