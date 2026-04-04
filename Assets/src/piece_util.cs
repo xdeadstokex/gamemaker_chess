@@ -49,7 +49,7 @@ public static class piece_util {
                     cp.evo_sprite0   = w ? data.mem.wp_e_king  : data.mem.bp_e_king;
                     cp.evo_sprite1   = null; cp.evo_sprite2 = null; break;
             case 6: cp.normal_sprite = w ? data.mem.wp_e_dqueen : data.mem.bp_e_dqueen;
-                    cp.evo_sprite0   = null; cp.evo_sprite1 = null; cp.evo_sprite2 = null; break;
+                    cp.evo_sprite0   = w ? data.mem.wp_e_dqueen : data.mem.bp_e_dqueen; break;
             case 7: cp.normal_sprite = w ? data.mem.wp_e_king : data.mem.bp_e_king;
                     cp.evo_sprite0   = null; cp.evo_sprite1 = null; cp.evo_sprite2 = null; break;
             default:cp.normal_sprite = null;
@@ -203,30 +203,55 @@ public static class piece_util {
         if (cp.score >= cp.score_to_envo) piece_util.evo(ref cp, pos);
     }
 
-	public static void evo(ref data.chess_piece cp, Vector3 pos){
-		if(cp.piece_type == 5) {
-			cp.piece_type = 7; 
-			cp.score = 0;
-		}
+    public static void evo(ref data.chess_piece cp, Vector3 pos) {     
+        if(cp.piece_type == 5) {
+            cp.piece_type = 7; 
+            cp.score = 0;
+        }
+        cp.evolved = 1;
+        piece_util.apply_piece_data(ref cp);
+        // LOGIC THEM THE
+        int myColor = cp.player_color;
+        int opponentColor = (myColor == 0) ? 1 : 0;
 
-		cp.evolved = 1;
-		piece_util.apply_piece_data(ref cp);
+        CardType[] randomCards = { CardType.Buff1, CardType.Buff2, CardType.Debuff }; 
+        
+        int randomIndex = UnityEngine.Random.Range(0, randomCards.Length); 
+        CardType selectedPowerUp = randomCards[randomIndex];
 
-		data.mem.evolving_signal = 1;
-		data.mem.evolving_pos = pos; // STORE POSITION
+        card_util.add_card(opponentColor, selectedPowerUp);
+        if (cp.piece_type == 4) {
 
-		Debug.Log($"<color=green>{cp.piece_type} HAS EVOLVED!</color>");
-	}
+            card_util.add_card(myColor, CardType.Item); 
+            card_util.add_card(opponentColor, CardType.DemonQueen);
 
-	public static void evo_with_weapon(ref data.chess_piece cp, PieceType weapon, Vector3 pos){
-		cp.evolved  = 1;
-		cp.unitType = PieceType.ELight;
+            Debug.Log($"<color=cyan>Hậu phe {myColor} tiến hóa! Đã phát thẻ thưởng và thẻ phạt.</color>");
+        }
+        Camera.main.GetComponent<CameraControl>().ZoomInTarget(pos, 1f);
+        Debug.Log($"<color=green>{cp.piece_type} HAS EVOLVED!</color>");
+    }
 
-		if (weapon == PieceType.KHeavy) cp.evolved_type = 0;
-		else if (weapon == PieceType.BHeavy) cp.evolved_type = 1;
-		else if (weapon == PieceType.RHeavy) cp.evolved_type = 2;
+    public static void evo_with_weapon(ref data.chess_piece cp, PieceType weapon, Vector3 pos) {
+        cp.evolved      = 1;
+        cp.unitType     = PieceType.ELight;
+        // cp.evolved_type = weapon == PieceType.KHeavy ? 0 : weapon == PieceType.BHeavy ? 1 : 2;
+        if (weapon == PieceType.KHeavy) cp.evolved_type = 0;
+        else if (weapon == PieceType.BHeavy) cp.evolved_type = 1;
+        else if (weapon == PieceType.RHeavy) cp.evolved_type = 2;
+        piece_util.apply_piece_data(ref cp);
+        Camera.main.GetComponent<CameraControl>().ZoomInTarget(pos, 1f);
 
-		piece_util.apply_piece_data(ref cp);
+        //logic them the
+        int myColor = cp.player_color;
+        int opponentColor = (myColor == 0) ? 1 : 0;
+
+        CardType[] randomCards = { CardType.Buff1, CardType.Buff2, CardType.Debuff }; 
+        
+        int randomIndex = UnityEngine.Random.Range(0, randomCards.Length); 
+        CardType selectedPowerUp = randomCards[randomIndex];
+
+        card_util.add_card(opponentColor, selectedPowerUp);
+    }
 
 		data.mem.evolving_signal = 1;
 		data.mem.evolving_pos = pos; // STORE POSITION
@@ -236,39 +261,38 @@ public static class piece_util {
     // ATTACK / MOVE
     // =========================================================================
 
-    public static void piece_attack(ref data.chess_piece attacker, int tx, int ty, Vector3 pos) {
+    public static void piece_attack(ref data.chess_piece attacker, int tx, int ty, Vector3 pos, bool is_counter = false) {
         ref data.board_cell cell = ref board_util.Cell(tx, ty);
         if (cell.has_piece == 0) return;
 
-        data.army_data       enemy  = data.mem.get_army(cell.piece_color);
+        data.army_data enemy = data.mem.get_army(cell.piece_color);
         ref data.chess_piece target = ref enemy.troop_list[cell.piece_index];
 
-        //dqueen start
-        if (target.piece_type == 6) {
-            // 1. Lưu lại vị trí cũ của kẻ tấn công
-            int oldAttackerX = attacker.x;
-            int oldAttackerY = attacker.y;
-
-            // 2. Tiêu diệt kẻ tấn công (Phản đòn)
-            attacker.rect.self_destroy();
-            attacker.rect = null;
-            // Xóa kẻ tấn công khỏi ô cờ cũ của nó
-            board_util.Cell(oldAttackerX, oldAttackerY).has_piece = 0; 
-
-            // 3. Kích hoạt kỹ năng dịch chuyển của DQueen
-            DQueenSkill(ref target, oldAttackerX, oldAttackerY);
+        // --- LOGIC DEMON QUEEN PHẢN ĐÒN ---
+        // Chỉ phản đòn nếu mục tiêu là Demon Queen (6) và ĐÂY KHÔNG PHẢI là đòn phản đòn sẵn có
+        if (target.piece_type == 6 && attacker.piece_type != 7 && !is_counter) {
+            Debug.Log("<color=purple>Demon Queen phản đòn!</color>");
             
-            sound_util.play_sound(data.mem.captureSound);
-            return; // Kết thúc hàm sớm, không xóa DQueen
+            // Demon Queen đánh ngược lại vị trí của kẻ tấn công (attacker.x, attacker.y)
+            // Gửi true vào tham số cuối để kết thúc chuỗi phản đòn
+            piece_attack(ref target, attacker.x, attacker.y, attacker.rect.obj.transform.position, true); 
+            move_piece(ref target, FindPieceIndex(ref target), target.player_color, attacker.x, attacker.y);
+            pvp_util.next_player_turn(); 
+            move_plate_util.clear_move_plate();
+            return;
         }
-        //dqueen end
+        if(target.piece_type == 4 && target.evolved == 1) {
+            card_util.add_card(target.player_color, CardType.GodQueen);
+        }
+
         piece_util.absorb_point(ref attacker, ref target, pos);
         sound_util.play_sound(data.mem.captureSound);
 
-        //if (target.piece_type == 5) Winner(target.player_color == 0 ? "black" : "white");
-
-        target.rect.self_destroy();
-        target.rect = null;
+        // Hủy quân cờ bị ăn
+        if (target.rect != null) {
+            target.rect.self_destroy();
+            target.rect = null;
+        }
         board_util.clear_cell(tx, ty);
     }
 
