@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+﻿﻿using System.Collections.Generic;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -52,9 +52,9 @@ public static class piece_util {
                     cp.evo_sprite0   = w ? data.mem.wp_e_king  : data.mem.bp_e_king;
                     cp.evo_sprite1   = null; cp.evo_sprite2 = null; break;
             case 6: cp.normal_sprite = w ? data.mem.wp_e_dqueen : data.mem.bp_e_dqueen;
-                    cp.evo_sprite0   = null; cp.evo_sprite1 = null; cp.evo_sprite2 = null; break;
+                    cp.evo_sprite0   = w ? data.mem.wp_e_dqueen : data.mem.bp_e_dqueen; break;
             case 7: cp.normal_sprite = w ? data.mem.wp_e_king : data.mem.bp_e_king;
-                    cp.evo_sprite0   = null; cp.evo_sprite1 = null; cp.evo_sprite2 = null; break;
+                    cp.evo_sprite0   = w ? data.mem.wp_e_king : data.mem.bp_e_king;break;
             default:cp.normal_sprite = null;
                     cp.evo_sprite0   = null;
                     cp.evo_sprite1   = null;
@@ -74,7 +74,7 @@ public static class piece_util {
             cp.rect.set_sprite(cp.normal_sprite);
             switch (cp.piece_type) {
                 case 4: cp.score = 9; cp.score_to_envo = 15; cp.unitType = PieceType.Core;   break;
-                case 5: cp.score = 0; cp.score_to_envo = 1;  cp.unitType = PieceType.Core;   break;
+                case 5: cp.score = 0; cp.score_to_envo = 100;  cp.unitType = PieceType.Core;   break;
                 case 1: cp.score = 5; cp.score_to_envo = 7; cp.unitType = PieceType.RHeavy; break;
                 case 2: cp.score = 3; cp.score_to_envo = 5;  cp.unitType = PieceType.KHeavy; break;
                 case 3: cp.score = 3; cp.score_to_envo = 5;  cp.unitType = PieceType.BHeavy; break;
@@ -207,7 +207,7 @@ public static class piece_util {
     // =========================================================================
 
     public static void absorb_point(ref data.chess_piece cp, ref data.chess_piece victim, Vector3 pos) {
-        if (cp.evolved == 1) return;
+        if (cp.evolved == 1 && cp.piece_type != 0) return;
 
         cp.score += victim.score;
         Debug.Log($"<color=blue>Absorbed {victim.score} points!</color> Total score: {cp.score}");
@@ -219,83 +219,142 @@ public static class piece_util {
             return;
         } 
         if (cp.unitType == PieceType.Light) {
+            // Debug.Log($"Checking for weapon evolution... In enemy half: {(cp.player_color == 0 ? cp.y >= 3 : cp.y <= 4)}, Ate heavy piece: {victim.unitType == PieceType.KHeavy || victim.unitType == PieceType.BHeavy || victim.unitType == PieceType.RHeavy}");
             bool inEnemyHalf = (cp.player_color == 0) ? cp.y >= 3 : cp.y <= 4; // not half enough but whatever
             bool ateHeavy    = victim.unitType == PieceType.KHeavy || victim.unitType == PieceType.BHeavy || victim.unitType == PieceType.RHeavy;
             if (inEnemyHalf && ateHeavy) { piece_util.evo_with_weapon(ref cp, victim.unitType, pos); return; }
+            return;
         }
         if (cp.score >= cp.score_to_envo) piece_util.evo(ref cp, pos);
     }
 
-	public static void evo(ref data.chess_piece cp, Vector3 pos){
-		if(cp.piece_type == 5) {
-			cp.piece_type = 7; 
-			cp.score = 0;
-		}
+    public static void evo(ref data.chess_piece cp, Vector3 pos) {     
+        if(cp.piece_type == 5) {
+            cp.piece_type = 7; 
+            cp.score = 0;
+        }
+        cp.evolved = 1;
+        piece_util.apply_piece_data(ref cp);
+        // LOGIC THEM THE
+        int myColor = cp.player_color;
+        int opponentColor = (myColor == 0) ? 1 : 0;
 
-		cp.evolved = 1;
-		piece_util.apply_piece_data(ref cp);
+        CardType[] randomCards = { CardType.Buff1, CardType.Buff2, CardType.Debuff }; 
+        
+        int randomIndex = UnityEngine.Random.Range(0, randomCards.Length); 
+        CardType selectedPowerUp = randomCards[randomIndex];
 
-		data.mem.evolving_signal = 1;
-		data.mem.evolving_pos = pos; // STORE POSITION
+        card_util.add_card(opponentColor, selectedPowerUp);
+        if (cp.piece_type == 4) {
 
-		Debug.Log($"<color=green>{cp.piece_type} HAS EVOLVED!</color>");
-	}
+            card_util.add_card(myColor, CardType.Item); 
+            card_util.add_card(opponentColor, CardType.DemonQueen);
 
-	public static void evo_with_weapon(ref data.chess_piece cp, PieceType weapon, Vector3 pos){
-		cp.evolved  = 1;
-		cp.unitType = PieceType.ELight;
+            Debug.Log($"<color=cyan>Hậu phe {myColor} tiến hóa! Đã phát thẻ thưởng và thẻ phạt.</color>");
+        }
+        // Camera.main.GetComponent<CameraControl>().ZoomInTarget(pos, 1f);
+        Debug.Log($"<color=green>{cp.piece_type} HAS EVOLVED!</color>");
+    }
 
-		if (weapon == PieceType.KHeavy) cp.evolved_type = 0;
-		else if (weapon == PieceType.BHeavy) cp.evolved_type = 1;
-		else if (weapon == PieceType.RHeavy) cp.evolved_type = 2;
+    public static void evo_with_weapon(ref data.chess_piece cp, PieceType weapon, Vector3 pos) {
+        cp.evolved      = 1;
+        cp.score_to_envo = 100;
+        cp.unitType     = PieceType.ELight;
+        // cp.evolved_type = weapon == PieceType.KHeavy ? 0 : weapon == PieceType.BHeavy ? 1 : 2;
+        Debug.Log($"Evolving with weapon! Weapon type: {weapon}");
+        if (weapon == PieceType.KHeavy) cp.evolved_type = 0;
+        else if (weapon == PieceType.BHeavy) cp.evolved_type = 1;
+        else if (weapon == PieceType.RHeavy) cp.evolved_type = 2;
+        Debug.Log($"Evolved type set to {cp.evolved_type} based on weapon {weapon}");
+        piece_util.apply_piece_data(ref cp);
+        Debug.Log($"Applied piece data after weapon evolution. Current sprite: {cp.rect.sprite.name}");
+        // Camera.main.GetComponent<CameraControl>().ZoomInTarget(pos, 1f);
 
-		piece_util.apply_piece_data(ref cp);
+        //logic them the
+        int myColor = cp.player_color;
+        int opponentColor = (myColor == 0) ? 1 : 0;
 
-		data.mem.evolving_signal = 1;
-		data.mem.evolving_pos = pos; // STORE POSITION
-	}
+        CardType[] randomCards = { CardType.Buff1, CardType.Buff2, CardType.Debuff }; 
+        
+        int randomIndex = UnityEngine.Random.Range(0, randomCards.Length); 
+        CardType selectedPowerUp = randomCards[randomIndex];
+
+        card_util.add_card(opponentColor, selectedPowerUp);
+    }
 
     // =========================================================================
     // ATTACK / MOVE
     // =========================================================================
 
-    public static void piece_attack(ref data.chess_piece attacker, int tx, int ty, Vector3 pos) {
+    public static void piece_attack(ref data.chess_piece attacker, int tx, int ty, Vector3 pos, bool is_counter = false) {
         ref data.board_cell cell = ref board_util.Cell(tx, ty);
         if (cell.has_piece == 0) return;
 
-        data.army_data       enemy  = data.mem.get_army(cell.piece_color);
+        data.army_data enemy = data.mem.get_army(cell.piece_color);
         ref data.chess_piece target = ref enemy.troop_list[cell.piece_index];
-
-        //dqueen start
-        if (target.piece_type == 6) {
-            // 1. Lưu lại vị trí cũ của kẻ tấn công
-            int oldAttackerX = attacker.x;
-            int oldAttackerY = attacker.y;
-
-            // 2. Tiêu diệt kẻ tấn công (Phản đòn)
-            attacker.rect.self_destroy();
-            attacker.rect = null;
-            // Xóa kẻ tấn công khỏi ô cờ cũ của nó
-            board_util.Cell(oldAttackerX, oldAttackerY).has_piece = 0; 
-
-            // 3. Kích hoạt kỹ năng dịch chuyển của DQueen
-            DQueenSkill(ref target, oldAttackerX, oldAttackerY);
+        // --- LOGIC DEMON QUEEN PHẢN ĐÒN ---
+        // Chỉ phản đòn nếu mục tiêu là Demon Queen (6) và ĐÂY KHÔNG PHẢI là đòn phản đòn sẵn có
+        if (target.piece_type == 6 && attacker.piece_type != 7 && !is_counter) {
+            Debug.Log("<color=purple>Demon Queen phản đòn!</color>");
             
-            sound_util.play_sound(data.mem.captureSound);
-            return; // Kết thúc hàm sớm, không xóa DQueen
+            // Demon Queen đánh ngược lại vị trí của kẻ tấn công (attacker.x, attacker.y)
+            // Gửi true vào tham số cuối để kết thúc chuỗi phản đòn
+            piece_attack(ref target, attacker.x, attacker.y, attacker.rect.obj.transform.position, true); 
+            move_piece(ref target, FindPieceIndex(ref target), target.player_color, attacker.x, attacker.y);
+            pvp_util.next_player_turn(); 
+            move_plate_util.clear_move_plate();
+            return;
         }
-        //dqueen end
+        if(target.piece_type == 4 && target.evolved == 1) {
+            card_util.add_card(target.player_color, CardType.GodQueen);
+        }
+        if(attacker.piece_type == 7) {
+            int txx = attacker.x;
+            int tyx = attacker.y;
+            int color = attacker.player_color;
+            data.army_data army = data.mem.get_army(color);
+
+            if (attacker.rect != null) attacker.rect.self_destroy();
+            board_util.clear_cell(txx, tyx);
+
+            piece_util.create_piece(txx, tyx, 5, army); 
+            ref data.chess_piece newKing = ref piece_util.get_piece_in_board(txx, tyx);
+            newKing.evolved = 0; 
+            newKing.score_to_envo = 3;
+            piece_util.apply_piece_data(ref newKing);
+        }
+        if(attacker.piece_type == 1 && attacker.evolved == 1) {
+            int myColor = attacker.player_color;
+
+
+            CardType[] randomCards = { CardType.Buff1, CardType.Buff2}; 
+            
+            int randomIndex = UnityEngine.Random.Range(0, randomCards.Length); 
+            CardType selectedPowerUp = randomCards[randomIndex];
+
+            card_util.add_card(myColor, selectedPowerUp);
+        }
         piece_util.absorb_point(ref attacker, ref target, pos);
         sound_util.play_sound(data.mem.captureSound);
 
-        //if (target.piece_type == 5) Winner(target.player_color == 0 ? "black" : "white");
-
-        target.rect.self_destroy();
-        target.rect = null;
+        // Hủy quân cờ bị ăn
+        if (target.rect != null) {
+            target.rect.self_destroy();
+            target.rect = null;
+        }
         board_util.clear_cell(tx, ty);
     }
 
     public static void move_piece(ref data.chess_piece cp, int idx, int color, int tx, int ty) {
+        if(cp.piece_type == 6){
+            cp.shield -= 1; 
+            if(cp.shield == 0) {
+            cp.rect.self_destroy(); 
+            board_util.clear_cell(cp.x, cp.y);
+
+            return;}
+            }
+
         board_util.clear_cell(cp.x, cp.y);
         cp.x = tx;
         cp.y = ty;

@@ -2,7 +2,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-public enum CardType { Buff1, Buff2, Debuff, GodQueen, DemonQueen, Event, Item }
+public enum CardType { Buff1, Buff2, Debuff, GodQueen, DemonQueen, Event, Item, Water}
 public enum PieceType { Light, ELight, KHeavy, BHeavy, RHeavy, Core }
 public enum AIDifficulty { Baby, Easy, Normal, Asean }
 
