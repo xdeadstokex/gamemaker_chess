@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: c7f52a275ce741b4faf2a58fd132fe7a
+guid: f1604db42aba41f468c9dfa676a9785f
 TextureImporter:
   internalIDToNameTable:
   - first:
@@ -103,12 +103,12 @@ TextureImporter:
       name: pve2_0
       rect:
         serializedVersion: 2
-        x: 3
+        x: 19
         y: 0
-        width: 317
+        width: 282
         height: 160
       alignment: 0
-      pivot: {x: 0.5, y: 0.5}
+      pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -123,7 +123,7 @@ TextureImporter:
     outline: []
     physicsShape: []
     bones: []
-    spriteID: b996478ecbf3a2c479ebb9b856385227
+    spriteID: 
     internalID: 0
     vertices: []
     indices: 

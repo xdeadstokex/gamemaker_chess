@@ -10,19 +10,32 @@ public static class card_util {
     // =========================================================================
     // CARD
     // =========================================================================
-    public static void init_card_table() {
+    
+    public static void init_card_table_white() {
     // Đặt bảng ở vị trí trung tâm hàng bài, Z= -4f (nằm dưới lá bài Z=-5f)
     // Tọa độ Y nên khớp với y_pos của CardHand
     float table_y = data.mem.white_hand_visual.y_pos - 1.1f; 
     
-    data.mem.card_table_obj = rect_2d.create(0f, table_y, -4f);
-    data.mem.card_table_obj.set_sprite(data.mem.Card_board_bg_sprite);
+    data.mem.card_table_obj_w = rect_2d.create(0f, table_y, -4f);
+    data.mem.card_table_obj_w.set_sprite(data.mem.Card_board_bg_sprite);
     
     // Giả sử bảng của bạn chứa 5 cột, 2 hàng thẻ. 
     // Độ rộng khoảng: 5 cột * 1.6f spacing = 8f. 
     float scale = 1.4f;
-    data.mem.card_table_obj.set_sprite_size(7.12f * scale, 5.4f * scale);
+    data.mem.card_table_obj_w.set_sprite_size(7.12f * scale, 5.4f * scale);
 }
+    public static void init_card_table_black() {
+    float table_y = data.mem.black_hand_visual.y_pos + 1.1f; // Đặt bảng ở vị trí trung tâm hàng bài, Z= -4f (nằm dưới lá bài Z=-5f)
+    
+    data.mem.card_table_obj_b   = rect_2d.create(0f, table_y, -4f);
+    data.mem.card_table_obj_b.set_sprite(data.mem.Card_board_bg_sprite);
+    
+    // Giả sử bảng của bạn chứa 5 cột, 2 hàng thẻ. 
+    // Độ rộng khoảng: 5 cột * 1.6f spacing = 8f. 
+    float scale = 1.4f;
+    data.mem.card_table_obj_b.set_sprite_size(7.12f * scale, 5.4f * scale);
+}
+
     public static void draw_debug_card() {
         if (data.mem == null) return;
 
@@ -116,7 +129,9 @@ public static void handle_card_input(int player_color) {
 
                     if (success) {
                         cardDataList.RemoveAt(i);
-                        refresh_card_visuals(player_color); // Cập nhật đúng phe
+                        refresh_card_visuals(player_color); 
+                        sound_util.play_sound(data.mem.cardPlaySound);
+                        // Cập nhật đúng phe
                         return;
                     }
                 }
@@ -154,7 +169,7 @@ public static void handle_card_input(int player_color) {
             case CardType.DemonQueen:
                 // Yêu cầu CÓ lính và PHẢI là quân mình, CHỈ áp dụng lên Queen
                 return (cell.has_piece == 1 && cell.piece_color == myColor && data.mem.get_army(cell.piece_color).troop_list[cell.piece_index].piece_type == 4);
-            case CardType.Water:
+            case CardType.Rock:
                 if (cell.has_piece == 1) return false;
                 if (myColor == 0 && ty <= 3) return true;
                 if (myColor == 1 && ty >= 4) return true;
@@ -164,6 +179,7 @@ public static void handle_card_input(int player_color) {
         }
     }
 public static void add_card(int player_color, CardType type) {
+    sound_util.play_sound(data.mem.cardDrawSound);
     if (data.mem == null) return;
 
     // 1. Khởi tạo đối tượng thẻ mới
@@ -199,13 +215,13 @@ public static void add_card(int player_color, CardType type) {
             newCard.cardName = "Demon Queen";
             newCard.artwork = data.mem.card_demon;
             break;
-        case CardType.Event:
-            newCard.cardName = "Lightning";
-            newCard.artwork = data.mem.card_expandc;
+            case CardType.Event:
+                newCard.cardName = "Lightning";
+                newCard.artwork = data.mem.card_expandc;
             break;
-        case CardType.Water:
-            newCard.cardName = "Water";
-            newCard.artwork = data.mem.card_expandc; // Tạm dùng sprite sự kiện cho thẻ nước
+        case CardType.Rock:
+            newCard.cardName = "Rock";  
+            newCard.artwork = data.mem.card_rock; // Tạm dùng sprite sự kiện cho thẻ nước
             break;
     }
 
@@ -230,6 +246,7 @@ public static void add_card(int player_color, CardType type) {
                 real2.score += 1;
                 Debug.Log($"{real2.piece_type} được Buff! Score: {real2.score}");
                 if (real2.score >= real2.score_to_envo) piece_util.evo(ref real2, effectPos);
+                sound_util.play_sound(data.mem.cardBuffSound);
                 return true;
             case CardType.Buff2:
 
@@ -237,6 +254,7 @@ public static void add_card(int player_color, CardType type) {
                 real.score += 2;
                 Debug.Log($"{real.piece_type} được Buff! Score: {real.score}");
                 if (real.score >= real.score_to_envo) piece_util.evo(ref real, effectPos);
+                sound_util.play_sound(data.mem.cardBuffSound);
                 return true;
 
             case CardType.Debuff:
@@ -262,6 +280,7 @@ public static void add_card(int player_color, CardType type) {
                     downgradedPiece.score = 0;
                     
                     piece_util.apply_piece_data(ref downgradedPiece);
+                    sound_util.play_sound(data.mem.cardDebuffSound);
 
                     return true; // Trả về true để xóa lá bài sau khi dùng
                 }
@@ -270,9 +289,19 @@ public static void add_card(int player_color, CardType type) {
             case CardType.GodQueen:
                 // Logic đặc biệt: Hồi sinh hoặc nâng cấp lên Queen
                 if (target.piece_type != 5) { // Không áp dụng lên King
-                    target.piece_type = 4;
-                    target.evolved = 0;
-                    piece_util.apply_piece_data(ref target);
+                    int tx = target.x;
+                    int ty = target.y;
+                    int color = target.player_color;
+                    data.army_data army = data.mem.get_army(color);
+
+                    // Xóa quân cũ khỏi màn hình và bộ nhớ
+                    if (target.rect != null) target.rect.self_destroy();
+                    board_util.clear_cell(tx, ty);
+                    // Tạo quân Queen (loại 4) mới tại vị trí đó    
+                    piece_util.create_piece(tx, ty, 4, army);   
+
+                    Debug.Log("<color=yellow>Đã hồi sinh/nâng cấp lên Queen mới!</color>");
+                    
                     return true;
                 }
                 return false;
@@ -296,7 +325,7 @@ public static void add_card(int player_color, CardType type) {
                     ref data.chess_piece newDQueen = ref piece_util.get_piece_in_board(tx, ty);
                     newDQueen.evolved = 1; 
                     piece_util.apply_piece_data(ref newDQueen);
-
+                    sound_util.play_sound(data.mem.DemonqueenEvolveSound);
                     Debug.Log("<color=purple>Đã thay thế Hậu bằng Demon Queen mới!</color>");
                     return true;
                 }
@@ -318,27 +347,44 @@ public static void add_card(int player_color, CardType type) {
                     ref data.chess_piece newKing = ref piece_util.get_piece_in_board(tx, ty);
                     newKing.evolved = 1; 
                     piece_util.apply_piece_data(ref newKing);
-                    card_util.add_card(color, CardType.Water); 
-                    card_util.add_card(opponentColor, CardType.Water); 
-
+                    card_util.add_card(color, CardType.Rock); 
+                    card_util.add_card(opponentColor, CardType.Rock); 
+                    sound_util.play_sound(data.mem.kingEvolveSound);
                     return true;
 
                 }
                 return false;
             case CardType.Event:
                 return true;
-            case CardType.Water:
-                int txy = target.x;
-                int tyy = target.y;
-                ref data.board_cell cell = ref board_util.Cell(txy, tyy);
+            case CardType.Rock:
+                // 1. Lấy vị trí chuột trong World Space
+                Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+                
+                // 2. Chuyển đổi ngược từ World sang tọa độ Board (int x, int y)
+                // Công thức này đảo ngược từ hàm board_to_world của ông: v * 1.28f - 4.48f
+                int txyy = Mathf.RoundToInt((mousePos.x + 4.48f) / 1.28f);
+                int tyyy = Mathf.RoundToInt((mousePos.y + 4.48f) / 1.28f);
 
-                if (cell.tile != null) {
+                // 3. Kiểm tra hợp lệ
+                if (!board_util.on_board(txyy, tyyy)) return false;
 
-                    cell.tile.self_destroy(); 
+                ref data.board_cell cell = ref board_util.Cell(txyy, tyyy);
 
-                    cell.tile = null; 
-                    cell.has_piece = -1; 
+                if (cell.has_piece == 0) {
+                    // Đảm bảo armies[2] đã tồn tại (Neutral)
+                    if (data.mem.armies.Length < 3) {
+                        data.army_data[] newArmies = new data.army_data[3];
+                        for(int i=0; i<data.mem.armies.Length; i++) newArmies[i] = data.mem.armies[i];
+                        newArmies[2] = new data.army_data(2);
+                        data.mem.armies = newArmies;
+                    }
 
+                    // Tạo đá
+                    piece_util.create_piece(txyy, tyyy, 99, data.mem.armies[2]);
+                    ref data.chess_piece rock = ref piece_util.get_piece_in_board(txyy, tyyy);
+                    rock.rect.set_sprite(data.mem.rock); // Sprite hòn đá
+                    rock.rect.set_sprite_size(1.1f, 1.1f);
+                    
                     return true;
                 }
                 return false;

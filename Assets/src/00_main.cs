@@ -12,7 +12,7 @@ public class Game : MonoBehaviour {
     const float MENU_CNT1_X  =  3f;    const float MENU_CNT2_X  =  0f;    const float MENU_CNT3_X = -3f;
     const float MENU_DIFF1_X =  4.5f;  const float MENU_DIFF2_X =  1.5f;
     const float MENU_DIFF3_X = -1.5f;  const float MENU_DIFF4_X = -4.5f;
-    const float MENU_ROW_Y   =  0f;    const float MENU_BACK_Y  = -3f;
+    const float MENU_ROW_Y   =  -3.0f;    const float MENU_BACK_Y  = 1f;
 
     // In-game settings button
     const float SETTINGS_BTN_X  = 6.5f; const float SETTINGS_BTN_Y  = 7.0f;
@@ -24,13 +24,29 @@ public class Game : MonoBehaviour {
     // LIFECYCLE
     // =========================================================================
 
-    void Start()  { ShowMainMenu(); }
+    void Start()  { if (Camera.main != null) {
+        Camera.main.clearFlags = CameraClearFlags.SolidColor; 
+        Camera.main.backgroundColor = new Color(0.384f, 0.713f, 0.627f);
+    }ShowMainMenu(); PlayThemeMusic(); }
 
 	int test = 0;
+    void PlayThemeMusic() {
+    if (data.mem.themesound != null && data.mem.audioSource != null) {
+        data.mem.audioSource.clip = data.mem.themesound;
+        data.mem.audioSource.loop = true; // Bật lặp lại
+        data.mem.audioSource.Play();
+    }
+}
     void Update() {
         HandleMenuInput();
         HandleSettingsButton();
-
+        bool isPvP1v1 = (data.mem.total_players == 2 && data.mem.play_against_AI == 0);
+        if (isPvP1v1) {
+            card_util.handle_card_input(data.mem.current_player_color);
+            
+            if (Input.GetKeyDown(KeyCode.K)) card_util.add_card(0, CardType.Rock);
+            if (Input.GetKeyDown(KeyCode.L)) card_util.add_card(1, CardType.DemonQueen);
+        }
         if (data.mem.game_started == 0) return;
 
         cam_2d.zoom(mouse_util.scroll);
@@ -64,10 +80,6 @@ public class Game : MonoBehaviour {
 
         HandlePieceInput();
         HandleMovePlateInput();
-        card_util.handle_card_input(data.mem.current_player_color);
-
-        if (Input.GetKeyDown(KeyCode.K)) card_util.draw_debug_card();
-        if (Input.GetKeyDown(KeyCode.L)) card_util.add_card(1, CardType.DemonQueen);
     }
 
     // =========================================================================
@@ -76,44 +88,44 @@ public class Game : MonoBehaviour {
 
     void MakeMenuBg() {
         data.mem.main_screen_gui = rect_2d.create(0f, 0f);
-        data.mem.main_screen_gui.set_sprite(data.mem.rect_2d_sprite);
-        data.mem.main_screen_gui.set_sprite_size(20f, 12f);
-        data.mem.main_screen_gui.set_collider_size(20f, 12f);
+        data.mem.main_screen_gui.set_sprite(data.mem.menu_bg_sprite);
+        data.mem.main_screen_gui.set_sprite_size(20f, 10f);
+        data.mem.main_screen_gui.set_collider_size(20f, 10f);
     }
 
     void ShowMainMenu() {
         gui_util.clear_menu();
         MakeMenuBg();
-        data.mem.pvp_button = gui_util.make_button(MENU_PVP_X, MENU_ROW_Y, Color.cyan,   "PvP");
-        data.mem.pve_button = gui_util.make_button(MENU_PVE_X, MENU_ROW_Y, Color.yellow, "PvE");
+        data.mem.pvp_button = gui_util.make_button_sprite(MENU_PVP_X, MENU_ROW_Y, data.mem.pvp_btn_sprite,3.0f, 1.5f);
+        data.mem.pve_button = gui_util.make_button_sprite(MENU_PVE_X, MENU_ROW_Y, data.mem.pve_btn_sprite,3.0f, 1.5f);
         data.mem.menu_state = data.MenuState.Main;
-    }
+        }
 
     void ShowPlayerCountMenu(bool is_pve) {
         gui_util.clear_menu();
         MakeMenuBg();
         if (is_pve) {
-            data.mem.btn_count1 = gui_util.make_button(MENU_CNT1_X, MENU_ROW_Y, Color.red,   "1 vs 1");
-            data.mem.btn_count2 = gui_util.make_button(MENU_CNT2_X, MENU_ROW_Y, Color.cyan,  "1 vs 2");
-            data.mem.btn_count3 = gui_util.make_button(MENU_CNT3_X, MENU_ROW_Y, Color.green, "1 vs 3");
+            data.mem.btn_count1 = gui_util.make_button_sprite(MENU_CNT1_X, MENU_ROW_Y, data.mem.pve_btn_sprite, 3.0f, 1.5f);
+            data.mem.btn_count2 = gui_util.make_button_sprite(MENU_CNT2_X, MENU_ROW_Y, data.mem.pve2_btn_sprite, 3.0f, 1.5f);
+            data.mem.btn_count3 = gui_util.make_button_sprite(MENU_CNT3_X, MENU_ROW_Y, data.mem.pve3_btn_sprite, 3.0f, 1.5f);
             data.mem.menu_state = data.MenuState.PickBotCount;
         } else {
-            data.mem.btn_count1 = gui_util.make_button(MENU_CNT1_X, MENU_ROW_Y, Color.red,   "2 Players");
-            data.mem.btn_count2 = gui_util.make_button(MENU_CNT2_X, MENU_ROW_Y, Color.cyan,  "3 Players");
-            data.mem.btn_count3 = gui_util.make_button(MENU_CNT3_X, MENU_ROW_Y, Color.green, "4 Players");
+            data.mem.btn_count1 = gui_util.make_button_sprite(MENU_CNT1_X, MENU_ROW_Y, data.mem.count1_btn_sprite, 3.0f, 1.5f);
+            data.mem.btn_count2 = gui_util.make_button_sprite(MENU_CNT2_X, MENU_ROW_Y, data.mem.count2_btn_sprite, 3.0f, 1.5f);
+            data.mem.btn_count3 = gui_util.make_button_sprite(MENU_CNT3_X, MENU_ROW_Y, data.mem.count3_btn_sprite, 3.0f, 1.5f);
             data.mem.menu_state = data.MenuState.PickPlayerCount;
         }
-        data.mem.back_button = gui_util.make_button(0f, MENU_BACK_Y, Color.red, "Back");
+        data.mem.back_button = gui_util.make_button_sprite(0f, MENU_BACK_Y, data.mem.back_btn_sprite, 2.0f, 2.0f);
     }
 
     void ShowDifficultyMenu() {
         gui_util.clear_menu();
         MakeMenuBg();
-        data.mem.btn_diff1   = gui_util.make_button(MENU_DIFF1_X, MENU_ROW_Y, Color.green,  "Baby");
-        data.mem.btn_diff2   = gui_util.make_button(MENU_DIFF2_X, MENU_ROW_Y, Color.cyan,   "Easy");
-        data.mem.btn_diff3   = gui_util.make_button(MENU_DIFF3_X, MENU_ROW_Y, Color.yellow, "Normal");
-        data.mem.btn_diff4   = gui_util.make_button(MENU_DIFF4_X, MENU_ROW_Y, Color.red,    "Asean");
-        data.mem.back_button = gui_util.make_button(0f, MENU_BACK_Y, Color.red, "Back");
+        data.mem.btn_diff1   = gui_util.make_button_sprite(MENU_DIFF1_X, MENU_ROW_Y, data.mem.diff1_btn_sprite, 3.0f, 1.5f);
+        data.mem.btn_diff2   = gui_util.make_button_sprite(MENU_DIFF2_X, MENU_ROW_Y, data.mem.diff2_btn_sprite, 3.0f, 1.5f);
+        data.mem.btn_diff3   = gui_util.make_button_sprite(MENU_DIFF3_X, MENU_ROW_Y, data.mem.diff3_btn_sprite, 3.0f, 1.5f);
+        data.mem.btn_diff4   = gui_util.make_button_sprite(MENU_DIFF4_X, MENU_ROW_Y, data.mem.diff4_btn_sprite, 3.0f, 1.5f);
+        data.mem.back_button = gui_util.make_button_sprite(0f, MENU_BACK_Y, data.mem.back_btn_sprite, 2.0f, 2.0f);
         data.mem.menu_state  = data.MenuState.PickBotDifficulty;
     }
 
@@ -122,39 +134,94 @@ public class Game : MonoBehaviour {
     // =========================================================================
 
     void HandleMenuInput() {
+        bool anyClicked = false;
         switch (data.mem.menu_state) {
             case data.MenuState.Main:
-                if (gui_util.clicked(data.mem.pvp_button)) ShowPlayerCountMenu(false);
-                if (gui_util.clicked(data.mem.pve_button)) ShowPlayerCountMenu(true);
+                if (gui_util.clicked(data.mem.pvp_button)) {
+                    ShowPlayerCountMenu(false);
+                    anyClicked = true;
+                }
+                if (gui_util.clicked(data.mem.pve_button)) {
+                    ShowPlayerCountMenu(true);
+                    anyClicked = true;
+                }
                 break;
 
             case data.MenuState.PickPlayerCount:
-                if (gui_util.clicked(data.mem.btn_count1)) StartGame(2, 0);
-                if (gui_util.clicked(data.mem.btn_count2)) StartGame(3, 0);
-                if (gui_util.clicked(data.mem.btn_count3)) StartGame(4, 0);
-                if (gui_util.clicked(data.mem.back_button)) ShowMainMenu();
+                if (gui_util.clicked(data.mem.btn_count1)) {
+                    StartGame(2, 0);
+                    anyClicked = true;
+                }
+                if (gui_util.clicked(data.mem.btn_count2)) {
+                    StartGame(3, 0);
+                    anyClicked = true;
+                }
+                if (gui_util.clicked(data.mem.btn_count3)) {
+                    StartGame(4, 0);
+                    anyClicked = true;
+                }
+                if (gui_util.clicked(data.mem.back_button)) {
+                    ShowMainMenu();
+                    anyClicked = true;
+                }
                 break;
 
             case data.MenuState.PickBotCount:
-                if (gui_util.clicked(data.mem.btn_count1)) PickBotCount(2, 1);
-                if (gui_util.clicked(data.mem.btn_count2)) PickBotCount(3, 2);
-                if (gui_util.clicked(data.mem.btn_count3)) PickBotCount(4, 3);
-                if (gui_util.clicked(data.mem.back_button)) ShowMainMenu();
+                if (gui_util.clicked(data.mem.btn_count1)) {
+                    PickBotCount(2, 1);
+                    anyClicked = true;
+                }
+                if (gui_util.clicked(data.mem.btn_count2)) {
+                    PickBotCount(3, 2);
+                    anyClicked = true;
+                }
+                if (gui_util.clicked(data.mem.btn_count3)) {
+                    PickBotCount(4, 3);
+                    anyClicked = true;
+                }
+                if (gui_util.clicked(data.mem.back_button)) {
+                    ShowMainMenu();
+                    anyClicked = true;
+                }
                 break;
 
             case data.MenuState.PickBotDifficulty:
-                if (gui_util.clicked(data.mem.btn_diff1)) StartGame_AI(AIDifficulty.Baby);
-                if (gui_util.clicked(data.mem.btn_diff2)) StartGame_AI(AIDifficulty.Easy);
-                if (gui_util.clicked(data.mem.btn_diff3)) StartGame_AI(AIDifficulty.Normal);
-                if (gui_util.clicked(data.mem.btn_diff4)) StartGame_AI(AIDifficulty.Asean);
-                if (gui_util.clicked(data.mem.back_button)) ShowPlayerCountMenu(true);
+                if (gui_util.clicked(data.mem.btn_diff1)) {
+                    StartGame_AI(AIDifficulty.Baby);
+                    anyClicked = true;
+                }
+                if (gui_util.clicked(data.mem.btn_diff2)) {
+                    StartGame_AI(AIDifficulty.Easy);
+                    anyClicked = true;
+                }
+                if (gui_util.clicked(data.mem.btn_diff3)) {
+                    StartGame_AI(AIDifficulty.Normal);
+                    anyClicked = true;
+                }
+                if (gui_util.clicked(data.mem.btn_diff4)) {
+                    StartGame_AI(AIDifficulty.Asean);
+                    anyClicked = true;
+                }
+                if (gui_util.clicked(data.mem.back_button)) {
+                    ShowPlayerCountMenu(true);
+                    anyClicked = true;
+                }
                 break;
 
             case data.MenuState.Settings:
-                if (gui_util.clicked(data.mem.btn_main_menu)) ReturnToMainMenu();
-                if (gui_util.clicked(data.mem.back_button))   HideSettingsOverlay();
+                if (gui_util.clicked(data.mem.btn_main_menu)) {
+                    ReturnToMainMenu();
+                    anyClicked = true;
+                }
+                if (gui_util.clicked(data.mem.back_button)) {
+                    HideSettingsOverlay();
+                    anyClicked = true;
+                }
                 break;
         }
+        if (anyClicked) {
+        sound_util.play_sound(data.mem.clicksound); // Phát tiếng click
+    }
     }
 
     void PickBotCount(int players, int bots) {
@@ -193,7 +260,13 @@ public class Game : MonoBehaviour {
         else                    SetupBoard_Cross(total_players);
 
         sound_util.play_sound(data.mem.startSound);
-        card_util.init_card_table();
+        if(total_players == 2 && bot_count == 0)
+        {
+        card_util.init_card_table_white();
+
+        card_util.init_card_table_black();
+        }
+
         card_util.refresh_card_visuals(0);
         SpawnSettingsButton();
     }
@@ -469,14 +542,14 @@ public class Game : MonoBehaviour {
 	void SpawnSettingsButton() {
 		DestroyRef(ref data.mem.settings_button);
 		Vector2 off = GetSettingsOffset();
-		data.mem.settings_button = gui_util.make_button(SETTINGS_BTN_X + off.x, SETTINGS_BTN_Y + off.y, Color.gray, "Set");
+		data.mem.settings_button = gui_util.make_button_sprite(SETTINGS_BTN_X + off.x, SETTINGS_BTN_Y + off.y, data.mem.settings_btn_sprite, 1f, 1f);
 		data.mem.menu_rects.Remove(data.mem.settings_button);
 	}
 
 	void ShowSettingsOverlay() {
 		Vector2 off = GetSettingsOffset();
-		data.mem.btn_main_menu = gui_util.make_button(SETTINGS_MENU_X + off.x, SETTINGS_MENU_Y + off.y, Color.red, "Main Menu");
-		data.mem.back_button = gui_util.make_button(SETTINGS_BACK_X + off.x, SETTINGS_BACK_Y + off.y, Color.cyan, "Back");
+		data.mem.btn_main_menu = gui_util.make_button_sprite(SETTINGS_MENU_X + off.x, SETTINGS_MENU_Y + off.y, data.mem.back_btn_sprite, 1f, 1f);
+		data.mem.back_button = gui_util.make_button_sprite(SETTINGS_BACK_X + off.x, SETTINGS_BACK_Y + off.y, data.mem.menu_btn_sprite, 1f, 1f);
 		data.mem.menu_state = data.MenuState.Settings;
 	}
 
@@ -504,7 +577,7 @@ public class Game : MonoBehaviour {
 
 		string txt = (data.mem.turn_state == 2) ? "Lose" : "Draw";
 		data.mem.lose_button = gui_util.make_button(SETTINGS_LOSE_X + off.x, SETTINGS_LOSE_Y + off.y, Color.red,txt);
-		data.mem.btn_main_menu = gui_util.make_button(SETTINGS_MENU_X + off.x, SETTINGS_MENU_Y + off.y, Color.red, "Main Menu");
+		data.mem.btn_main_menu = gui_util.make_button_sprite(SETTINGS_MENU_X + off.x, SETTINGS_MENU_Y + off.y, data.mem.back_btn_sprite, 1f, 1f);
 		data.mem.menu_state = data.MenuState.Settings;
 	}
     // =========================================================================
@@ -529,9 +602,16 @@ public class Game : MonoBehaviour {
                         if (army.troop_list[i].rect != null)
                             army.troop_list[i].rect.self_destroy();
 
+
+        DestroyRef(ref data.mem.card_table_obj_w);
+
+        ClearCardHandVisual(data.mem.white_hand_visual);
+        ClearCardHandVisual(data.mem.black_hand_visual);
+        data.mem.whiteHand.Clear();
+        data.mem.blackHand.Clear();
         move_plate_util.clear_move_plate();
         DestroyRef(ref data.mem.settings_button);
-        DestroyRef(ref data.mem.card_table_obj);
+        DestroyRef(ref data.mem.card_table_obj_b);
 		DestroyRef(ref data.mem.lose_button);
 		data.mem.lose_ui_shown = false;
         // Reset state
@@ -572,5 +652,15 @@ public class Game : MonoBehaviour {
         if (r == null) return;
         r.self_destroy();
         r = null;
+    }
+        void ClearCardHandVisual(data.CardHand hand) {
+        if (hand != null && hand.card_rects != null) {
+            for (int i = 0; i < hand.card_rects.Count; i++) {
+                if (hand.card_rects[i] != null) {
+                    hand.card_rects[i].self_destroy();
+                }
+            }
+            hand.card_rects.Clear(); // Làm trống list sau khi destroy
+        }
     }
 }
