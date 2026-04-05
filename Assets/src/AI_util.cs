@@ -33,11 +33,10 @@ public static class AI_util {
         if (chosenMove.piece_index != -1 && !data.mem.gameOver) {
             ExecuteAIMove(chosenMove, currentColor);
         } else {
-            data.mem.selected_a_piece = 0;
-            piece_util.unselect_all_piece();
-            move_plate_util.clear_move_plate();
-            pvp_util.next_player_turn();
+            data.mem.gameOver = true;
+            Debug.Log("<color=orange>AI Backup: AI không tìm được nước đi. Đóng băng Game!</color>");
         }
+        
         data.mem.isAIThinking = false;
     }
     
@@ -56,9 +55,12 @@ public static class AI_util {
                 for (int ty = 0; ty < data.mem.board_h; ty++) {
                     if (piece_util.can_move_to(ref cp, tx, ty)) {
                         bool isAttack = board_util.Cell(tx, ty).has_piece == 1;
-                        moves.Add(new data.AIMove {
-                            piece_index = i, targetX = tx, targetY = ty, isAttack = isAttack
-                        });
+                        
+                        if (piece_util.IsSafeMove(i, color, tx, ty, isAttack)) {
+                            moves.Add(new data.AIMove {
+                                piece_index = i, targetX = tx, targetY = ty, isAttack = isAttack
+                            });
+                        }
                     }
                 }
             }
@@ -132,18 +134,6 @@ public static class AI_util {
         }
     }
 
-    // public static data.board_cell[] CloneBoard(data.board_cell[] original) {
-    //     return (data.board_cell[])original.Clone();
-    // }
-
-    // public static data.army_data[] CloneArmies(data.army_data[] original) {
-    //     data.army_data[] clone = new data.army_data[original.Length];
-    //     for (int i = 0; i < original.Length; i++) {
-    //         clone[i] = CloneArmy(original[i]);
-    //     }
-    //     return clone;
-    // }
-
     public static int SimulateMoveDataOnly(data.AIMove move, int color) {
         data.army_data army = data.mem.get_army(color);
         ref data.chess_piece attacker = ref army.troop_list[move.piece_index];
@@ -172,18 +162,17 @@ public static class AI_util {
     // TACTICS & HEURISTICS
     // =========================================================================
     public static float GetPieceValue(ref data.chess_piece cp) {
-        if (cp.piece_type == 5 || cp.piece_type == 7) return 10000f; // Vua: Vô giá
-        if (cp.piece_type == 4 || cp.piece_type == 6) return 900f;   // Hậu / DQueen
-        if (cp.piece_type == 1) return 500f;                         // Xe
-        if (cp.piece_type == 2 || cp.piece_type == 3) return 300f;   // Mã, Tượng
+        if (cp.piece_type == 5 || cp.piece_type == 7) return 10000f; 
+        if (cp.piece_type == 4 || cp.piece_type == 6) return 900f;   
+        if (cp.piece_type == 1) return 500f;                         
+        if (cp.piece_type == 2 || cp.piece_type == 3) return 300f;   
         
-        // Nhận diện quân Tốt đã tiến hóa
         if (cp.piece_type == 0) {
             if (cp.evolved == 1) {
-                if (cp.evolved_type == 2) return 500f; // Đã hóa Xe
-                return 300f;                           // Đã hóa Mã hoặc Tượng
+                if (cp.evolved_type == 2) return 500f; 
+                return 300f;                         
             }
-            return 100f; // Tốt thường
+            return 100f; 
         }
         return 100f; 
     }
@@ -194,32 +183,28 @@ public static class AI_util {
             data.army_data enemyArmy = data.mem.armies[c];
             
             for (int i = 0; i < enemyArmy.troop_count; i++) {
-                ref data.chess_piece ep = ref enemyArmy.troop_list[i]; // ep = enemyPiece
+                ref data.chess_piece ep = ref enemyArmy.troop_list[i]; 
                 if (ep.rect == null) continue;
                 
                 int dx = Mathf.Abs(x - ep.x);
                 int dy = Mathf.Abs(y - ep.y);
 
-                // 1. VUA SÚNG (Bắn 5x5)
                 if (ep.piece_type == 7) {
                     if (dx <= 2 && dy <= 2 && (dx > 0 || dy > 0)) return true;
-                    continue; // Bỏ qua phần dưới
+                    continue; 
                 }
-
-                // 2. TỐT VÀ TỐT TIẾN HÓA (Xử lý riệng bạo bệnh Tốt không ăn thẳng)
                 if (ep.piece_type == 0) {
                     int dir = (ep.player_color == 0) ? 1 : -1;
-                    if (dx == 1 && (y - ep.y) == dir) return true; // Tốt luôn ăn chéo
+                    if (dx == 1 && (y - ep.y) == dir) return true; 
                     
                     if (ep.evolved == 1) {
                         if (ep.evolved_type == 2 && piece_util.valid_line(ref ep, x, y)) return true;
                         if (ep.evolved_type == 0 && piece_util.valid_knight(ref ep, x, y)) return true;
                         if (ep.evolved_type == 1 && piece_util.valid_diag(ref ep, x, y)) return true;
                     }
-                    continue; // Không cho rơi xuống dưới để tránh lỗi Tốt ăn thẳng
+                    continue; 
                 }
 
-                // 3. CÁC QUÂN CÒN LẠI VÀ QUÂN TIẾN HÓA (Xe, Mã, Tượng, Hậu, DQueen...)
                 bool attacks = false;
                 switch (ep.piece_type) {
                     case 1: attacks = piece_util.valid_line(ref ep, x, y); break;
@@ -274,10 +259,9 @@ public static class AI_util {
     }
 
     // =========================================================================
-    // "VALUE HEAD" - Chấm điểm tĩnh cực kỳ sắc bén (KHÔNG BỊ BÓP CLAMP)
+    // "VALUE HEAD"
     // =========================================================================
     
-    // HÀM MỚI DÀNH RIÊNG CHO MINIMAX: Báo cáo đúng sự thật, mất 900 điểm là âm 900 điểm!
     public static float EvaluateBoardRaw(int ai_color, int colorToMove) {
         float aiScore = 0;
         float enemyScore = 0;
@@ -299,8 +283,6 @@ public static class AI_util {
                     }
 
                     if (IsSquareAttacked(cp.x, cp.y, c)) {
-                        // Bị uy hiếp: Nếu tới lượt địch đi, xem như quân này đã chết (chỉ còn 10% giá trị)
-                        // Nếu tới lượt mình, thì quân này bị giảm 50% giá trị (ép nó phải chạy khỏi ô đó để hồi lại điểm)
                         pieceValue *= (c == colorToMove) ? 0.5f : 0.1f; 
                     }
 
@@ -311,10 +293,8 @@ public static class AI_util {
             else enemyScore += score;
         }
         
-        return aiScore - enemyScore; // Trả về raw data!
+        return aiScore - enemyScore;
     }
-
-    // Hàm cũ giờ chỉ dùng làm vỏ bọc cho Monte Carlo
     private static float EvaluateBoardStatic(int ai_color, int colorToMove) {
         float diff = EvaluateBoardRaw(ai_color, colorToMove);
         return 0.5f + Mathf.Clamp(diff * 0.0002f, -0.48f, 0.48f); 
@@ -324,7 +304,6 @@ public static class AI_util {
     // MCTS (EASY)
     // =========================================================================
     public static data.AIMove CalculateMCTSMove(int ai_color) {
-        // Vẫn giữ BackupRealState 1 lần ở rễ để đảm bảo an toàn tuyệt đối 100%
         BackupRealState(); 
 
         data.MCTSNode root = new data.MCTSNode();
@@ -332,13 +311,11 @@ public static class AI_util {
         root.untriedMoves = GenerateAllValidMoves(ai_color);
         root.untriedMoves.Sort((a, b) => GetMoveHeuristic(a, ai_color).CompareTo(GetMoveHeuristic(b, ai_color)));
 
-        // TĂNG LƯỢNG MÔ PHỎNG LÊN 3000 LẦN! (Bạn có thể thử 5000 nếu máy khỏe)
         int maxIterations = 2500; 
 
         for (int i = 0; i < maxIterations; i++) {
             data.MCTSNode node = root;
             
-            // Danh sách lưu lại tất cả các nước đi trong 1 lần duyệt cành để Tời lại (Undo)
             List<data.UndoData> undoStack = new List<data.UndoData>();
 
             // 1. SELECTION
@@ -362,7 +339,6 @@ public static class AI_util {
                 }
                 node = bestChild;
                 
-                // Đi thử và ném lịch sử vào Ngăn Xếp
                 undoStack.Add(DoMoveFast(node.move, node.parent.colorToMove));
             }
 
@@ -381,7 +357,6 @@ public static class AI_util {
                 };
                 node.children.Add(child);
                 
-                // Đi thử và ném lịch sử vào Ngăn Xếp
                 data.UndoData undo = DoMoveFast(move, node.colorToMove);
                 undoStack.Add(undo);
                 node = child;
@@ -404,13 +379,12 @@ public static class AI_util {
             }
 
             // 5. UNDO TOÀN BỘ ĐỂ TRẢ BÀN CỜ VỀ TRẠNG THÁI GỐC
-            // Phải Undo ngược từ ngọn cây về rễ cây
             for (int j = undoStack.Count - 1; j >= 0; j--) {
                 UndoMoveFast(undoStack[j]);
             }
         }
 
-        RestoreRealState(); // Lưới an toàn cuối cùng
+        RestoreRealState();
 
         data.MCTSNode bestFinalChild = null;
         int maxVisits = -1;
@@ -437,7 +411,6 @@ public static class AI_util {
         List<data.AIMove> moves = GenerateAllValidMoves(colorToMove);
         if (moves.Count == 0) return isMaximizing ? -99999f : 99999f; 
 
-        // Nới Beam Search ra một xíu để khỏi lỡ mất các nước quan trọng
         int moveLimit = moves.Count;
         if (depth >= 3) moveLimit = 8;       
         else if (depth >= 1) moveLimit = 15; 
@@ -445,7 +418,6 @@ public static class AI_util {
         int movesEvaluated = 0;
 
         if (isMaximizing) {
-            // Lượt của AI -> Ưu tiên nước tốt nhất cho AI
             moves.Sort((a, b) => GetMoveHeuristic(b, colorToMove).CompareTo(GetMoveHeuristic(a, colorToMove)));
             float maxEval = -Mathf.Infinity;
 
@@ -463,7 +435,6 @@ public static class AI_util {
             return maxEval;
 
         } else {
-            // Lượt Kẻ địch -> SỬA LỖI TẠI ĐÂY: Vẫn phải xếp b.CompareTo(a) để địch đi nước XẢO QUYỆT nhất!
             moves.Sort((a, b) => GetMoveHeuristic(b, colorToMove).CompareTo(GetMoveHeuristic(a, colorToMove)));
             float minEval = Mathf.Infinity;
 
@@ -488,7 +459,6 @@ public static class AI_util {
         List<data.AIMove> moves = GenerateAllValidMoves(ai_color);
         moves.Sort((a, b) => GetMoveHeuristic(b, ai_color).CompareTo(GetMoveHeuristic(a, ai_color)));
 
-        // --- ĐẾM SỐ QUÂN CÒN SỐNG TRÊN BÀN ---
         int alivePieces = 0;
         for (int c = 0; c < data.mem.total_players; c++) {
             for (int p = 0; p < data.mem.armies[c].troop_count; p++) {
@@ -496,18 +466,16 @@ public static class AI_util {
             }
         }
 
-        // --- ĐỘ SÂU ĐỘNG (DYNAMIC DEPTH) ---
+        // --- DYNAMIC DEPTH ---
         int maxDepth = 3; 
         if (data.mem.total_players > 2) {
-            // Chế độ 3-4 người chơi: Lượng tổ hợp siêu khổng lồ
-            if (alivePieces > 35) maxDepth = 2;      // Khai cuộc: Quá đông, chỉ nhìn 2 bước
-            else if (alivePieces > 15) maxDepth = 3; // Trung cuộc: Nhìn 3 bước
-            else maxDepth = 4;                       // Tàn cuộc: Tính toán 4 bước
+            if (alivePieces > 35) maxDepth = 2;      
+            else if (alivePieces > 15) maxDepth = 3;
+            else maxDepth = 4;                       
         } else {
-            // Chế độ 2 người chơi (1vs1)
-            if (alivePieces > 24) maxDepth = 3;      // Khai cuộc
-            else if (alivePieces > 10) maxDepth = 4; // Trung cuộc
-            else maxDepth = 5;                       // Tàn cuộc ít quân, tự tin nghĩ 5 bước!
+            if (alivePieces > 24) maxDepth = 3;     
+            else if (alivePieces > 10) maxDepth = 4;
+            else maxDepth = 5;                  
         }
 
         float bestScore = -Mathf.Infinity;
@@ -515,7 +483,6 @@ public static class AI_util {
         float alpha = -Mathf.Infinity;
         float beta = Mathf.Infinity;
 
-        // Cấp cao nhất không giới hạn Beam Search để tránh bỏ sót nước cờ quyết định
         foreach (var move in moves) {
             float repPenalty = (data.lastAIMove.piece_index == move.piece_index) ? 0.5f : 0f;
 

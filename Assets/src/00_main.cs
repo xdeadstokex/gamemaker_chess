@@ -192,13 +192,13 @@ public class Game : MonoBehaviour {
 			c.tile.col.enabled = false;
 		}
 
-		int[] back_white = { 7, 2, 3, 4, 5, 3, 2, 1 };
+		int[] back_white = { 1, 2, 3, 4, 5, 3, 2, 1 };
 		for (int x = 0; x < 8; x++)
 			piece_util.create_piece(x, 0, back_white[x], data.mem.armies[0], 0, +1);
 		for (int x = 0; x < 8; x++)
 			piece_util.create_piece(x, 1, 0, data.mem.armies[0], 0, +1);
 
-		int[] back_black = { 1, 2, 3, 5, 4, 3, 2, 7 };
+		int[] back_black = { 1, 2, 3, 4, 5, 3, 2, 1 };
 		for (int x = 0; x < 8; x++)
 			piece_util.create_piece(x, 7, back_black[x], data.mem.armies[1], 0, -1);
 		for (int x = 0; x < 8; x++)

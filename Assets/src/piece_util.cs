@@ -413,8 +413,9 @@ public static class piece_util {
     // =========================================================================
     // CHECK KING CHECKED
     // =========================================================================
-    public static bool IsSafeMove(ref data.chess_piece attacker, int tx, int ty, bool isAttack) {
-        int color = attacker.player_color;
+    public static bool IsSafeMove(int piece_index, int color, int tx, int ty, bool isAttack) {
+        ref data.chess_piece attacker = ref data.mem.get_army(color).troop_list[piece_index];
+        
         int old_x = attacker.x;
         int old_y = attacker.y;
 
@@ -424,22 +425,23 @@ public static class piece_util {
 
         if (isAttack) {
             ref data.board_cell cell = ref board_util.Cell(tx, ty);
-            if(cell.has_piece == 1){
+            if (cell.has_piece == 1) {
                 target_color = cell.piece_color;
                 target_idx = cell.piece_index;
                 target_backup = data.mem.get_army(target_color).troop_list[target_idx];
-                data.mem.get_army(target_color).troop_list[target_idx].rect = null; //temp die
+                
+                data.mem.get_army(target_color).troop_list[target_idx].rect = null; 
             }
         }
 
         board_util.clear_cell(old_x, old_y);
         attacker.x = tx;
         attacker.y = ty;
-        board_util.set_cell(tx, ty, color, FindPieceIndex(ref attacker));
+        board_util.set_cell(tx, ty, color, piece_index);
 
         int kx = -1, ky = -1;
         data.army_data army = data.mem.get_army(color);
-        for(int i = 0; i < army.troop_count; i++) {
+        for (int i = 0; i < army.troop_count; i++) {
             if ((army.troop_list[i].piece_type == 5 || army.troop_list[i].piece_type == 7) && army.troop_list[i].rect != null) {
                 kx = army.troop_list[i].x;
                 ky = army.troop_list[i].y;
@@ -447,21 +449,21 @@ public static class piece_util {
             }
         }
 
-        bool safe = true;
+        bool isSafe = true;
         if (kx != -1) {
-            safe = !AI_util.IsSquareAttacked(kx, ky, color);
+            isSafe = !AI_util.IsSquareAttacked(kx, ky, color);
         }
 
         board_util.clear_cell(tx, ty);
         attacker.x = old_x;
         attacker.y = old_y;
-        board_util.set_cell(old_x, old_y, color, FindPieceIndex(ref attacker));
+        board_util.set_cell(old_x, old_y, color, piece_index);
 
         if (isAttack && target_color != -1) {
             data.mem.get_army(target_color).troop_list[target_idx] = target_backup;
             board_util.set_cell(tx, ty, target_color, target_idx);
         }
 
-        return safe;
+        return isSafe;
     }
 }

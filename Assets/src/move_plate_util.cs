@@ -190,8 +190,6 @@ public static class move_plate_util {
     }
 
     public static void spawn_plate(int piece_index, int piece_color, int mx, int my, bool isAttack) {
-        ref data.chess_piece cp = ref data.mem.get_army(piece_color).troop_list[piece_index];
-    
         if (isAttack) {
             ref data.board_cell cell = ref board_util.Cell(mx, my);
             if (cell.has_piece == 1) {
@@ -199,7 +197,10 @@ public static class move_plate_util {
                 if (target.piece_type == 5 || target.piece_type == 7) return; 
             }
         }
-        if (!piece_util.IsSafeMove(ref cp, mx, my, isAttack)) return;
+
+        if (!piece_util.IsSafeMove(piece_index, piece_color, mx, my, isAttack)) {
+            return;
+        }
 
         Sprite sprite = (isAttack && data.mem.mp_attack != null) ? data.mem.mp_attack : data.mem.mp_normal;
 
