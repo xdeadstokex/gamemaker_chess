@@ -31,6 +31,9 @@ public static class piece_util {
         cp.pawn_dir_x          = pawn_dir_x;
         cp.pawn_dir_y          = pawn_dir_y;
 
+        cp.pawn_dir_x          = pawn_dir_x;
+        cp.pawn_dir_y          = pawn_dir_y;
+
         switch (piece_type) {
             case 0: cp.normal_sprite = w ? data.mem.wp_pawn   : data.mem.bp_pawn;
                     cp.evo_sprite0   = w ? data.mem.wp_e_pawn_knight : data.mem.bp_e_pawn_knight;
@@ -112,12 +115,16 @@ public static class piece_util {
     public static bool can_move_to(ref data.chess_piece cp, int tx, int ty){
         if (!board_util.on_board(tx, ty)) return false;
         ref data.board_cell cell = ref board_util.Cell(tx, ty);
+<<<<<<< Updated upstream
         if (cell.has_piece == 1) {
             data.army_data targetArmy = data.mem.get_army(cell.piece_color);
             if (targetArmy.troop_list[cell.piece_index].piece_type == 99) {
                 return false;
             }
         }
+=======
+        
+>>>>>>> Stashed changes
         if (cell.has_piece == 1 && data.mem.get_army(cell.piece_color).troop_list[cell.piece_index].player_color == cp.player_color) 
             return false;
 

@@ -86,7 +86,10 @@ public static class move_plate_util {
             }
         }
     }
+<<<<<<< Updated upstream
 }
+=======
+>>>>>>> Stashed changes
 
     public static void spawn_gun_king_plate(ref data.chess_piece cp, int i, int c) {
         for (int xOffset = -2; xOffset <= 2; xOffset++) {
@@ -133,25 +136,45 @@ public static class move_plate_util {
         int dx = cp.pawn_dir_x;
         int dy = cp.pawn_dir_y;
 
+<<<<<<< Updated upstream
+=======
+        // Safety: if direction was never set, fall back to color-based default.
+>>>>>>> Stashed changes
         if (dx == 0 && dy == 0) {
             dy = (cp.player_color == 0) ? 1 : -1;
         }
 
+<<<<<<< Updated upstream
+=======
+        // "Starting position" = how far the pawn has moved along its forward axis.
+        // For vertical pawns  (dx==0): progress = y, start line = 1 or board_h-2.
+        // For horizontal pawns (dy==0): progress = x, start line = 1 or board_w-2.
+>>>>>>> Stashed changes
         int progress  = cp.x * Mathf.Abs(dx) + cp.y * Mathf.Abs(dy);
         int startLine = (dx + dy > 0) ? 1 : (dx == 0 ? data.mem.board_h : data.mem.board_w) - 2;
         int steps     = (progress == startLine) ? 2 : 1;
 
+<<<<<<< Updated upstream
         move_plate_util.ray_plate(ref cp,i,c,  dx,  dy, steps, 1, skip_obs:false, capture:false);
+=======
+        // Forward move (no capture).
+        move_plate_util.ray_plate(ref cp,i,c,  dx,  dy, steps, 1, skip_obs:false, capture:false);
+        // Diagonal attacks (capture only).
+        // Perpendicular axis: if moving vertically, sideways = ±x. If horizontally, sideways = ±y.
+>>>>>>> Stashed changes
         int px = Mathf.Abs(dy); // 1 when moving vertically,   0 when moving horizontally
         int py = Mathf.Abs(dx); // 1 when moving horizontally, 0 when moving vertically
         move_plate_util.ray_plate(ref cp,i,c, dx + px, dy + py, 1, 1, skip_obs:false, capture_only:true);
         move_plate_util.ray_plate(ref cp,i,c, dx - px, dy - py, 1, 1, skip_obs:false, capture_only:true);
+<<<<<<< Updated upstream
 
         if (data.mem.en_passant_x != -1) {
         if (Mathf.Abs(cp.x - data.mem.en_passant_x) == 1 && (cp.y + dy) == data.mem.en_passant_y) {
             move_plate_util.spawn_plate(i, c, data.mem.en_passant_x, data.mem.en_passant_y, true);
         }
     }
+=======
+>>>>>>> Stashed changes
     }
 
     // =========================================================================
