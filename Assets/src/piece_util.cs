@@ -229,59 +229,62 @@ public static class piece_util {
         if (cp.score >= cp.score_to_envo) piece_util.evo(ref cp, pos);
     }
 
-    public static void evo(ref data.chess_piece cp, Vector3 pos) {     
-        if(cp.piece_type == 5) {
-            cp.piece_type = 7; 
-            cp.score = 0;
-        }
-        cp.evolved = 1;
-        piece_util.apply_piece_data(ref cp);
-        // LOGIC THEM THE
-        int myColor = cp.player_color;
-        int opponentColor = (myColor == 0) ? 1 : 0;
+	public static void evo(ref data.chess_piece cp, Vector3 pos) {
 
-        CardType[] randomCards = { CardType.Buff1, CardType.Buff2, CardType.Debuff }; 
-        
-        int randomIndex = UnityEngine.Random.Range(0, randomCards.Length); 
-        CardType selectedPowerUp = randomCards[randomIndex];
+		// ===== FIX: trigger camera =====
+		data.mem.evolving_signal = 1;
+		data.mem.evolving_pos    = pos;
 
-        card_util.add_card(opponentColor, selectedPowerUp);
-        if (cp.piece_type == 4) {
+		if (cp.piece_type == 5) {
+			cp.piece_type = 7;
+			cp.score = 0;
+		}
 
-            card_util.add_card(myColor, CardType.Item); 
-            card_util.add_card(opponentColor, CardType.DemonQueen);
+		cp.evolved = 1;
+		piece_util.apply_piece_data(ref cp);
 
-            Debug.Log($"<color=cyan>Hậu phe {myColor} tiến hóa! Đã phát thẻ thưởng và thẻ phạt.</color>");
-        }
-        // Camera.main.GetComponent<CameraControl>().ZoomInTarget(pos, 1f);
-        Debug.Log($"<color=green>{cp.piece_type} HAS EVOLVED!</color>");
-    }
+		int myColor = cp.player_color;
+		int opponentColor = (myColor == 0) ? 1 : 0;
 
-    public static void evo_with_weapon(ref data.chess_piece cp, PieceType weapon, Vector3 pos) {
-        cp.evolved      = 1;
-        cp.score_to_envo = 100;
-        cp.unitType     = PieceType.ELight;
-        // cp.evolved_type = weapon == PieceType.KHeavy ? 0 : weapon == PieceType.BHeavy ? 1 : 2;
-        Debug.Log($"Evolving with weapon! Weapon type: {weapon}");
-        if (weapon == PieceType.KHeavy) cp.evolved_type = 0;
-        else if (weapon == PieceType.BHeavy) cp.evolved_type = 1;
-        else if (weapon == PieceType.RHeavy) cp.evolved_type = 2;
-        Debug.Log($"Evolved type set to {cp.evolved_type} based on weapon {weapon}");
-        piece_util.apply_piece_data(ref cp);
-        Debug.Log($"Applied piece data after weapon evolution. Current sprite: {cp.rect.sprite.name}");
-        // Camera.main.GetComponent<CameraControl>().ZoomInTarget(pos, 1f);
+		CardType[] pool = { CardType.Buff1, CardType.Buff2, CardType.Debuff };
+		CardType rand   = pool[Random.Range(0, pool.Length)];
 
-        //logic them the
-        int myColor = cp.player_color;
-        int opponentColor = (myColor == 0) ? 1 : 0;
+		card_util.add_card(opponentColor, rand);
 
-        CardType[] randomCards = { CardType.Buff1, CardType.Buff2, CardType.Debuff }; 
-        
-        int randomIndex = UnityEngine.Random.Range(0, randomCards.Length); 
-        CardType selectedPowerUp = randomCards[randomIndex];
+		if (cp.piece_type == 4) {
+			card_util.add_card(myColor, CardType.Item);
+			card_util.add_card(opponentColor, CardType.DemonQueen);
 
-        card_util.add_card(opponentColor, selectedPowerUp);
-    }
+			Debug.Log($"<color=cyan>Queen {myColor} evolved!</color>");
+		}
+
+		Debug.Log($"<color=green>{cp.piece_type} EVOLVED</color>");
+	}
+
+	public static void evo_with_weapon(ref data.chess_piece cp, PieceType weapon, Vector3 pos) {
+
+		// ===== FIX: trigger camera =====
+		data.mem.evolving_signal = 1;
+		data.mem.evolving_pos    = pos;
+
+		cp.evolved       = 1;
+		cp.score_to_envo = 100;
+		cp.unitType      = PieceType.ELight;
+
+		if      (weapon == PieceType.KHeavy) cp.evolved_type = 0;
+		else if (weapon == PieceType.BHeavy) cp.evolved_type = 1;
+		else if (weapon == PieceType.RHeavy) cp.evolved_type = 2;
+
+		piece_util.apply_piece_data(ref cp);
+
+		int myColor = cp.player_color;
+		int opponentColor = (myColor == 0) ? 1 : 0;
+
+		CardType[] pool = { CardType.Buff1, CardType.Buff2, CardType.Debuff };
+		CardType rand   = pool[Random.Range(0, pool.Length)];
+
+		card_util.add_card(opponentColor, rand);
+	}
 
     // =========================================================================
     // ATTACK / MOVE

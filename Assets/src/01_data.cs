@@ -189,6 +189,8 @@ public class data : MonoBehaviour {
     //difficult
     public rect_2d settings_button;   // in-game gear button (always visible)
     public rect_2d btn_main_menu;     // inside settings overlay
+	public rect_2d lose_button;
+
 
     public rect_2d btn_diff1;
     public rect_2d btn_diff2;
@@ -230,6 +232,8 @@ public class data : MonoBehaviour {
 
 	public float evoStartX, evoStartY;
 	public int              zoom_cross_board    = 0;
+	public int turn_state = 0; //  turn result signal 0 = normal 1 = check 2 = checkmate 3 = stalemate
+	public bool lose_ui_shown = false;
     public AIDifficulty ai_difficulty = AIDifficulty.Baby;
     // =========================================================================
     // AI

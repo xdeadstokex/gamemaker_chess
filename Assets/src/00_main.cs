@@ -18,7 +18,7 @@ public class Game : MonoBehaviour {
     const float SETTINGS_BTN_X  = 6.5f; const float SETTINGS_BTN_Y  = 7.0f;
     const float SETTINGS_MENU_X = 6.5f; const float SETTINGS_MENU_Y = 6.0f;
     const float SETTINGS_BACK_X = 6.5f; const float SETTINGS_BACK_Y = 5.0f;
-
+    const float SETTINGS_LOSE_X = 9.5f; const float SETTINGS_LOSE_Y = 7.0f;
     const float CAM_SCALE_2P = 1.7f; const float CAM_SCALE_4P = 3.7f;
     // =========================================================================
     // LIFECYCLE
@@ -26,6 +26,7 @@ public class Game : MonoBehaviour {
 
     void Start()  { ShowMainMenu(); }
 
+	int test = 0;
     void Update() {
         HandleMenuInput();
         HandleSettingsButton();
@@ -38,9 +39,20 @@ public class Game : MonoBehaviour {
 
         zoom_on_evolving_piece();
 
+		if(test == 0 && mouse_util.middle.hold == 1){
+			test = 1;
+			ShowLoseOverlay();
+			data.mem.lose_ui_shown = true;
+		}
+
+		
         if (data.mem.gameOver) {
-            if (Input.GetMouseButtonDown(0)) ReturnToMainMenu();
-            return;
+		if (!data.mem.lose_ui_shown && data.mem.turn_state >= 2) {
+			ShowLoseOverlay();
+			data.mem.lose_ui_shown = true;
+		}
+
+		return;
         }
 
         if (data.mem.play_against_AI == 1 && data.mem.current_player_color != 0) {
@@ -484,6 +496,17 @@ public class Game : MonoBehaviour {
 		if (data.mem.total_players == 2) return Vector2.zero; // 2P = centered
 		return new Vector2(10.5f + 1f, 10.5f + 2f); // 3P / 4P = board centered at (10.5, 10.5)
 	}
+	
+	void ShowLoseOverlay() {
+		Vector2 off = GetSettingsOffset();
+
+		DestroyRef(ref data.mem.lose_button);
+
+		string txt = (data.mem.turn_state == 2) ? "Lose" : "Draw";
+		data.mem.lose_button = gui_util.make_button(SETTINGS_LOSE_X + off.x, SETTINGS_LOSE_Y + off.y, Color.red,txt);
+		data.mem.btn_main_menu = gui_util.make_button(SETTINGS_MENU_X + off.x, SETTINGS_MENU_Y + off.y, Color.red, "Main Menu");
+		data.mem.menu_state = data.MenuState.Settings;
+	}
     // =========================================================================
     // RETURN TO MAIN MENU
     // =========================================================================
@@ -509,7 +532,8 @@ public class Game : MonoBehaviour {
         move_plate_util.clear_move_plate();
         DestroyRef(ref data.mem.settings_button);
         DestroyRef(ref data.mem.card_table_obj);
-
+		DestroyRef(ref data.mem.lose_button);
+		data.mem.lose_ui_shown = false;
         // Reset state
         data.mem.game_started         = 0;
         data.mem.gameOver             = false;
