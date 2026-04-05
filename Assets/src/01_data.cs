@@ -1,4 +1,3 @@
-﻿
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
@@ -13,7 +12,7 @@ public class data : MonoBehaviour {
     // MENU STATE
     // =========================================================================
 
-    public enum MenuState { None, Main, PickPlayerCount, PickBotCount, PickBotDifficulty }
+    public enum MenuState { None, Main, PickPlayerCount, PickBotCount, PickBotDifficulty, Settings }
     public MenuState menu_state = MenuState.None;
 
     // =========================================================================
@@ -188,6 +187,9 @@ public class data : MonoBehaviour {
     public rect_2d back_button;
 
     //difficult
+    public rect_2d settings_button;   // in-game gear button (always visible)
+    public rect_2d btn_main_menu;     // inside settings overlay
+
     public rect_2d btn_diff1;
     public rect_2d btn_diff2;
     public rect_2d btn_diff3;
@@ -236,8 +238,6 @@ public class data : MonoBehaviour {
 
     public int        aiColor     = 1;
     public bool       isAIThinking= false;
-    public board_cell[] real_board;
-    public army_data[]  real_armies;
     public static AIMove    lastAIMove           = new AIMove { piece_index = -1 };
 
     // =========================================================================

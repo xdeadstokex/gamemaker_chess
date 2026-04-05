@@ -61,9 +61,11 @@ public static class gui_util {
         data.mem.btn_count2   = null;
         data.mem.btn_count3   = null;
         data.mem.back_button  = null;
-        data.mem.btn_diff1 = null;
-        data.mem.btn_diff2 = null;
-        data.mem.btn_diff3 = null;
-        data.mem.btn_diff4 = null;
+        data.mem.btn_diff1    = null;
+        data.mem.btn_diff2    = null;
+        data.mem.btn_diff3    = null;
+        data.mem.btn_diff4    = null;
+        data.mem.btn_main_menu = null;
+        // NOTE: settings_button is NOT cleared here — it persists during gameplay.
     }
 }
