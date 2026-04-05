@@ -56,6 +56,7 @@ public class data : MonoBehaviour {
         // direction this piece's pawns advance: (0,+1)=up (0,-1)=down (+1,0)=right (-1,0)=left
         public int     pawn_dir_x;
         public int     pawn_dir_y;
+        public int has_moved; //0 = not moved. 1 = moved
     }
 
     // =========================================================================
@@ -126,6 +127,22 @@ public class data : MonoBehaviour {
         public int            visits       = 0;
         public int            colorToMove;
         public List<AIMove>   untriedMoves;
+    }
+
+    public struct UndoData {
+        public int attacker_color;
+        public int attacker_idx;
+        public int old_x;
+        public int old_y;
+        public int old_score;
+        
+        public bool is_attack;
+        public int target_color;
+        public int target_idx;
+        public int target_score;
+        public rect_2d target_rect;
+        
+        public bool is_king_dead;
     }
 
     // =========================================================================
@@ -251,6 +268,12 @@ public class data : MonoBehaviour {
     // CARDS
     // =========================================================================
 
+
+    // =========================================================================
+    // SPECIAL
+    // =========================================================================
+    public int en_passant_x = -1;
+    public int en_passant_y = -1;
 
 
     // =========================================================================

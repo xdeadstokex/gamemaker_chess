@@ -53,11 +53,40 @@ public static class move_plate_util {
     }
 
     public static void spawn_king_plate(ref data.chess_piece cp, int i, int c) {
-        move_plate_util.ray_plate(ref cp,i,c,  1, 0, 1,1); move_plate_util.ray_plate(ref cp,i,c, -1, 0, 1,1);
-        move_plate_util.ray_plate(ref cp,i,c,  0, 1, 1,1); move_plate_util.ray_plate(ref cp,i,c,  0,-1, 1,1);
-        move_plate_util.ray_plate(ref cp,i,c,  1, 1, 1,1); move_plate_util.ray_plate(ref cp,i,c,  1,-1, 1,1);
-        move_plate_util.ray_plate(ref cp,i,c, -1, 1, 1,1); move_plate_util.ray_plate(ref cp,i,c, -1,-1, 1,1);
+    move_plate_util.ray_plate(ref cp,i,c,  1, 0, 1,1); move_plate_util.ray_plate(ref cp,i,c, -1, 0, 1,1);
+    move_plate_util.ray_plate(ref cp,i,c,  0, 1, 1,1); move_plate_util.ray_plate(ref cp,i,c,  0,-1, 1,1);
+    move_plate_util.ray_plate(ref cp,i,c,  1, 1, 1,1); move_plate_util.ray_plate(ref cp,i,c,  1,-1, 1,1);
+    move_plate_util.ray_plate(ref cp,i,c, -1, 1, 1,1); move_plate_util.ray_plate(ref cp,i,c, -1,-1, 1,1);
+
+    if (cp.has_moved == 0 && !AI_util.IsSquareAttacked(cp.x, cp.y, c)) {
+        if (board_util.on_board(cp.x + 3, cp.y)) {
+            ref data.board_cell rookCell = ref board_util.Cell(cp.x + 3, cp.y);
+            if (rookCell.has_piece == 1) {
+                ref data.chess_piece rook = ref data.mem.get_army(rookCell.piece_color).troop_list[rookCell.piece_index];
+                if (rook.piece_type == 1 && rook.has_moved == 0) { // Nếu là Xe và chưa đi
+                    if (board_util.Cell(cp.x + 1, cp.y).has_piece == 0 && board_util.Cell(cp.x + 2, cp.y).has_piece == 0) {
+                        if (!AI_util.IsSquareAttacked(cp.x + 1, cp.y, c) && !AI_util.IsSquareAttacked(cp.x + 2, cp.y, c)) {
+                            move_plate_util.spawn_plate(i, c, cp.x + 2, cp.y, false);
+                        }
+                    }
+                }
+            }
+        }
+        if (board_util.on_board(cp.x - 4, cp.y)) {
+            ref data.board_cell rookCell = ref board_util.Cell(cp.x - 4, cp.y);
+            if (rookCell.has_piece == 1) {
+                ref data.chess_piece rook = ref data.mem.get_army(rookCell.piece_color).troop_list[rookCell.piece_index];
+                if (rook.piece_type == 1 && rook.has_moved == 0) {
+                    if (board_util.Cell(cp.x - 1, cp.y).has_piece == 0 && board_util.Cell(cp.x - 2, cp.y).has_piece == 0 && board_util.Cell(cp.x - 3, cp.y).has_piece == 0) {
+                        if (!AI_util.IsSquareAttacked(cp.x - 1, cp.y, c) && !AI_util.IsSquareAttacked(cp.x - 2, cp.y, c)) {
+                            move_plate_util.spawn_plate(i, c, cp.x - 2, cp.y, false);
+                        }
+                    }
+                }
+            }
+        }
     }
+}
 
     public static void spawn_gun_king_plate(ref data.chess_piece cp, int i, int c) {
         for (int xOffset = -2; xOffset <= 2; xOffset++) {
@@ -104,26 +133,25 @@ public static class move_plate_util {
         int dx = cp.pawn_dir_x;
         int dy = cp.pawn_dir_y;
 
-        // Safety: if direction was never set, fall back to color-based default.
         if (dx == 0 && dy == 0) {
             dy = (cp.player_color == 0) ? 1 : -1;
         }
 
-        // "Starting position" = how far the pawn has moved along its forward axis.
-        // For vertical pawns  (dx==0): progress = y, start line = 1 or board_h-2.
-        // For horizontal pawns (dy==0): progress = x, start line = 1 or board_w-2.
         int progress  = cp.x * Mathf.Abs(dx) + cp.y * Mathf.Abs(dy);
         int startLine = (dx + dy > 0) ? 1 : (dx == 0 ? data.mem.board_h : data.mem.board_w) - 2;
         int steps     = (progress == startLine) ? 2 : 1;
 
-        // Forward move (no capture).
         move_plate_util.ray_plate(ref cp,i,c,  dx,  dy, steps, 1, skip_obs:false, capture:false);
-        // Diagonal attacks (capture only).
-        // Perpendicular axis: if moving vertically, sideways = ±x. If horizontally, sideways = ±y.
         int px = Mathf.Abs(dy); // 1 when moving vertically,   0 when moving horizontally
         int py = Mathf.Abs(dx); // 1 when moving horizontally, 0 when moving vertically
         move_plate_util.ray_plate(ref cp,i,c, dx + px, dy + py, 1, 1, skip_obs:false, capture_only:true);
         move_plate_util.ray_plate(ref cp,i,c, dx - px, dy - py, 1, 1, skip_obs:false, capture_only:true);
+
+        if (data.mem.en_passant_x != -1) {
+        if (Mathf.Abs(cp.x - data.mem.en_passant_x) == 1 && (cp.y + dy) == data.mem.en_passant_y) {
+            move_plate_util.spawn_plate(i, c, data.mem.en_passant_x, data.mem.en_passant_y, true);
+        }
+    }
     }
 
     // =========================================================================
@@ -162,6 +190,18 @@ public static class move_plate_util {
     }
 
     public static void spawn_plate(int piece_index, int piece_color, int mx, int my, bool isAttack) {
+        if (isAttack) {
+            ref data.board_cell cell = ref board_util.Cell(mx, my);
+            if (cell.has_piece == 1) {
+                ref data.chess_piece target = ref data.mem.get_army(cell.piece_color).troop_list[cell.piece_index];
+                if (target.piece_type == 5 || target.piece_type == 7) return; 
+            }
+        }
+
+        if (!piece_util.IsSafeMove(piece_index, piece_color, mx, my, isAttack)) {
+            return;
+        }
+
         Sprite sprite = (isAttack && data.mem.mp_attack != null) ? data.mem.mp_attack : data.mem.mp_normal;
 
         data.move_plate mp;
