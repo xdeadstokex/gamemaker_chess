@@ -221,21 +221,24 @@ public static void add_card(int player_color, CardType type) {
     refresh_card_visuals(player_color);
 
     string colorText = (player_color == 0) ? "white" : "black";
-    Debug.Log($"<color={colorText}>Đã thêm thẻ {newCard.cardName} cho {(player_color == 0 ? "Trắng" : "Đen")}.</color>");
+    if (GATrainer.instance == null || !GATrainer.instance.isTraining)
+        Debug.Log($"<color={colorText}>Đã thêm thẻ {newCard.cardName} cho {(player_color == 0 ? "Trắng" : "Đen")}.</color>");
 }
 	public static bool apply_card_effect(data.Card card, ref data.chess_piece target, Vector3 effectPos) {
         switch (card.type) {
             case CardType.Buff1:
                 ref data.chess_piece real2 = ref piece_util.get_piece_in_board(target.x, target.y);
                 real2.score += 1;
-                Debug.Log($"{real2.piece_type} được Buff! Score: {real2.score}");
+                if (GATrainer.instance == null || !GATrainer.instance.isTraining)
+                    Debug.Log($"{real2.piece_type} được Buff! Score: {real2.score}");
                 if (real2.score >= real2.score_to_envo) piece_util.evo(ref real2, effectPos);
                 return true;
             case CardType.Buff2:
 
                 ref data.chess_piece real = ref piece_util.get_piece_in_board(target.x, target.y);
                 real.score += 2;
-                Debug.Log($"{real.piece_type} được Buff! Score: {real.score}");
+                if (GATrainer.instance == null || !GATrainer.instance.isTraining)
+                    Debug.Log($"{real.piece_type} được Buff! Score: {real.score}");
                 if (real.score >= real.score_to_envo) piece_util.evo(ref real, effectPos);
                 return true;
 
@@ -297,7 +300,8 @@ public static void add_card(int player_color, CardType type) {
                     newDQueen.evolved = 1; 
                     piece_util.apply_piece_data(ref newDQueen);
 
-                    Debug.Log("<color=purple>Đã thay thế Hậu bằng Demon Queen mới!</color>");
+                    if (GATrainer.instance == null || !GATrainer.instance.isTraining)
+                        Debug.Log("<color=purple>Đã thay thế Hậu bằng Demon Queen mới!</color>");
                     return true;
                 }
                 return false;
@@ -344,7 +348,8 @@ public static void add_card(int player_color, CardType type) {
                 return false;
 
         }
-        sound_util.play_sound(data.mem.startSound); // Âm thanh hiệu ứng
+        if (GATrainer.instance == null || !GATrainer.instance.isTraining)
+            sound_util.play_sound(data.mem.startSound); 
         return false;
     }
 

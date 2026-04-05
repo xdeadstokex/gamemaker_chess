@@ -211,7 +211,8 @@ public static class piece_util {
         if (cp.evolved == 1 && cp.piece_type != 0) return;
 
         cp.score += victim.score;
-        Debug.Log($"<color=blue>Absorbed {victim.score} points!</color> Total score: {cp.score}");
+        if (GATrainer.instance == null || !GATrainer.instance.isTraining)
+            Debug.Log($"<color=blue>Absorbed {victim.score} points!</color> Total score: {cp.score}");
         if (cp.score < 0) cp.score = 1;
         if (cp.piece_type == 7 && cp.score >= cp.score_to_envo) //king có súng nhận điểm tích đạn
         {
@@ -255,10 +256,11 @@ public static class piece_util {
 			card_util.add_card(myColor, CardType.Item);
 			card_util.add_card(opponentColor, CardType.DemonQueen);
 
-			Debug.Log($"<color=cyan>Queen {myColor} evolved!</color>");
+            if (GATrainer.instance == null || !GATrainer.instance.isTraining)
+			    Debug.Log($"<color=cyan>Queen {myColor} evolved!</color>");
 		}
-
-		Debug.Log($"<color=green>{cp.piece_type} EVOLVED</color>");
+        if (GATrainer.instance == null || !GATrainer.instance.isTraining)
+		    Debug.Log($"<color=green>{cp.piece_type} EVOLVED</color>");
 	}
 
 	public static void evo_with_weapon(ref data.chess_piece cp, PieceType weapon, Vector3 pos) {
@@ -299,7 +301,8 @@ public static class piece_util {
         // --- LOGIC DEMON QUEEN PHẢN ĐÒN ---
         // Chỉ phản đòn nếu mục tiêu là Demon Queen (6) và ĐÂY KHÔNG PHẢI là đòn phản đòn sẵn có
         if (target.piece_type == 6 && attacker.piece_type != 7 && !is_counter) {
-            Debug.Log("<color=purple>Demon Queen phản đòn!</color>");
+            if (GATrainer.instance == null || !GATrainer.instance.isTraining)
+                Debug.Log("<color=purple>Demon Queen phản đòn!</color>");
             
             // Demon Queen đánh ngược lại vị trí của kẻ tấn công (attacker.x, attacker.y)
             // Gửi true vào tham số cuối để kết thúc chuỗi phản đòn
@@ -339,7 +342,8 @@ public static class piece_util {
             card_util.add_card(myColor, selectedPowerUp);
         }
         piece_util.absorb_point(ref attacker, ref target, pos);
-        sound_util.play_sound(data.mem.captureSound);
+        if (GATrainer.instance == null || !GATrainer.instance.isTraining)
+            sound_util.play_sound(data.mem.captureSound);
 
         // Hủy quân cờ bị ăn
         if (target.rect != null) {
@@ -381,7 +385,8 @@ public static class piece_util {
         // 4. Ghi đè DQueen vào ô mới trên mảng Board
         board_util.set_cell(targetX, targetY, dQueen.player_color, FindPieceIndex(ref dQueen));
         
-        Debug.Log("<color=purple>DQueen phản đòn và chiếm giữ vị trí của kẻ địch!</color>");
+        if (GATrainer.instance == null || !GATrainer.instance.isTraining)
+            Debug.Log("<color=purple>DQueen phản đòn và chiếm giữ vị trí của kẻ địch!</color>");
     }
 	
 

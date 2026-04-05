@@ -24,7 +24,17 @@ public class Game : MonoBehaviour {
     // LIFECYCLE
     // =========================================================================
 
-    void Start()  { ShowMainMenu(); }
+    void Start()  {
+        if(GATrainer.instance != null && GATrainer.instance.isTraining) 
+        {
+            data.mem.ai_difficulty = AIDifficulty.Normal;
+            StartGame(2, 2);
+        }
+        else
+        {
+            ShowMainMenu();
+        } 
+    }
 
 	int test = 0;
     void Update() {
@@ -55,7 +65,16 @@ public class Game : MonoBehaviour {
 		return;
         }
 
-        if (data.mem.play_against_AI == 1 && data.mem.current_player_color != 0) {
+        bool isAITurn = false;
+        
+        if (GATrainer.instance != null && GATrainer.instance.isTraining) {
+            isAITurn = true; 
+        } 
+        else if (data.mem.play_against_AI == 1 && data.mem.current_player_color != 0) {
+            isAITurn = true; 
+        }
+
+        if (isAITurn) {
             if (!data.mem.isAIThinking) StartCoroutine(AI_util.PlayAITurn());
             return;
         }
@@ -151,8 +170,8 @@ public class Game : MonoBehaviour {
                 break;
 
             case data.MenuState.Settings:
-                if (gui_util.clicked(data.mem.btn_main_menu)) ReturnToMainMenu();
-                if (gui_util.clicked(data.mem.back_button))   HideSettingsOverlay();
+                if (data.mem.btn_main_menu != null && gui_util.clicked(data.mem.btn_main_menu)) ReturnToMainMenu();
+                if (data.mem.back_button != null && gui_util.clicked(data.mem.back_button))   HideSettingsOverlay();
                 break;
         }
     }
@@ -192,10 +211,24 @@ public class Game : MonoBehaviour {
         if (total_players == 2) SetupBoard_2P();
         else                    SetupBoard_Cross(total_players);
 
-        sound_util.play_sound(data.mem.startSound);
-        card_util.init_card_table();
-        card_util.refresh_card_visuals(0);
-        SpawnSettingsButton();
+        // BẮT BUỘC KHỞI TẠO ĐỂ KHÔNG BỊ LỖI KHI RÚT THẺ
+        card_util.init_card_table(); 
+
+        // --- CHỈ BẬT ÂM THANH VÀ UI NẾU KHÔNG PHẢI LÀ TRAIN ---
+        if (GATrainer.instance == null || !GATrainer.instance.isTraining) {
+            sound_util.play_sound(data.mem.startSound);
+            card_util.refresh_card_visuals(0);
+            SpawnSettingsButton();
+        } 
+        // --- NẾU ĐANG TRAIN: TÌM VÀ TẮT CAMERA MỘT CÁCH AN TOÀN ---
+        else {
+            // Tìm chính xác theo tên object của bạn thay vì dùng Camera.main
+            GameObject camObj = GameObject.Find("main_camera");
+            if (camObj != null) {
+                Camera cam = camObj.GetComponent<Camera>();
+                if (cam != null) cam.enabled = false;
+            }
+        }
     }
 
     // =========================================================================
@@ -373,7 +406,8 @@ public class Game : MonoBehaviour {
             ref data.chess_piece attacker = ref data.mem.armies[mp.piece_color].troop_list[mp.piece_index];
 
             if (!mp.attack) {
-                sound_util.play_sound(data.mem.moveSound);
+                if (GATrainer.instance == null || !GATrainer.instance.isTraining)
+                    sound_util.play_sound(data.mem.moveSound);
                 TrySetEnPassant(ref attacker, mp.mat_y);
                 TryCastle(ref attacker, mp.mat_x);
                 attacker.has_moved = 1;
