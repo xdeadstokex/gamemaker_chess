@@ -56,7 +56,7 @@ public class Game : MonoBehaviour {
         }
 
         if (data.mem.play_against_AI == 1 && data.mem.current_player_color != 0) {
-            if (!data.mem.isAIThinking) StartCoroutine(AI_util.PlayAITurn());
+            if (!data.mem.isAIThinking){ StartCoroutine(AI_util.PlayAITurn()); ClearEnPassant(); }
             return;
         }
 
