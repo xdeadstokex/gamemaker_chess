@@ -277,7 +277,7 @@ public class Game : MonoBehaviour {
 			PlaceArm_V(data.mem.armies[1], CROSS_SIZE - 1, CROSS_SIZE - 2, -1);
 
 		cam_2d.set_pos(10.5f, 10.5f);
-		cam_2d.scale(3.2f);
+		cam_2d.scale(3.7f);
 	}
 
 
