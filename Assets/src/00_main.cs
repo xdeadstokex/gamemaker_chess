@@ -21,8 +21,8 @@ public class Game : MonoBehaviour {
 
         // Camera drag + zoom
         cam_2d.zoom(mouse_util.scroll);
-        if (mouse_util.left.hold == 1)
-            cam_2d.move(-mouse_util.dx * 0.1f, -mouse_util.dy * 0.1f);
+        if (mouse_util.right.hold == 1)
+            cam_2d.move(-mouse_util.dx * 0.3f, -mouse_util.dy * 0.3f);
 
         zoom_on_evolving_piece();
 
@@ -277,7 +277,7 @@ public class Game : MonoBehaviour {
 			PlaceArm_V(data.mem.armies[1], CROSS_SIZE - 1, CROSS_SIZE - 2, -1);
 
 		cam_2d.set_pos(10.5f, 10.5f);
-		cam_2d.scale(3.2f);
+		cam_2d.scale(3.7f);
 	}
 
 
