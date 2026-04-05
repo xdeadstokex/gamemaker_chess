@@ -56,6 +56,10 @@ public static class piece_util {
                     cp.evo_sprite0   = w ? data.mem.wp_e_dqueen : data.mem.bp_e_dqueen; break;
             case 7: cp.normal_sprite = w ? data.mem.wp_e_king : data.mem.bp_e_king;
                     cp.evo_sprite0   = w ? data.mem.wp_e_king : data.mem.bp_e_king;break;
+            case 99: cp.normal_sprite = data.mem.rock;
+                    cp.evo_sprite0   = null;
+                    cp.evo_sprite1   = null;
+                    cp.evo_sprite2   = null; break;
             default:cp.normal_sprite = null;
                     cp.evo_sprite0   = null;
                     cp.evo_sprite1   = null;
@@ -68,7 +72,7 @@ public static class piece_util {
         army.troop_list[army.troop_count++] = cp;
         board_util.set_cell(x, y, army.color, idx);
     }
-
+    
 	public static void apply_piece_data(ref data.chess_piece cp){
     
         if (cp.evolved == 0) {
@@ -95,6 +99,7 @@ public static class piece_util {
                 case 3: cp.unitType = PieceType.BHeavy; break;
                 case 0: cp.unitType = PieceType.ELight; break;
                 case 6: cp.unitType = PieceType.Core; cp.shield = 4;   break; //added shield to dqueen
+                case 99: cp.unitType = PieceType.Rock;  break; 
             }
         }
         cp.rect.fit_collider_to_sprite(cp.rect.sprite);
@@ -107,7 +112,12 @@ public static class piece_util {
     public static bool can_move_to(ref data.chess_piece cp, int tx, int ty){
         if (!board_util.on_board(tx, ty)) return false;
         ref data.board_cell cell = ref board_util.Cell(tx, ty);
-        
+        if (cell.has_piece == 1) {
+            data.army_data targetArmy = data.mem.get_army(cell.piece_color);
+            if (targetArmy.troop_list[cell.piece_index].piece_type == 99) {
+                return false;
+            }
+        }
         if (cell.has_piece == 1 && data.mem.get_army(cell.piece_color).troop_list[cell.piece_index].player_color == cp.player_color) 
             return false;
 
@@ -209,7 +219,7 @@ public static class piece_util {
 
     public static void absorb_point(ref data.chess_piece cp, ref data.chess_piece victim, Vector3 pos) {
         if (cp.evolved == 1 && cp.piece_type != 0) return;
-
+        if (victim.piece_type == 99) return; // Don't absorb points from obstacles
         cp.score += victim.score;
         if (GATrainer.instance == null || !GATrainer.instance.isTraining)
             Debug.Log($"<color=blue>Absorbed {victim.score} points!</color> Total score: {cp.score}");
@@ -251,7 +261,12 @@ public static class piece_util {
 		CardType rand   = pool[Random.Range(0, pool.Length)];
 
 		card_util.add_card(opponentColor, rand);
-
+        switch (cp.piece_type) {
+            case 1:sound_util.play_sound(data.mem.rookEvolveSound); break;
+            case 2:sound_util.play_sound(data.mem.knightEvolveSound); break;
+            case 3:sound_util.play_sound(data.mem.bishopEvolveSound); break;
+            case 4:card_util.add_card(myColor, CardType.Item); card_util.add_card(opponentColor, CardType.DemonQueen);sound_util.play_sound(data.mem.GodqueenEvolveSound); break;
+        }
 		if (cp.piece_type == 4) {
 			card_util.add_card(myColor, CardType.Item);
 			card_util.add_card(opponentColor, CardType.DemonQueen);
@@ -276,6 +291,7 @@ public static class piece_util {
 		if      (weapon == PieceType.KHeavy) cp.evolved_type = 0;
 		else if (weapon == PieceType.BHeavy) cp.evolved_type = 1;
 		else if (weapon == PieceType.RHeavy) cp.evolved_type = 2;
+        sound_util.play_sound(data.mem.pawnEvolveSound);
 
 		piece_util.apply_piece_data(ref cp);
 
@@ -294,10 +310,13 @@ public static class piece_util {
 
     public static void piece_attack(ref data.chess_piece attacker, int tx, int ty, Vector3 pos, bool is_counter = false) {
         ref data.board_cell cell = ref board_util.Cell(tx, ty);
+
         if (cell.has_piece == 0) return;
 
         data.army_data enemy = data.mem.get_army(cell.piece_color);
         ref data.chess_piece target = ref enemy.troop_list[cell.piece_index];
+        if(target.piece_type == 99) return; 
+        Debug.Log($"Attacking piece at ({tx}, {ty}) - Type: {target.piece_type}, Player: {target.player_color}");
         // --- LOGIC DEMON QUEEN PHẢN ĐÒN ---
         // Chỉ phản đòn nếu mục tiêu là Demon Queen (6) và ĐÂY KHÔNG PHẢI là đòn phản đòn sẵn có
         if (target.piece_type == 6 && attacker.piece_type != 7 && !is_counter) {
@@ -309,6 +328,7 @@ public static class piece_util {
             piece_attack(ref target, attacker.x, attacker.y, attacker.rect.obj.transform.position, true); 
             move_piece(ref target, FindPieceIndex(ref target), target.player_color, attacker.x, attacker.y);
             pvp_util.next_player_turn(); 
+
             move_plate_util.clear_move_plate();
             return;
         }
@@ -316,6 +336,7 @@ public static class piece_util {
             card_util.add_card(target.player_color, CardType.GodQueen);
         }
         if(attacker.piece_type == 7) {
+            sound_util.play_sound(data.mem.burstSound   );
             int txx = attacker.x;
             int tyx = attacker.y;
             int color = attacker.player_color;
@@ -354,20 +375,30 @@ public static class piece_util {
     }
 
     public static void move_piece(ref data.chess_piece cp, int idx, int color, int tx, int ty) {
+        ref data.board_cell targetCell = ref board_util.Cell(tx, ty);
+        if (targetCell.has_piece == 1) {
+            var targetPiece = data.mem.get_army(targetCell.piece_color).troop_list[targetCell.piece_index];
+            if (targetPiece.piece_type == 99) {
+                Debug.LogWarning("Cannot move: Target cell is an indestructible Rock!");
+                return; 
+            }
+        }
         if(cp.piece_type == 6){
             cp.shield -= 1; 
             if(cp.shield == 0) {
             cp.rect.self_destroy(); 
             board_util.clear_cell(cp.x, cp.y);
-
+            
             return;}
             }
+        
 
         board_util.clear_cell(cp.x, cp.y);
         cp.x = tx;
         cp.y = ty;
         cp.rect.move_to_board(tx, ty, -1f);
         board_util.set_cell(tx, ty, color, idx);
+        Debug.Log($"Moved piece to ({tx}, {ty})");
     }
 
 
@@ -473,5 +504,28 @@ public static class piece_util {
         }
 
         return isSafe;
+    }
+    public static void create_obstacle(int x, int y) {
+
+        data.chess_piece obstacle = new data.chess_piece();
+        
+        // 2. Thiết lập hiển thị (dùng rect_2d)
+        obstacle.rect = rect_2d.create(board_util.board_to_world(x), board_util.board_to_world(y), -1f);
+        obstacle.rect.set_sprite(data.mem.rock);
+        obstacle.rect.set_sprite_size(1f, 1f);
+        obstacle.rect.fit_collider_to_sprite(obstacle.rect.sprite);
+
+        obstacle.x = x;
+        obstacle.y = y;
+        obstacle.piece_type = 99; // Loại đặc biệt: Obstacle
+        obstacle.player_color = 1; // Phe thứ 3 (Trung lập)
+        obstacle.unitType = PieceType.Rock;
+        
+        // 4. Đưa vào hệ thống board để is_blocked() nhận diện được
+        // Lưu ý: Bạn cần một list riêng cho vật cản hoặc đưa vào một army trung lập
+        // Cách nhanh nhất là dùng board_util.set_cell với một index đặc biệt
+        board_util.set_cell(x, y, 99, 999); // color 2, index 999 đại diện cho vật cản
+        
+        Debug.Log($"<color=gray>Đã đặt vật cản tại {x}, {y}</color>");
     }
 }

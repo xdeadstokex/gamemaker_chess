@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-public enum CardType { Buff1, Buff2, Debuff, GodQueen, DemonQueen, Event, Item, Water}
-public enum PieceType { Light, ELight, KHeavy, BHeavy, RHeavy, Core }
+public enum CardType { Buff1, Buff2, Debuff, GodQueen, DemonQueen, Event, Item, Rock}
+public enum PieceType { Light, ELight, KHeavy, BHeavy, RHeavy, Core, Rock }
 public enum AIDifficulty { Baby, Easy, Normal, Asean }
 
 public class data : MonoBehaviour {
@@ -107,7 +107,8 @@ public class data : MonoBehaviour {
         public float spacing = 2.13f; // Khoảng cách giữa các thẻ
         public float y_pos = -8f;  // Vị trí Y nằm dưới bàn cờ
     }
-    public rect_2d card_table_obj;
+    public rect_2d card_table_obj_w;
+    public rect_2d card_table_obj_b;
     public CardHand white_hand_visual = new CardHand();
     public CardHand black_hand_visual = new CardHand{y_pos = 8f};
 
@@ -166,6 +167,10 @@ public class data : MonoBehaviour {
     // GUI BUTTONS
     // =========================================================================
     [Header("Menu Sprites")]
+    public Sprite camera_bg_sprite;
+    public Sprite menu_bg_sprite;
+    public Sprite pve2_btn_sprite;
+    public Sprite pve3_btn_sprite;
     public Sprite pvp_btn_sprite;
     public Sprite pve_btn_sprite;
     public Sprite back_btn_sprite;
@@ -176,6 +181,8 @@ public class data : MonoBehaviour {
     public Sprite diff2_btn_sprite;
     public Sprite diff3_btn_sprite;
     public Sprite diff4_btn_sprite;
+    public Sprite settings_btn_sprite;
+    public Sprite menu_btn_sprite;
     public rect_2d main_screen_gui;
 
 
@@ -209,6 +216,8 @@ public class data : MonoBehaviour {
     public Sprite card_god;       
     public Sprite card_gun;       
     public Sprite card_thunder;    
+    public Sprite card_rock;
+    public Sprite rock;
 
     // =========================================================================
     // GAME STATE
@@ -269,6 +278,10 @@ public class data : MonoBehaviour {
 
     public AudioSource audioSource;
     public AudioClip   moveSound, captureSound, checkSound, startSound, endSound, timeLess;
+    public AudioClip   pawnEvolveSound, knightEvolveSound, GodqueenEvolveSound, kingEvolveSound, DemonqueenEvolveSound,bishopEvolveSound, rookEvolveSound, burstSound;
+    public AudioClip   cardDrawSound, cardPlaySound, cardBuffSound, cardDebuffSound;
+    public AudioClip   themesound, clicksound, winSound, loseSound
+    ;
 
     // =========================================================================
     // CARDS
