@@ -244,6 +244,7 @@ public class data : MonoBehaviour {
 	public int turn_state = 0; //  turn result signal 0 = normal 1 = check 2 = checkmate 3 = stalemate
 	public bool lose_ui_shown = false;
     public AIDifficulty ai_difficulty = AIDifficulty.Baby;
+    public int current_turn_count = 0;
     // =========================================================================
     // AI
     // =========================================================================
@@ -252,6 +253,7 @@ public class data : MonoBehaviour {
     public int        aiColor     = 1;
     public bool       isAIThinking= false;
     public static AIMove    lastAIMove           = new AIMove { piece_index = -1 };
+    public BotDNA pveBrain;
 
     // =========================================================================
     // SPRITES
@@ -303,4 +305,10 @@ public class data : MonoBehaviour {
         black_army = new army_data(1);
         armies     = new army_data[] { white_army, black_army };
     }
+}
+
+[System.Serializable]
+public class GAPopulationData {
+    public int generation;
+    public List<BotDNA> dnaList;
 }

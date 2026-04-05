@@ -10,13 +10,13 @@ public static class AI_util {
     public static IEnumerator PlayAITurn() {
         data.mem.isAIThinking = true;
         int color = data.mem.current_player_color;
-        yield return new WaitForSeconds(0.1f);
+        if (GATrainer.instance == null || !GATrainer.instance.isTraining) yield return new WaitForSeconds(0.1f);
 
         data.AIMove move = data.mem.ai_difficulty switch {
             AIDifficulty.Baby   => RandMove(GenerateAllValidMoves(color)),
-            AIDifficulty.Easy   => CalculateMCTSMove(color),
+            AIDifficulty.Easy   => CalculateGreedyMove(color), // Đổi thành Greedy
             AIDifficulty.Normal => CalculateMinimaxMove(color),
-            AIDifficulty.Asean  => CalculateMCTSMove(color),
+            AIDifficulty.Asean  => CalculateMinimaxMove(color), // Asean cũng dùng Minimax
             _                   => new data.AIMove { piece_index = -1 }
         };
 
@@ -24,7 +24,8 @@ public static class AI_util {
             ExecuteAIMove(move, color);
         else {
             data.mem.gameOver = true;
-            Debug.Log("<color=orange>AI: no moves found, freezing game.</color>");
+            if (GATrainer.instance == null || !GATrainer.instance.isTraining)
+                Debug.Log("<color=orange>AI: no moves found, freezing game.</color>");
         }
 
         data.mem.isAIThinking = false;
@@ -153,6 +154,30 @@ public static class AI_util {
     // HEURISTICS & EVALUATION
     // =========================================================================
     public static float GetPieceValue(ref data.chess_piece cp) {
+        BotDNA dna = null;
+
+        if (GATrainer.instance != null && GATrainer.instance.isTraining) {
+            dna = (cp.player_color == 0) ? GATrainer.instance.currentWhiteDNA : GATrainer.instance.currentBlackDNA;
+        }
+        else if (data.mem != null && data.mem.ai_difficulty == AIDifficulty.Asean && data.mem.pveBrain != null) {
+            dna = data.mem.pveBrain;
+        }
+
+        if (dna != null) { 
+            switch (cp.piece_type) {
+                case 5: case 7: return 10000f; 
+                case 4: return dna.weights[3]; 
+                case 6: return dna.weights[9];
+                case 1: return dna.weights[2]; 
+                case 2: return dna.weights[1];
+                case 3: return dna.weights[1];
+                case 0:
+                    if (cp.evolved == 1) return (cp.evolved_type == 2) ? dna.weights[5] : dna.weights[4]; 
+                    return dna.weights[0];
+                default: return 100f;
+            }
+        }
+
         switch (cp.piece_type) {
             case 5: case 7: return 10000f;
             case 4: case 6: return 900f;
@@ -260,8 +285,6 @@ public static class AI_util {
                     pos += fwd * 2f;
                 }
 
-                // Only run the expensive attack-check on kings — protects eval quality,
-                // skips the full enemy scan for every pawn/rook/etc.
                 if ((cp.piece_type == 5 || cp.piece_type == 7) && IsSquareAttacked(cp.x, cp.y, c))
                     val *= (c == colorToMove) ? 0.5f : 0.1f;
 
@@ -364,9 +387,12 @@ public static class AI_util {
         for (int p = 0; p < data.mem.armies[c].troop_count; p++)
             if (data.mem.armies[c].troop_list[p].rect != null) alive++;
 
-        int depth = data.mem.total_players > 2
+        int baseDepth = data.mem.total_players > 2
             ? (alive > 35 ? 2 : alive > 15 ? 3 : 4)
             : (alive > 24 ? 3 : alive > 10 ? 4 : 5);
+
+
+        int depth = (data.mem.ai_difficulty == AIDifficulty.Asean) ? baseDepth : baseDepth - 1;
 
         float      bestScore = -Mathf.Infinity;
         float      alpha     = -Mathf.Infinity;
@@ -428,7 +454,8 @@ public static class AI_util {
             var pos = board_util.Cell(move.targetX, move.targetY).tile.obj.transform.position;
             piece_util.piece_attack(ref attacker, move.targetX, move.targetY, pos);
         } else {
-            sound_util.play_sound(data.mem.moveSound);
+            if (GATrainer.instance == null || !GATrainer.instance.isTraining)
+                sound_util.play_sound(data.mem.moveSound);
         }
 
         piece_util.move_piece(ref attacker, move.piece_index, color, move.targetX, move.targetY);

@@ -12,7 +12,8 @@ public class SlotHover : MonoBehaviour, IPointerEnterHandler, IPointerExitHandle
 
     public void OnPointerEnter(PointerEventData eventData)
     {
-        Debug.Log("IN: " + gameObject.name);
+        if (GATrainer.instance == null || !GATrainer.instance.isTraining)
+            Debug.Log("IN: " + gameObject.name);
         
         if (hoverSprite != null && followImage != null)
         {
@@ -27,7 +28,8 @@ public class SlotHover : MonoBehaviour, IPointerEnterHandler, IPointerExitHandle
 
     public void OnPointerExit(PointerEventData eventData)
     {
-        Debug.Log("OUT: " + gameObject.name);
+        if (GATrainer.instance == null || !GATrainer.instance.isTraining)
+            Debug.Log("OUT: " + gameObject.name);
         
         isHovering = false;
         if (followImage != null)

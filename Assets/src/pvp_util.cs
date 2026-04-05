@@ -61,44 +61,76 @@ public static class pvp_util {
     // NEXT TURN
     // =========================================================
     public static void next_player_turn() {
-
         int next = GetNextPlayer(data.mem.current_player_color);
         data.mem.current_player_color = next;
-
+        data.mem.current_turn_count++;
         bool checkedKing = IsKingChecked(next);
         bool hasMove     = CheckForAnyValidMove(next);
-
-        // reset state
         data.mem.turn_state = 0;
 
-        // =====================================================
-        // END GAME
-        // =====================================================
+        bool forceDraw = false;
+        if (GATrainer.instance != null && GATrainer.instance.isTraining && data.mem.current_turn_count > 150) {
+            forceDraw = true;
+            hasMove = false; 
+        }
+
         if (!hasMove) {
             data.mem.gameOver = true;
-            data.mem.turn_state = checkedKing ? 2 : 3;
-
-            if (data.mem.endSound)
-                sound_util.play_sound(data.mem.endSound);
-
-            if (checkedKing) {
-                Debug.Log($"<color=red>CHECKMATE! Player {next} lost.</color>");
+            
+            if (forceDraw) {
+                data.mem.turn_state = 3; // Hòa
+                if (GATrainer.instance == null || !GATrainer.instance.isTraining)
+                    Debug.Log("<color=yellow>HÒA DO QUÁ SỐ TURN (Turn Limit)!</color>");
             } else {
-                Debug.Log($"<color=yellow>STALEMATE! Player {next} has no moves.</color>");
+                data.mem.turn_state = checkedKing ? 2 : 3;
+                if (data.mem.endSound) 
+                    if (GATrainer.instance == null || !GATrainer.instance.isTraining)
+                        sound_util.play_sound(data.mem.endSound);
+                
+                if (checkedKing) 
+                    if (GATrainer.instance == null || !GATrainer.instance.isTraining)
+                        Debug.Log($"<color=red>CHECKMATE! Player {next} lost.</color>");
+                else 
+                    if (GATrainer.instance == null || !GATrainer.instance.isTraining)
+                        Debug.Log($"<color=yellow>STALEMATE! Player {next} has no moves.</color>");
+            }
+
+            // BÁO CÁO CHI TIẾT CHO GA TRAINER
+            if (GATrainer.instance != null && GATrainer.instance.isTraining) {
+                bool isDraw = !checkedKing || forceDraw;
+                
+                // Tính tổng giá trị quân cờ còn lại trên bàn
+                float whiteScore = CalculateMaterial(0);
+                float blackScore = CalculateMaterial(1);
+
+                int matchNum = GATrainer.instance.currentMatchIndex + 1;
+                int totalMatches = GATrainer.instance.populationSize / 2;
+                Debug.Log($"<color=orange>=> Xong trận {matchNum}/{totalMatches} (Kéo dài {data.mem.current_turn_count} Turns)</color>");
+
+                GATrainer.instance.ReportMatchResult(next, isDraw, data.mem.current_turn_count, whiteScore, blackScore);
             }
             return;
         }
 
-        // =====================================================
-        // CHECK
-        // =====================================================
         if (checkedKing) {
             data.mem.turn_state = 1;
-
-            if (data.mem.checkSound)
-                sound_util.play_sound(data.mem.checkSound);
-
-            Debug.Log($"<color=red>CHECK! Player {next} king is threatened.</color>");
+            if (data.mem.checkSound) 
+                if (GATrainer.instance == null || !GATrainer.instance.isTraining)
+                    sound_util.play_sound(data.mem.checkSound);
+            if (GATrainer.instance == null || !GATrainer.instance.isTraining)
+                Debug.Log($"<color=red>CHECK! Player {next} king is threatened.</color>");
         }
+    }
+
+    static float CalculateMaterial(int color) {
+        float score = 0;
+        var army = data.mem.get_army(color);
+        for (int i = 0; i < army.troop_count; i++) {
+            ref var cp = ref army.troop_list[i];
+            if (cp.rect != null) { // Quân cờ còn sống
+                score += AI_util.GetPieceValue(ref cp);
+            }
+        }
+        return score;
     }
 }

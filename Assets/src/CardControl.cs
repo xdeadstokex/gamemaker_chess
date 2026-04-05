@@ -18,7 +18,8 @@ public class DragDrop : MonoBehaviour, IDragHandler, IEndDragHandler, IBeginDrag
     }
     public void OnBeginDrag(PointerEventData eventData)
     {
-        Debug.Log("Clicked");
+        if (GATrainer.instance == null || !GATrainer.instance.isTraining)
+            Debug.Log("Clicked");
         parentAfterDrag = transform.parent;
         transform.SetParent(transform.root);
         transform.SetAsLastSibling();
@@ -27,7 +28,8 @@ public class DragDrop : MonoBehaviour, IDragHandler, IEndDragHandler, IBeginDrag
 
     public void OnDrag(PointerEventData eventData)
     {
-        Debug.Log("Dragging");
+        if (GATrainer.instance == null || !GATrainer.instance.isTraining)
+            Debug.Log("Dragging");
         transform.position = Input.mousePosition;
     }
 

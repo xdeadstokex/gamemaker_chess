@@ -24,10 +24,19 @@ public class Game : MonoBehaviour {
     // LIFECYCLE
     // =========================================================================
 
-    void Start()  { if (Camera.main != null) {
-        Camera.main.clearFlags = CameraClearFlags.SolidColor; 
-        Camera.main.backgroundColor = new Color(0.384f, 0.713f, 0.627f);
-    }ShowMainMenu(); PlayThemeMusic(); }
+    void Start()  {
+        if(GATrainer.instance != null && GATrainer.instance.isTraining){
+            data.mem.ai_difficulty = AIDifficulty.Normal;
+            StartGame(2, 2);
+        }
+        else{
+            if (Camera.main != null) {
+                Camera.main.clearFlags = CameraClearFlags.SolidColor; 
+                Camera.main.backgroundColor = new Color(0.384f, 0.713f, 0.627f);
+            }
+            ShowMainMenu(); PlayThemeMusic();
+        } 
+    }
 
 	int test = 0;
     void PlayThemeMusic() {
@@ -71,8 +80,17 @@ public class Game : MonoBehaviour {
 		return;
         }
 
-        if (data.mem.play_against_AI == 1 && data.mem.current_player_color != 0) {
-            if (!data.mem.isAIThinking){ StartCoroutine(AI_util.PlayAITurn()); ClearEnPassant(); }
+        bool isAITurn = false;
+        
+        if (GATrainer.instance != null && GATrainer.instance.isTraining) {
+            isAITurn = true; 
+        } 
+        else if (data.mem.play_against_AI == 1 && data.mem.current_player_color != 0) {
+            isAITurn = true; 
+        }
+
+        if (isAITurn) {
+            if (!data.mem.isAIThinking) StartCoroutine(AI_util.PlayAITurn());
             return;
         }
 
@@ -259,16 +277,25 @@ public class Game : MonoBehaviour {
         if (total_players == 2) SetupBoard_2P();
         else                    SetupBoard_Cross(total_players);
 
-        sound_util.play_sound(data.mem.startSound);
-        if(total_players == 2 && bot_count == 0)
-        {
-        card_util.init_card_table_white();
+        if (GATrainer.instance == null || !GATrainer.instance.isTraining) {
+            sound_util.play_sound(data.mem.startSound);
+            if(total_players == 2 && bot_count == 0)
+            {
+            card_util.init_card_table_white();
 
-        card_util.init_card_table_black();
+            card_util.init_card_table_black();
+            }
+
+            card_util.refresh_card_visuals(0);
+            SpawnSettingsButton();
+        } 
+        else {//turn off camera in training mode
+            GameObject camObj = GameObject.Find("main_camera");
+            if (camObj != null) {
+                Camera cam = camObj.GetComponent<Camera>();
+                if (cam != null) cam.enabled = false;
+            }
         }
-
-        card_util.refresh_card_visuals(0);
-        SpawnSettingsButton();
     }
 
     // =========================================================================
@@ -446,7 +473,8 @@ public class Game : MonoBehaviour {
             ref data.chess_piece attacker = ref data.mem.armies[mp.piece_color].troop_list[mp.piece_index];
 
             if (!mp.attack) {
-                sound_util.play_sound(data.mem.moveSound);
+                if (GATrainer.instance == null || !GATrainer.instance.isTraining)
+                    sound_util.play_sound(data.mem.moveSound);
                 TrySetEnPassant(ref attacker, mp.mat_y);
                 TryCastle(ref attacker, mp.mat_x);
                 attacker.has_moved = 1;
