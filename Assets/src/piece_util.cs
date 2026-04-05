@@ -267,13 +267,13 @@ public static class piece_util {
             case 3:sound_util.play_sound(data.mem.bishopEvolveSound); break;
             case 4:card_util.add_card(myColor, CardType.Item); card_util.add_card(opponentColor, CardType.DemonQueen);sound_util.play_sound(data.mem.GodqueenEvolveSound); break;
         }
-		if (cp.piece_type == 4) {
-			card_util.add_card(myColor, CardType.Item);
-			card_util.add_card(opponentColor, CardType.DemonQueen);
+		// if (cp.piece_type == 4) {
+		// 	card_util.add_card(myColor, CardType.Item);
+		// 	card_util.add_card(opponentColor, CardType.DemonQueen);
 
-            if (GATrainer.instance == null || !GATrainer.instance.isTraining)
-			    Debug.Log($"<color=cyan>Queen {myColor} evolved!</color>");
-		}
+        //     if (GATrainer.instance == null || !GATrainer.instance.isTraining)
+		// 	    Debug.Log($"<color=cyan>Queen {myColor} evolved!</color>");
+		// }
         if (GATrainer.instance == null || !GATrainer.instance.isTraining)
 		    Debug.Log($"<color=green>{cp.piece_type} EVOLVED</color>");
 	}
