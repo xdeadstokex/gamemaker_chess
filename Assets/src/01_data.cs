@@ -252,14 +252,8 @@ public class data : MonoBehaviour {
 
     public int        aiColor     = 1;
     public bool       isAIThinking= false;
-<<<<<<< Updated upstream
     public static AIMove    lastAIMove           = new AIMove { piece_index = -1 };
     public BotDNA pveBrain;
-=======
-    public board_cell[] real_board;
-    public army_data[]  real_armies;
-    public static AIMove    lastAIMove           = new AIMove { piece_index = -1 };
->>>>>>> Stashed changes
 
     // =========================================================================
     // SPRITES

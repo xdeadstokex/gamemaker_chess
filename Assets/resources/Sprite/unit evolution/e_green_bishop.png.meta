@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 36e8f34faa088f642ada216d773f3a18
+guid: 500698c42c77d7d4ca40c11e58d2dd1e
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -6416704506416456542
-    second: setting_0
+      213: -878244986587062773
+    second: e_green_bishop_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -100,7 +100,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: setting_0
+      name: e_green_bishop_0
       rect:
         serializedVersion: 2
         x: 0
@@ -114,8 +114,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 2ac1662af3943f6a0800000000000000
-      internalID: -6416704506416456542
+      spriteID: b0ed5bc76d8dfc3f0800000000000000
+      internalID: -878244986587062773
       vertices: []
       indices: 
       edges: []

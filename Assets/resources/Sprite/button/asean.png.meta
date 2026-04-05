@@ -1,13 +1,5 @@
 fileFormatVersion: 2
-<<<<<<< Updated upstream
 guid: 2a07c0e995a72d24ab6f15d3828ef2a4
-=======
-<<<<<<< HEAD
-guid: 77fa0a4c782a1dc4cb6890b2bddf47c8
-=======
-guid: e2b7cba65b6d53c43a891de241a9b7a9
->>>>>>> 8f178996a71c64005397d2302b1c80b793da95e5
->>>>>>> Stashed changes
 TextureImporter:
   internalIDToNameTable:
   - first:
@@ -45,7 +37,7 @@ TextureImporter:
   maxTextureSize: 2048
   textureSettings:
     serializedVersion: 2
-    filterMode: 0
+    filterMode: 1
     aniso: 1
     mipBias: 0
     wrapU: 1
@@ -138,8 +130,7 @@ TextureImporter:
     edges: []
     weights: []
     secondaryTextures: []
-    nameFileIdTable:
-      asean_0: 3384485505974468210
+    nameFileIdTable: {}
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

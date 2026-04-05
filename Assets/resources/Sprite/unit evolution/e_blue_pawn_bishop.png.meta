@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 55e2fc00291cb454dab2a0aa6b4fb28e
+guid: 85246ef5fdb990b4dbd32305eeb424de
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 7042847911465117151
-    second: menu_0
+      213: 1862839143062816402
+    second: e_blue_pawn_bishop_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -100,13 +100,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: menu_0
+      name: e_blue_pawn_bishop_0
       rect:
         serializedVersion: 2
-        x: 0
-        y: 0
-        width: 16
-        height: 16
+        x: 7
+        y: 7
+        width: 121
+        height: 114
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -114,8 +114,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: fd5eaf16cd83db160800000000000000
-      internalID: 7042847911465117151
+      spriteID: 296c3f3b4522ad910800000000000000
+      internalID: 1862839143062816402
       vertices: []
       indices: 
       edges: []
@@ -130,8 +130,7 @@ TextureImporter:
     edges: []
     weights: []
     secondaryTextures: []
-    nameFileIdTable:
-      menu_0: 7042847911465117151
+    nameFileIdTable: {}
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

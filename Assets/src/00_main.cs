@@ -24,7 +24,6 @@ public class Game : MonoBehaviour {
     // LIFECYCLE
     // =========================================================================
 
-<<<<<<< Updated upstream
     void Start()  {
         if(GATrainer.instance != null && GATrainer.instance.isTraining){
             data.mem.ai_difficulty = AIDifficulty.Normal;
@@ -92,148 +91,14 @@ public class Game : MonoBehaviour {
 
         if (isAITurn) {
             if (!data.mem.isAIThinking) StartCoroutine(AI_util.PlayAITurn());
-=======
-    void Start() {
-        ShowMainMenu();
-    }
-
-<<<<<<< HEAD
-	public void Update() {
-        if (Input.GetKeyDown(KeyCode.K)) {
-        card_util.add_card(0, CardType.Water); 
-=======
-    void Update() {
-        HandleMenuInput();
-
-        if (data.mem.game_started == 0) return;
-
-        // Camera drag + zoom
-        cam_2d.zoom(mouse_util.scroll);
-        if (mouse_util.left.hold == 1)
-            cam_2d.move(-mouse_util.dx * 0.1f, -mouse_util.dy * 0.1f);
-
-        zoom_on_evolving_piece();
-
-        // Restart on click after game over
-        if (data.mem.gameOver) {
-            if (Input.GetMouseButtonDown(0)) {
-                data.mem.gameOver = false;
-                SceneManager.LoadScene("Game");
-            }
-            return;
->>>>>>> 3fa99dbaf5cc16841a5972d8388a8bdd48a6a2b6
-        }
-
-        // AI turn
-        if (data.mem.play_against_AI == 1 && data.mem.current_player_color != 0) {
-            if (!data.mem.isAIThinking)
-                StartCoroutine(AI_util.PlayAITurn());
-            return;
-        }
-<<<<<<< HEAD
-        if (data.mem.gameOver && Input.GetMouseButtonDown(0)) {
-            data.mem.gameOver = false;
-            SceneManager.LoadScene("Game");
->>>>>>> Stashed changes
             return;
         }
 
         if (data.mem.menu_state == data.MenuState.Settings) return;
 
-<<<<<<< Updated upstream
         HandlePieceInput();
         HandleMovePlateInput();
     }
-=======
-		if(data.mem.zoom_cross_board == 0){
-		if(data.mem.total_players > 2 || data.mem.bot_count >= 2){
-		data.mem.zoom_cross_board = 1;
-		cam_2d.set_pos(10.5f, 10.5f);
-		cam_2d.scale(3.2f);
-		}
-		}
-
-		zoom_on_evolving_piece();
-
-		// --- GAME OVER ---
-		if (data.mem.gameOver && Input.GetMouseButtonDown(0)) {
-			data.mem.gameOver = false;
-			SceneManager.LoadScene("Game");
-			return;
-		}
-
-		HandleMenuInput();
-
-		if (data.mem.game_started == 0) return;
-
-		if(data.mem.current_player_color != 0 && data.mem.play_against_AI == 1){
-			if (!data.mem.isAIThinking) {
-				StartCoroutine(AI_util.PlayAITurn());
-			}
-			return;
-		}
-
-		HandlePieceInput();
-		HandleMovePlateInput();
-        int currentColor = data.mem.current_player_color; 
-
-        card_util.handle_card_input(currentColor);
-	}
-=======
-
-        HandlePieceInput();
-        HandleMovePlateInput();
-        card_util.handle_card_input(data.mem.current_player_color);
-
-        // Debug shortcuts
-        if (Input.GetKeyDown(KeyCode.K)) card_util.draw_debug_card();
-        if (Input.GetKeyDown(KeyCode.L)) card_util.add_card(1, CardType.DemonQueen);
-    }
->>>>>>> 3fa99dbaf5cc16841a5972d8388a8bdd48a6a2b6
-
-    // =========================================================================
-    // MENU — SHOW
-    // =========================================================================
-
-<<<<<<< HEAD
-        void ShowMainMenu() {
-        gui_util.clear_menu();
-
-        // Nền menu
-        data.mem.main_screen_gui = rect_2d.create(0f, 0f, 1f);
-        data.mem.main_screen_gui.set_sprite(data.mem.rect_2d_sprite);
-        data.mem.main_screen_gui.set_sprite_size(20f, 12f);
-
-        // Nút PvP
-        data.mem.pvp_button = gui_util.make_button(2.5f, 0f, Color.white, "");
-        data.mem.pvp_button.set_sprite(data.mem.pvp_btn_sprite); // Dùng sprite thay vì vẽ màu
-        data.mem.pvp_button.set_sprite_size(4f, 2f); // Chỉnh lại size cho vừa mắt
-
-        // Nút PvE
-        data.mem.pve_button = gui_util.make_button(-2.5f, 0f, Color.white, "");
-        data.mem.pve_button.set_sprite(data.mem.pve_btn_sprite);
-        data.mem.pve_button.set_sprite_size(4f, 2f);
-
-=======
-    void MakeMenuBg() {
-        data.mem.main_screen_gui = rect_2d.create(0f, 0f);
-        data.mem.main_screen_gui.set_sprite(data.mem.rect_2d_sprite);
-        data.mem.main_screen_gui.set_sprite_size(20f, 12f);
-        data.mem.main_screen_gui.set_collider_size(20f, 12f);
-    }
-
-    void ShowMainMenu() {
-        gui_util.clear_menu();
-        MakeMenuBg();
-        data.mem.pvp_button = gui_util.make_button( 2.5f, 0f, Color.cyan,   "PvP");
-        data.mem.pve_button = gui_util.make_button(-2.5f, 0f, Color.yellow, "PvE");
->>>>>>> 3fa99dbaf5cc16841a5972d8388a8bdd48a6a2b6
-        data.mem.menu_state = data.MenuState.Main;
-    }
-    void ShowPlayerCountMenu(bool is_pve) {
-        gui_util.clear_menu();
-<<<<<<< HEAD
->>>>>>> Stashed changes
 
     // =========================================================================
     // MENU — SHOW
@@ -254,7 +119,6 @@ public class Game : MonoBehaviour {
         data.mem.menu_state = data.MenuState.Main;
         }
 
-<<<<<<< Updated upstream
     void ShowPlayerCountMenu(bool is_pve) {
         gui_util.clear_menu();
         MakeMenuBg();
@@ -270,32 +134,10 @@ public class Game : MonoBehaviour {
             data.mem.menu_state = data.MenuState.PickPlayerCount;
         }
         data.mem.back_button = gui_util.make_button_sprite(0f, MENU_BACK_Y, data.mem.back_btn_sprite, 2.0f, 2.0f);
-=======
-        // 4. Nút Back (Dùng Sprite hình mũi tên hoặc chữ Back đã vẽ sẵn)
-        data.mem.back_button = gui_util.make_button(0f, -3f, Color.white, "");
-        data.mem.back_button.set_sprite(data.mem.back_btn_sprite); // Gán Sprite nút Back
-        data.mem.back_button.set_sprite_size(2f, 2f); // Điều chỉnh kích thước nút Back cho cân đối
-=======
-        MakeMenuBg();
-        if (is_pve) {
-            data.mem.btn_count1 = gui_util.make_button( 3f, 0f, Color.red,   "1 vs 1");
-            data.mem.btn_count2 = gui_util.make_button( 0f, 0f, Color.cyan,  "1 vs 2");
-            data.mem.btn_count3 = gui_util.make_button(-3f, 0f, Color.green, "1 vs 3");
-            data.mem.menu_state = data.MenuState.PickBotCount;
-        } else {
-            data.mem.btn_count1 = gui_util.make_button( 3f, 0f, Color.red,   "2 Players");
-            data.mem.btn_count2 = gui_util.make_button( 0f, 0f, Color.cyan,  "3 Players");
-            data.mem.btn_count3 = gui_util.make_button(-3f, 0f, Color.green, "4 Players");
-            data.mem.menu_state = data.MenuState.PickPlayerCount;
-        }
-        data.mem.back_button = gui_util.make_button(0f, -3f, Color.red, "Back");
->>>>>>> 3fa99dbaf5cc16841a5972d8388a8bdd48a6a2b6
->>>>>>> Stashed changes
     }
 
     void ShowDifficultyMenu() {
         gui_util.clear_menu();
-<<<<<<< Updated upstream
         MakeMenuBg();
         data.mem.btn_diff1   = gui_util.make_button_sprite(MENU_DIFF1_X, MENU_ROW_Y, data.mem.diff1_btn_sprite, 3.0f, 1.5f);
         data.mem.btn_diff2   = gui_util.make_button_sprite(MENU_DIFF2_X, MENU_ROW_Y, data.mem.diff2_btn_sprite, 3.0f, 1.5f);
@@ -303,47 +145,6 @@ public class Game : MonoBehaviour {
         data.mem.btn_diff4   = gui_util.make_button_sprite(MENU_DIFF4_X, MENU_ROW_Y, data.mem.diff4_btn_sprite, 3.0f, 1.5f);
         data.mem.back_button = gui_util.make_button_sprite(0f, MENU_BACK_Y, data.mem.back_btn_sprite, 2.0f, 2.0f);
         data.mem.menu_state  = data.MenuState.PickBotDifficulty;
-=======
-<<<<<<< HEAD
-        
-        // Nền
-        data.mem.main_screen_gui = rect_2d.create(0f, 0f);
-        data.mem.main_screen_gui.set_sprite(data.mem.rect_2d_sprite);
-        data.mem.main_screen_gui.set_sprite_size(20f, 12f);
-
-        // Các nút độ khó dùng Sprite riêng
-        data.mem.btn_diff1 = gui_util.make_button(4.5f, 0f, Color.white, "");
-        data.mem.btn_diff1.set_sprite(data.mem.diff1_btn_sprite);
-        data.mem.btn_diff1.set_sprite_size(4f, 2f);
-        
-        data.mem.btn_diff2 = gui_util.make_button(1.5f, 0f, Color.white, "");
-        data.mem.btn_diff2.set_sprite(data.mem.diff2_btn_sprite);
-        data.mem.btn_diff2.set_sprite_size(4f, 2f);
-
-        data.mem.btn_diff3 = gui_util.make_button(-1.5f, 0f, Color.white, "");
-        data.mem.btn_diff3.set_sprite(data.mem.diff3_btn_sprite);
-        data.mem.btn_diff3.set_sprite_size(4f, 2f);
-
-        data.mem.btn_diff4 = gui_util.make_button(-4.5f, 0f, Color.white, "");
-        data.mem.btn_diff4.set_sprite(data.mem.diff4_btn_sprite);
-        data.mem.btn_diff4.set_sprite_size(4f, 2f);
-
-        // Nút Back
-        data.mem.back_button = gui_util.make_button(0f, -3f, Color.white, "");
-        data.mem.back_button.set_sprite(data.mem.back_btn_sprite);
-        data.mem.back_button.set_sprite_size(2f, 2f);
-
-        data.mem.menu_state = data.MenuState.PickBotDifficulty;
-=======
-        MakeMenuBg();
-        data.mem.btn_diff1   = gui_util.make_button( 4.5f, 0f, Color.green,  "Baby");
-        data.mem.btn_diff2   = gui_util.make_button( 1.5f, 0f, Color.cyan,   "Easy");
-        data.mem.btn_diff3   = gui_util.make_button(-1.5f, 0f, Color.yellow, "Normal");
-        data.mem.btn_diff4   = gui_util.make_button(-4.5f, 0f, Color.red,    "Asean");
-        data.mem.back_button = gui_util.make_button(0f,   -3f, Color.red,    "Back");
-        data.mem.menu_state  = data.MenuState.PickBotDifficulty;
->>>>>>> 3fa99dbaf5cc16841a5972d8388a8bdd48a6a2b6
->>>>>>> Stashed changes
     }
 
     // =========================================================================
@@ -354,7 +155,6 @@ public class Game : MonoBehaviour {
         bool anyClicked = false;
         switch (data.mem.menu_state) {
             case data.MenuState.Main:
-<<<<<<< Updated upstream
                 if (gui_util.clicked(data.mem.pvp_button)) {
                     ShowPlayerCountMenu(false);
                     anyClicked = true;
@@ -363,10 +163,6 @@ public class Game : MonoBehaviour {
                     ShowPlayerCountMenu(true);
                     anyClicked = true;
                 }
-=======
-                if (gui_util.clicked(data.mem.pvp_button)) ShowPlayerCountMenu(false);
-                if (gui_util.clicked(data.mem.pve_button)) ShowPlayerCountMenu(true);
->>>>>>> Stashed changes
                 break;
 
             case data.MenuState.PickPlayerCount:
@@ -408,7 +204,6 @@ public class Game : MonoBehaviour {
                 break;
 
             case data.MenuState.PickBotDifficulty:
-<<<<<<< Updated upstream
                 if (gui_util.clicked(data.mem.btn_diff1)) {
                     StartGame_AI(AIDifficulty.Baby);
                     anyClicked = true;
@@ -440,13 +235,6 @@ public class Game : MonoBehaviour {
                     HideSettingsOverlay();
                     anyClicked = true;
                 }
-=======
-                if (gui_util.clicked(data.mem.btn_diff1)) { data.mem.ai_difficulty = AIDifficulty.Baby;   StartGame(data.mem.total_players, data.mem.bot_count); }
-                if (gui_util.clicked(data.mem.btn_diff2)) { data.mem.ai_difficulty = AIDifficulty.Easy;   StartGame(data.mem.total_players, data.mem.bot_count); }
-                if (gui_util.clicked(data.mem.btn_diff3)) { data.mem.ai_difficulty = AIDifficulty.Normal; StartGame(data.mem.total_players, data.mem.bot_count); }
-                if (gui_util.clicked(data.mem.btn_diff4)) { data.mem.ai_difficulty = AIDifficulty.Asean;  StartGame(data.mem.total_players, data.mem.bot_count); }
-                if (gui_util.clicked(data.mem.back_button)) ShowPlayerCountMenu(true);
->>>>>>> Stashed changes
                 break;
         }
         if (anyClicked) {
@@ -465,14 +253,13 @@ public class Game : MonoBehaviour {
         StartGame(data.mem.total_players, data.mem.bot_count);
     }
 
-	// =========================================================================
-	// GAME START
-	// =========================================================================
+    // =========================================================================
+    // GAME START
+    // =========================================================================
 
-	void StartGame(int total_players, int bot_count) {
-		gui_util.clear_menu();
+    void StartGame(int total_players, int bot_count) {
+        gui_util.clear_menu();
 
-<<<<<<< Updated upstream
         data.mem.total_players        = total_players;
         data.mem.bot_count            = bot_count;
         data.mem.current_player_color = 0;
@@ -509,35 +296,6 @@ public class Game : MonoBehaviour {
                 if (cam != null) cam.enabled = false;
             }
         }
-=======
-		data.mem.total_players        = total_players;
-		data.mem.bot_count            = bot_count;
-		data.mem.current_player_color = 0;
-		data.mem.game_started         = 1;
-		data.mem.menu_state           = data.MenuState.None;
-		data.mem.play_against_AI      = bot_count > 0 ? 1 : 0;
-
-		data.mem.armies = new data.army_data[total_players];
-		for (int i = 0; i < total_players; i++)
-			data.mem.armies[i] = new data.army_data(i);
-
-		data.mem.white_army = data.mem.armies[0];
-		if (total_players > 1)
-			data.mem.black_army = data.mem.armies[1];
-
-		if (total_players == 2)
-			SetupBoard_2P();
-		else
-			SetupBoard_Cross(total_players);
-
-		sound_util.play_sound(data.mem.startSound);
-	}
-
-<<<<<<< HEAD
-        sound_util.play_sound(data.mem.startSound);
-        card_util.init_card_table();
-        card_util.refresh_card_visuals(0);
->>>>>>> Stashed changes
     }
 
     // =========================================================================
@@ -633,158 +391,7 @@ public class Game : MonoBehaviour {
     }
 
     // =========================================================================
-<<<<<<< Updated upstream
     // PIECE INPUT
-=======
-    // PIECE INPUT  (unchanged logic, extended to N armies)
-=======
-
-	// =========================================================================
-	// 2P BOARD
-	// =========================================================================
-
-	void SetupBoard_2P() {
-		board_util.InitFlat(8, 8);
-
-		int H = data.mem.board_h;
-
-		for (int y = 0; y < 8; y++)
-		for (int x = 0; x < 8; x++) {
-			ref data.board_cell c = ref board_util.Cell(x, y);
-
-			bool light = (x + y) % 2 == 0;
-			c.tile_sprite = light ? data.mem.board_tile0 : data.mem.board_tile1;
-
-			int fy = H - 1 - y;
-
-			c.tile = rect_2d.create(
-				board_util.board_to_world(x),
-				board_util.board_to_world(fy),
-				0f
-			);
-
-			c.tile.set_sprite(c.tile_sprite);
-			c.tile.set_sprite_scale(1f, 1f);
-			c.tile.col.enabled = false;
-		}
-
-		int[] back_white = { 7, 2, 3, 4, 5, 3, 2, 1 };
-		for (int x = 0; x < 8; x++)
-			piece_util.create_piece(x, 0, back_white[x], data.mem.armies[0], 0, +1);
-		for (int x = 0; x < 8; x++)
-			piece_util.create_piece(x, 1, 0, data.mem.armies[0], 0, +1);
-
-		int[] back_black = { 1, 2, 3, 5, 4, 3, 2, 7 };
-		for (int x = 0; x < 8; x++)
-			piece_util.create_piece(x, 7, back_black[x], data.mem.armies[1], 0, -1);
-		for (int x = 0; x < 8; x++)
-			piece_util.create_piece(x, 6, 0, data.mem.armies[1], 0, -1);
-
-		cam_2d.scale(1.2f);
-	}
-
-
-	// =========================================================================
-	// CROSS BOARD (3P = SAME AS 4P BOARD)
-	// =========================================================================
-
-	const int CROSS_SIZE = 24;
-	const int ARM        = 8;
-
-	static bool IsCrossCell(int x, int y) {
-		return (x >= ARM && x < ARM * 2) || (y >= ARM && y < ARM * 2);
-	}
-
-	void SetupBoard_Cross(int n) {
-		board_util.InitFlat(CROSS_SIZE, CROSS_SIZE);
-
-		int H = data.mem.board_h;
-
-		// 🔥 IMPORTANT: NO TILE REMOVAL ANYMORE
-		for (int y = 0; y < CROSS_SIZE; y++)
-		for (int x = 0; x < CROSS_SIZE; x++) {
-			ref data.board_cell c = ref board_util.Cell(x, y);
-
-			if (!IsCrossCell(x, y)) {
-				c.valid = 0;
-				continue;
-			}
-
-			c.valid = 1;
-
-			bool light = (x + y) % 2 == 0;
-
-			Sprite s0, s1;
-			if      (y >= ARM * 2) { s0 = data.mem.board_tile0; s1 = data.mem.board_tile1; }
-			else if (y < ARM)      { s0 = data.mem.board_tile2; s1 = data.mem.board_tile3; }
-			else if (x < ARM)      { s0 = data.mem.board_tile0; s1 = data.mem.board_tile2; }
-			else if (x >= ARM * 2) { s0 = data.mem.board_tile1; s1 = data.mem.board_tile3; }
-			else                   { s0 = data.mem.board_tile0; s1 = data.mem.board_tile1; }
-
-			int fy = H - 1 - y;
-
-			c.tile_sprite = light ? s0 : s1;
-			c.tile = rect_2d.create(
-				board_util.board_to_world(x),
-				board_util.board_to_world(fy),
-				0f
-			);
-
-			c.tile.set_sprite(c.tile_sprite);
-			c.tile.set_sprite_scale(1f, 1f);
-			c.tile.col.enabled = false;
-		}
-
-		// ---------------------------------------------------------------------
-		// SAME PLACEMENT LOGIC AS 4P
-		// ---------------------------------------------------------------------
-
-		// WHITE (bottom)
-		PlaceArm_V(data.mem.armies[0], 0, 1, +1);
-
-		// LEFT
-		PlaceArm_H(data.mem.armies[n == 3 ? 1 : 2], 0, 1, +1);
-
-		// RIGHT
-		PlaceArm_H(data.mem.armies[n == 3 ? 2 : 3], CROSS_SIZE - 1, CROSS_SIZE - 2, -1);
-
-		// TOP ONLY EXISTS IN 4P
-		if (n == 4)
-			PlaceArm_V(data.mem.armies[1], CROSS_SIZE - 1, CROSS_SIZE - 2, -1);
-
-		cam_2d.set_pos(10.5f, 10.5f);
-		cam_2d.scale(3.2f);
-	}
-
-
-	// =========================================================================
-	// ARM HELPERS
-	// =========================================================================
-
-	static void PlaceArm_V(data.army_data army, int back_row, int pawn_row, int dy) {
-		int[] back = { 1, 2, 3, 5, 4, 3, 2, 1 };
-
-		for (int i = 0; i < ARM; i++)
-			piece_util.create_piece(ARM + i, back_row, back[i], army, 0, dy);
-
-		for (int i = 0; i < ARM; i++)
-			piece_util.create_piece(ARM + i, pawn_row, 0, army, 0, dy);
-	}
-
-	static void PlaceArm_H(data.army_data army, int back_col, int pawn_col, int dx) {
-		int[] back = { 1, 2, 3, 5, 4, 3, 2, 1 };
-
-		for (int i = 0; i < ARM; i++)
-			piece_util.create_piece(back_col, ARM + i, back[i], army, dx, 0);
-
-		for (int i = 0; i < ARM; i++)
-			piece_util.create_piece(pawn_col, ARM + i, 0, army, dx, 0);
-	}
-
-    // =========================================================================
-    // PIECE INPUT
->>>>>>> 3fa99dbaf5cc16841a5972d8388a8bdd48a6a2b6
->>>>>>> Stashed changes
     // =========================================================================
 
     void HandlePieceInput() {
@@ -830,14 +437,10 @@ public class Game : MonoBehaviour {
             move_plate_util.spawn_plate(ref src.troop_list[hovered_i], hovered_i, hovered_color);
         }
 
-<<<<<<< Updated upstream
         ScalePieces();
     }
 
     void ScalePieces() {
-=======
-        // Scale pass
->>>>>>> Stashed changes
         for (int color = 0; color < data.mem.total_players; color++) {
             data.army_data army = data.mem.armies[color];
             for (int i = 0; i < army.troop_count; i++) {
@@ -860,10 +463,6 @@ public class Game : MonoBehaviour {
 
             bool  hov        = mp.rect.mouse_hover == 1;
             Color base_color = mp.attack ? Color.red : Color.white;
-<<<<<<< Updated upstream
-=======
-            bool  hov        = mp.rect.mouse_hover == 1;
->>>>>>> Stashed changes
             mp.rect.set_color(hov ? base_color + new Color(0.4f, 0.4f, 0.4f, 0f) : base_color);
             float sc = hov ? mp.hover_sprite_scale : mp.normal_sprite_scale;
             mp.rect.set_sprite_scale(sc, sc);
@@ -871,7 +470,6 @@ public class Game : MonoBehaviour {
             if (mp.rect.mouse_unclick != 1) continue;
             mp.rect.mouse_unclick = 0;
 
-<<<<<<< Updated upstream
             ref data.chess_piece attacker = ref data.mem.armies[mp.piece_color].troop_list[mp.piece_index];
 
             if (!mp.attack) {
@@ -888,18 +486,6 @@ public class Game : MonoBehaviour {
                     piece_util.move_piece(ref attacker, mp.piece_index, mp.piece_color, mp.mat_x, mp.mat_y);
                 attacker.has_moved = 1;
                 ClearEnPassant();
-=======
-            data.army_data       army     = data.mem.armies[mp.piece_color];
-            ref data.chess_piece attacker = ref army.troop_list[mp.piece_index];
-
-            if (!mp.attack) {
-                sound_util.play_sound(data.mem.moveSound);
-                piece_util.move_piece(ref attacker, mp.piece_index, mp.piece_color, mp.mat_x, mp.mat_y);
-            } else {
-                piece_util.piece_attack(ref attacker, mp.mat_x, mp.mat_y, mp.rect.obj.transform.position);
-                if (attacker.piece_type != 7)
-                    piece_util.move_piece(ref attacker, mp.piece_index, mp.piece_color, mp.mat_x, mp.mat_y);
->>>>>>> Stashed changes
             }
 
             data.mem.selected_a_piece = 0;
@@ -968,21 +554,14 @@ public class Game : MonoBehaviour {
             cam_2d.x    = Mathf.Lerp(data.mem.evolving_pos.x, data.mem.evoStartX, k);
             cam_2d.y    = Mathf.Lerp(data.mem.evolving_pos.y, data.mem.evoStartY, k);
         } else {
-<<<<<<< Updated upstream
             cam_2d.size = data.mem.evoStartSize;
             cam_2d.x    = data.mem.evoStartX;
             cam_2d.y    = data.mem.evoStartY;
-=======
-            cam_2d.size      = data.mem.evoStartSize;
-            cam_2d.x         = data.mem.evoStartX;
-            cam_2d.y         = data.mem.evoStartY;
->>>>>>> Stashed changes
             data.mem.evoZoom = 0;
         }
 
         cam_2d.apply();
     }
-<<<<<<< Updated upstream
 
     // =========================================================================
     // SETTINGS  (in-game gear button + overlay)
@@ -1113,6 +692,3 @@ public class Game : MonoBehaviour {
         }
     }
 }
-=======
-}
->>>>>>> Stashed changes
