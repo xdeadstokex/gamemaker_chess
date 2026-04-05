@@ -22,7 +22,7 @@ public class Game : MonoBehaviour {
         // Camera drag + zoom
         cam_2d.zoom(mouse_util.scroll);
         if (mouse_util.right.hold == 1)
-            cam_2d.move(-mouse_util.dx * 0.1f, -mouse_util.dy * 0.1f);
+            cam_2d.move(-mouse_util.dx * 0.3f, -mouse_util.dy * 0.3f);
 
         zoom_on_evolving_piece();
 
