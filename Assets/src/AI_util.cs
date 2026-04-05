@@ -162,7 +162,7 @@ public static class AI_util {
     // TACTICS & HEURISTICS
     // =========================================================================
     public static float GetPieceValue(ref data.chess_piece cp) {
-        if (cp.piece_type == 5 || cp.piece_type == 7) return 10000f; 
+        if (cp.piece_type == 5 || cp.piece_type == 7) return 10000f; //king, king promax
         if (cp.piece_type == 4 || cp.piece_type == 6) return 900f;   
         if (cp.piece_type == 1) return 500f;                         
         if (cp.piece_type == 2 || cp.piece_type == 3) return 300f;   
