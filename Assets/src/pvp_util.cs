@@ -1,89 +1,104 @@
-﻿using System.Collections.Generic;
-using System.Collections;
-using UnityEngine;
-using UnityEngine.SceneManagement;
+﻿using UnityEngine;
 
 public static class pvp_util {
 
-    //scan for valid move
+    // =========================================================
+    // CHECK ANY VALID MOVE
+    // =========================================================
     public static bool CheckForAnyValidMove(int color) {
-        data.army_data army = data.mem.get_army(color);
-        
-        for (int i = 0; i < army.troop_count; i++) {
-            ref data.chess_piece cp = ref army.troop_list[i];
-            if (cp.rect == null) continue; //glory for the died one
+        var army = data.mem.get_army(color);
 
-            for (int tx = 0; tx < data.mem.board_w; tx++) {
-                for (int ty = 0; ty < data.mem.board_h; ty++) {
-                    
-                    if (piece_util.can_move_to(ref cp, tx, ty)) {
-                        bool isAttack = board_util.Cell(tx, ty).has_piece == 1;
-                        if (piece_util.IsSafeMove(i, color, tx, ty, isAttack)) {
-                            return true;//can save
-                        }
-                    }
-                }
-            }
+        for (int i = 0; i < army.troop_count; i++) {
+            ref var cp = ref army.troop_list[i];
+            if (cp.rect == null) continue;
+
+            for (int x = 0; x < data.mem.board_w; x++) {
+            for (int y = 0; y < data.mem.board_h; y++) {
+
+                if (!piece_util.can_move_to(ref cp, x, y)) continue;
+
+                bool atk = board_util.Cell(x, y).has_piece == 1;
+                if (piece_util.IsSafeMove(i, color, x, y, atk))
+                    return true;
+            }}
         }
-        return false;//call ambulance
+        return false;
     }
 
-    public static void next_player_turn() {
+    // =========================================================
+    // CHECK KING STATE
+    // =========================================================
+    static bool IsKingChecked(int color) {
+        var army = data.mem.get_army(color);
+
+        for (int i = 0; i < army.troop_count; i++) {
+            ref var cp = ref army.troop_list[i];
+
+            if (cp.piece_type == 5 && cp.rect != null) {
+                return AI_util.IsSquareAttacked(cp.x, cp.y, color);
+            }
+        }
+        return false;
+    }
+
+    // =========================================================
+    // FIND NEXT ALIVE PLAYER
+    // =========================================================
+    static int GetNextPlayer(int current) {
         int n = data.mem.total_players;
-        int next = (data.mem.current_player_color + 1) % n;
- 
-        //multiplayer
+        int next = (current + 1) % n;
+
         for (int i = 0; i < n; i++) {
-            if (data.mem.armies[next].troop_count > 0) break;
+            if (data.mem.armies[next].troop_count > 0)
+                return next;
+
             next = (next + 1) % n;
         }
- 
+        return next;
+    }
+
+    // =========================================================
+    // NEXT TURN
+    // =========================================================
+    public static void next_player_turn() {
+
+        int next = GetNextPlayer(data.mem.current_player_color);
         data.mem.current_player_color = next;
 
-        //check next player king checked ?
-        bool isChecked = false;
-        data.army_data army = data.mem.get_army(next);
-        
-        for (int i = 0; i < army.troop_count; i++) {
-            ref data.chess_piece cp = ref army.troop_list[i];
-            
-            if (cp.piece_type == 5 && cp.rect != null) {
-                if (AI_util.IsSquareAttacked(cp.x, cp.y, next)) {
-                    isChecked = true;
-                    break; 
-                }
+        bool checkedKing = IsKingChecked(next);
+        bool hasMove     = CheckForAnyValidMove(next);
+
+        // reset state
+        data.mem.turn_state = 0;
+
+        // =====================================================
+        // END GAME
+        // =====================================================
+        if (!hasMove) {
+            data.mem.gameOver = true;
+            data.mem.turn_state = checkedKing ? 2 : 3;
+
+            if (data.mem.endSound)
+                sound_util.play_sound(data.mem.endSound);
+
+            if (checkedKing) {
+                Debug.Log($"<color=red>CHECKMATE! Player {next} lost.</color>");
+            } else {
+                Debug.Log($"<color=yellow>STALEMATE! Player {next} has no moves.</color>");
             }
+            return;
         }
 
-        // check next player has any valid move
-        bool hasValidMoves = CheckForAnyValidMove(next);
+        // =====================================================
+        // CHECK
+        // =====================================================
+        if (checkedKing) {
+            data.mem.turn_state = 1;
 
-        //lose or draw
-        if (!hasValidMoves) {
-            data.mem.gameOver = true; //gg
-            
-            if (data.mem.endSound != null) {
-                sound_util.play_sound(data.mem.endSound);
-            }
-            
-            //!=========================================
-            /*
-                make ui for checkmate and draw below
-            */
-            //!=========================================
-
-            if (isChecked) {
-                Debug.Log($"<color=red>CHIẾU HẾT (CHECKMATE)! Phe {next} đã bị dồn vào đường cùng và Thua cuộc!</color>");
-            } else {
-                Debug.Log($"<color=yellow>HÒA CỜ (STALEMATE)! Phe {next} không bị chiếu nhưng hết nước đi hợp lệ!</color>");
-            }
-        } 
-        else if (isChecked) {
-            //is checked but still ok
-            if (data.mem.checkSound != null) {
+            if (data.mem.checkSound)
                 sound_util.play_sound(data.mem.checkSound);
-            }
-            Debug.Log($"<color=red>CHIẾU! Phe {next} đang bị đe dọa Vua!</color>");
+
+            Debug.Log($"<color=red>CHECK! Player {next} king is threatened.</color>");
         }
     }
 }
