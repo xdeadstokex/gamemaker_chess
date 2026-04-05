@@ -389,11 +389,44 @@ public class Game : MonoBehaviour {
 
             if (!mp.attack) {
                 sound_util.play_sound(data.mem.moveSound);
+
+                if (attacker.piece_type == 0 && Mathf.Abs(mp.mat_y - attacker.y) == 2) {
+                    data.mem.en_passant_x = attacker.x;
+                    data.mem.en_passant_y = attacker.y + (mp.mat_y - attacker.y) / 2;
+                } else {
+                    data.mem.en_passant_x = -1;
+                    data.mem.en_passant_y = -1;
+                }
+
+                if ((attacker.piece_type == 5 || attacker.piece_type == 7) && Mathf.Abs(mp.mat_x - attacker.x) == 2) {
+                    bool isKingside = mp.mat_x > attacker.x;
+                    int rookX = isKingside ? (attacker.x + 3) : (attacker.x - 4);
+                    int newRookX = isKingside ? (attacker.x + 1) : (attacker.x - 1);
+                    
+                    ref data.board_cell rookCell = ref board_util.Cell(rookX, attacker.y);
+                    if (rookCell.has_piece == 1) {
+                        ref data.chess_piece rook = ref data.mem.get_army(rookCell.piece_color).troop_list[rookCell.piece_index];
+                        piece_util.move_piece(ref rook, rookCell.piece_index, rookCell.piece_color, newRookX, attacker.y);
+                        rook.has_moved = 1;
+                    }
+                }
+
+                attacker.has_moved = 1;
                 piece_util.move_piece(ref attacker, mp.piece_index, mp.piece_color, mp.mat_x, mp.mat_y);
-            } else {
-                piece_util.piece_attack(ref attacker, mp.mat_x, mp.mat_y, mp.rect.obj.transform.position);
+            } 
+            else {
+                if (board_util.Cell(mp.mat_x, mp.mat_y).has_piece == 0) {
+                    piece_util.piece_attack(ref attacker, mp.mat_x, attacker.y, mp.rect.obj.transform.position); 
+                } else {
+                    piece_util.piece_attack(ref attacker, mp.mat_x, mp.mat_y, mp.rect.obj.transform.position);
+                }
+                
                 if (attacker.piece_type != 7)
                     piece_util.move_piece(ref attacker, mp.piece_index, mp.piece_color, mp.mat_x, mp.mat_y);
+                    
+                attacker.has_moved = 1;
+                data.mem.en_passant_x = -1;
+                data.mem.en_passant_y = -1;
             }
 
             data.mem.selected_a_piece = 0;

@@ -56,6 +56,7 @@ public class data : MonoBehaviour {
         // direction this piece's pawns advance: (0,+1)=up (0,-1)=down (+1,0)=right (-1,0)=left
         public int     pawn_dir_x;
         public int     pawn_dir_y;
+        public int has_moved; //0 = not moved. 1 = moved
     }
 
     // =========================================================================
@@ -267,6 +268,12 @@ public class data : MonoBehaviour {
     // CARDS
     // =========================================================================
 
+
+    // =========================================================================
+    // SPECIAL
+    // =========================================================================
+    public int en_passant_x = -1;
+    public int en_passant_y = -1;
 
 
     // =========================================================================
