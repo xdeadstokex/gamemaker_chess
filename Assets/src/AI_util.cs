@@ -7,16 +7,21 @@ public static class AI_util {
     // =========================================================================
     // ENTRY POINT
     // =========================================================================
+    // =========================================================================
+    // ENTRY POINT
+    // =========================================================================
     public static IEnumerator PlayAITurn() {
         data.mem.isAIThinking = true;
         int color = data.mem.current_player_color;
+
         if (GATrainer.instance == null || !GATrainer.instance.isTraining) yield return new WaitForSeconds(0.1f);
 
+        // Phân bổ thuật toán theo cấp độ khó
         data.AIMove move = data.mem.ai_difficulty switch {
-            AIDifficulty.Baby   => RandMove(GenerateAllValidMoves(color)),
-            AIDifficulty.Easy   => CalculateGreedyMove(color), // Đổi thành Greedy
+            AIDifficulty.Baby   => CalculateGreedyMove(color),
+            AIDifficulty.Easy   => CalculateMCTSMove(color),   
             AIDifficulty.Normal => CalculateMinimaxMove(color),
-            AIDifficulty.Asean  => CalculateMinimaxMove(color), // Asean cũng dùng Minimax
+            AIDifficulty.Asean  => CalculateMinimaxMove(color), 
             _                   => new data.AIMove { piece_index = -1 }
         };
 
@@ -168,38 +173,35 @@ public static class AI_util {
                 dna = GATrainer.instance.currentDNAs[cp.player_color];
             }
         }
-        // === NẠP NÃO CHO TỪNG BOT THEO MÀU ===
         else if (data.mem != null && data.mem.pveBrains != null && data.mem.pveBrains.Count > 0 && 
                 (data.mem.ai_difficulty == AIDifficulty.Asean || data.mem.ai_difficulty == AIDifficulty.Normal)) {
             
-            // Giả sử Player là màu 0, Bot là màu 1, 2, 3. 
-            // Bot màu 1 sẽ lấy não pveBrains[0], Bot màu 2 lấy não pveBrains[1], v.v.
             int brainIndex = Mathf.Clamp(cp.player_color - 1, 0, data.mem.pveBrains.Count - 1);
             dna = data.mem.pveBrains[brainIndex];
         }
 
         // ========================================================
-        // TÍNH TOÁN GIÁ TRỊ CƠ BẢN
+        // TÍNH TOÁN GIÁ TRỊ CƠ BẢN (KHÓA MỨC TỐI THIỂU)
         // ========================================================
         float baseVal = 100f;
 
         if (dna != null) { 
             switch (cp.piece_type) {
-                case 5: case 7: return 10000f; 
-                case 4: baseVal = dna.weights[3]; break;
-                case 6: baseVal = dna.weights[9]; break;
-                case 1: baseVal = dna.weights[2]; break;
-                case 2: baseVal = dna.weights[1]; break;
-                case 3: baseVal = dna.weights[1]; break;
+                case 5: case 7: return 100000f; // Vua vô giá
+                case 4: baseVal = Mathf.Max(dna.weights[3], 800f); break; // Ép Hậu tối thiểu 800
+                case 6: baseVal = Mathf.Max(dna.weights[9], 800f); break;
+                case 1: baseVal = Mathf.Max(dna.weights[2], 400f); break; // Xe tối thiểu 400
+                case 2: baseVal = Mathf.Max(dna.weights[1], 250f); break;
+                case 3: baseVal = Mathf.Max(dna.weights[1], 250f); break;
                 case 0:
                     if (cp.evolved == 1) baseVal = (cp.evolved_type == 2) ? dna.weights[5] : dna.weights[4]; 
-                    else baseVal = dna.weights[0];
+                    else baseVal = Mathf.Min(dna.weights[0], 150f); // Tốt tối đa 150
                     break;
             }
         } else {
-            // Dự phòng hoặc Baby/Easy
+            // ... (Đoạn fallback giữ nguyên như cũ)
             switch (cp.piece_type) {
-                case 5: case 7: return 10000f;
+                case 5: case 7: return 100000f;
                 case 4: case 6: baseVal = 900f; break;
                 case 1:         baseVal = 500f; break;
                 case 2: case 3: baseVal = 300f; break;
@@ -209,10 +211,7 @@ public static class AI_util {
                     break;
             }
         }
-
-        // ========================================================
-        // TÍNH TOÁN ĐIỂM THƯỞNG (DÙNG GEN 10 NẾU CÓ)
-        // ========================================================
+        // ... (Đoạn thưởng điểm giữ nguyên)
         float bountyWeight = (dna != null && dna.weights.Length > 10) ? (dna.weights[10] / 10f) : 3.0f;
         float bonus = cp.score * (10f * bountyWeight); 
         
@@ -339,34 +338,37 @@ public static class AI_util {
         ref var attacker = ref army.troop_list[move.piece_index];
 
         float atkVal = GetPieceValue(ref attacker);
-
-        // ========================================================
-        // 🚨 SỬA LỖI MOVE ORDERING: BẢN NĂNG SINH TỒN 🚨
-        // ========================================================
-        // Kiểm tra xem quân này ở vị trí CŨ có đang bị ngắm bắn không
         bool currentlyAttacked = IsSquareAttacked(attacker.x, attacker.y, color);
         if (currentlyAttacked && atkVal >= 300f) {
-            // NẾU ĐANG BỊ ĐE DỌA, ĐẨY NƯỚC ĐI NÀY LÊN ĐẦU DANH SÁCH (Cộng 5000 điểm)
             score += atkVal * 10f; 
             
-            // Nếu nhảy tới ô mới mà an toàn thì thưởng thêm cực mạnh
             if (!IsSquareAttacked(move.targetX, move.targetY, color)) {
                 score += atkVal * 10f; 
             }
         }
-        // ========================================================
 
         if (move.isAttack) {
             ref var cell   = ref board_util.Cell(move.targetX, move.targetY);
             var     target = data.mem.get_army(cell.piece_color).troop_list[cell.piece_index];
 
+            // SÁT THỦ MÁU LẠNH: Nếu nước đi này là ĂN VUA -> Ưu tiên tuyệt đối!
+            if (target.piece_type == 5 || target.piece_type == 7) {
+                return 999999f; 
+            }
+
             float tgtVal = GetPieceValue(ref target);
             bool squareDefended = IsSquareAttacked(move.targetX, move.targetY, color);
             
-            float netGain = tgtVal - (squareDefended ? atkVal : 0f);
-            score += netGain * 10f + 1000f;  // Ưu tiên ăn quân
+            // Trừ điểm nếu thí Hậu/Xe vào ô địch đang canh giữ
+            if (squareDefended && atkVal > tgtVal + 200f) {
+                score -= 5000f; 
+            } else {
+                float netGain = tgtVal - (squareDefended ? atkVal : 0f);
+                score += netGain * 10f + 1000f; 
+            }
         }
-
+        
+        // ... (Đoạn vị trí trung tâm và Tốt đẩy lên giữ nguyên)
         float cx = Mathf.Abs(move.targetX - data.mem.board_w * 0.5f);
         float cy = Mathf.Abs(move.targetY - data.mem.board_h * 0.5f);
         score += (10f - cx - cy);
@@ -586,8 +588,10 @@ public static class AI_util {
             if (n++ >= limit) break;
             var   undo = DoMoveFast(move, colorToMove);
             int   next = GetNextActiveColor(colorToMove);
+            
+            // TĂNG ĐIỂM KHI ĂN VUA THÊM 1 SỐ 9
             float eval = undo.is_king_dead
-                ? (isMax ? 99999f + depth : -99999f - depth)
+                ? (isMax ? 999999f + depth : -999999f - depth) 
                 : Minimax(depth - 1, alpha, beta, next, aiColor, next == aiColor, move.isAttack);
             UndoMoveFast(undo);
 

@@ -1490,9 +1490,9 @@ MonoBehaviour:
   board_w: 0
   board_h: 0
   camera_bg_sprite: {fileID: 0}
-  menu_bg_sprite: {fileID: 0}
-  pve2_btn_sprite: {fileID: 0}
-  pve3_btn_sprite: {fileID: 0}
+  menu_bg_sprite: {fileID: -6311352213680616822, guid: 378f52691950c754f92789f4fc137198, type: 3}
+  pve2_btn_sprite: {fileID: -387798895787037788, guid: f1604db42aba41f468c9dfa676a9785f, type: 3}
+  pve3_btn_sprite: {fileID: 1017499566100369943, guid: 0605754968c9b7144bf94552b9d2eccf, type: 3}
   pvp_btn_sprite: {fileID: 4049157492619089546, guid: 42e75c0885f5414489261432ddc91903, type: 3}
   pve_btn_sprite: {fileID: 8457386649788975288, guid: f952858c0b4c66f41b1ccbb23e58b892, type: 3}
   back_btn_sprite: {fileID: -4571828015118065507, guid: a82139da608d5cd479287ad7fd24ebfe, type: 3}
@@ -1503,8 +1503,8 @@ MonoBehaviour:
   diff2_btn_sprite: {fileID: -7810657052778308784, guid: 7059b4e4234fce848a123e0d20308d9c, type: 3}
   diff3_btn_sprite: {fileID: -5407382270401558378, guid: 47575a619ae20e64f978179aa8b0eff3, type: 3}
   diff4_btn_sprite: {fileID: 5328332788402992666, guid: c52040d18e3e5b84b90576c31ba86863, type: 3}
-  settings_btn_sprite: {fileID: 0}
-  menu_btn_sprite: {fileID: 0}
+  settings_btn_sprite: {fileID: -6416704506416456542, guid: 36e8f34faa088f642ada216d773f3a18, type: 3}
+  menu_btn_sprite: {fileID: 5251744956290624300, guid: 4e8a739f738bb8548a7bfb3b9575bb27, type: 3}
   main_screen_gui: {fileID: 0}
   pvp_button: {fileID: 0}
   pve_button: {fileID: 0}
@@ -1529,8 +1529,8 @@ MonoBehaviour:
   card_god: {fileID: -7684102119012213494, guid: e032e7a33f41f5e46a9dfd6b62eca9ed, type: 3}
   card_gun: {fileID: -6628414004274166170, guid: 48fe43b93ba2c16489a29ee160119f5f, type: 3}
   card_thunder: {fileID: 9078623318578753597, guid: 57127931c242ab541a4851012625984a, type: 3}
-  card_rock: {fileID: 0}
-  rock: {fileID: 0}
+  card_rock: {fileID: 8756218830931252041, guid: 68de1bf78b3004c48b82a28016f45bd9, type: 3}
+  rock: {fileID: -2182124076254010665, guid: 4968ebb5dcbf9af4084eeaf044bb4c60, type: 3}
   gameOver: 0
   current_player_color: 0
   selected_a_piece: 0
@@ -1553,10 +1553,6 @@ MonoBehaviour:
   current_turn_count: 0
   aiColor: 1
   isAIThinking: 0
-<<<<<<< HEAD
-  pveBrains: []
-  turns_without_progress: 0
-=======
   pveBrain:
     weights:
     - 0
@@ -1572,7 +1568,6 @@ MonoBehaviour:
     - 0
     - 0
     fitness: 0
->>>>>>> main
   board_tile0: {fileID: -2845123107130222339, guid: 2589ea6c1e955f989a6477bf85c14a98, type: 3}
   board_tile1: {fileID: 2014498029736853455, guid: 6396a7b39e50368128a40695aebdf80f, type: 3}
   board_tile2: {fileID: -2845123107130222339, guid: 2589ea6c1e955f989a6477bf85c14a98, type: 3}
@@ -1645,24 +1640,6 @@ MonoBehaviour:
   startSound: {fileID: 8300000, guid: c3774de02d88a2840bf7b3672546b812, type: 3}
   endSound: {fileID: 8300000, guid: 8b43868e6f5a0704cb3e13eaf8976a6c, type: 3}
   timeLess: {fileID: 8300000, guid: 98d41c6a4a5e4264aa7597930c2043a1, type: 3}
-<<<<<<< HEAD
-  pawnEvolveSound: {fileID: 0}
-  knightEvolveSound: {fileID: 0}
-  GodqueenEvolveSound: {fileID: 0}
-  kingEvolveSound: {fileID: 0}
-  DemonqueenEvolveSound: {fileID: 0}
-  bishopEvolveSound: {fileID: 0}
-  rookEvolveSound: {fileID: 0}
-  burstSound: {fileID: 0}
-  cardDrawSound: {fileID: 0}
-  cardPlaySound: {fileID: 0}
-  cardBuffSound: {fileID: 0}
-  cardDebuffSound: {fileID: 0}
-  themesound: {fileID: 0}
-  clicksound: {fileID: 0}
-  winSound: {fileID: 0}
-  loseSound: {fileID: 0}
-=======
   pawnEvolveSound: {fileID: 8300000, guid: b0835c171d7684144ab1725dca49744c, type: 3}
   knightEvolveSound: {fileID: 8300000, guid: f1ceb830dc0d07549aa861b864f29541, type: 3}
   GodqueenEvolveSound: {fileID: 8300000, guid: 7a9def3acd8ee3d4089a2bdd82883ca4, type: 3}
@@ -1681,7 +1658,6 @@ MonoBehaviour:
   loseSound: {fileID: 8300000, guid: ab64ee8fdb053f64594d6d2f8954b4a1, type: 3}
   mutebutn: {fileID: 0}
   unmutebtn: {fileID: 0}
->>>>>>> main
   en_passant_x: -1
   en_passant_y: -1
 --- !u!4 &1239710108
@@ -2290,59 +2266,6 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 4474192150969876591, guid: aa0ce4367a93f8140a3ecc4c88c73c77, type: 3}
   m_PrefabInstance: {fileID: 1666784353}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &1930017025
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1930017027}
-  - component: {fileID: 1930017028}
-  m_Layer: 0
-  m_Name: GATrainer
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1930017027
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1930017025}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.1758064, y: -0.14296806, z: -0.0025274148}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1930017028
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1930017025}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8140e20333d2a104a9fab0c5d2e66da4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  isTraining: 1
-  populationSize: 40
-  mutationRate: 0.1
-  eliteCount: 2
-  currentGeneration: 1
-  currentMatchIndex: 0
-  population: []
-  playersPerMatch: 4
-  currentDNAs: []
 --- !u!1 &2022160386
 GameObject:
   m_ObjectHideFlags: 0
@@ -2756,4 +2679,3 @@ SceneRoots:
   - {fileID: 1728710305}
   - {fileID: 609339474}
   - {fileID: 2023649121}
-  - {fileID: 1930017027}

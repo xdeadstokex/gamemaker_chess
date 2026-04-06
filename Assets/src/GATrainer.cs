@@ -12,8 +12,35 @@ public class BotDNA {
     public BotDNA() {}
 
     public void InitializeRandom() {
+        // Cấp cho thế hệ đầu tiên tỷ lệ vàng gần giống cờ vua tiêu chuẩn
+        weights[0] = Random.Range(80f, 150f);   // Tốt thường
+        weights[1] = Random.Range(280f, 350f);  // Tượng/Mã
+        weights[2] = Random.Range(480f, 550f);  // Xe
+        weights[3] = Random.Range(850f, 1000f); // 🚨 Hậu (Bắt buộc khởi điểm cao)
+        weights[4] = Random.Range(300f, 400f);  // Tốt tiến hóa
+        weights[5] = Random.Range(800f, 1000f); // Tốt tiến hóa xịn
+
+        // Các trọng số chiến thuật (từ index 6 trở đi) vẫn để ngẫu nhiên
+        for (int i = 6; i < weights.Length; i++) {
+            weights[i] = Random.Range(10f, 50f); 
+        }
+    }
+
+    // Đột biến (Mutate)
+    public void Mutate(float mutationRate) {
         for (int i = 0; i < weights.Length; i++) {
-            weights[i] = Random.Range(10f, 500f); 
+            if (Random.value < mutationRate) {
+                // Đột biến theo tỷ lệ phần trăm (thay đổi nhẹ +/- 15% để tránh phá hỏng gen tốt)
+                float change = weights[i] * Random.Range(-0.15f, 0.15f); 
+                weights[i] += change;
+
+                // Khóa chặn: Riêng Gen số 3 (Hậu) và 5 (Tốt xịn) không bao giờ cho rớt dưới 800
+                if (i == 3 || i == 5) {
+                    weights[i] = Mathf.Clamp(weights[i], 800f, 2000f);
+                } else {
+                    weights[i] = Mathf.Clamp(weights[i], 1f, 2000f); 
+                }
+            }
         }
     }
 
@@ -24,18 +51,6 @@ public class BotDNA {
             child.weights[i] = Random.value > 0.5f ? this.weights[i] : partner.weights[i];
         }
         return child;
-    }
-
-    // Đột biến (Mutate)
-    public void Mutate(float mutationRate) {
-        for (int i = 0; i < weights.Length; i++) {
-            if (Random.value < mutationRate) {
-                // Đột biến theo tỷ lệ phần trăm thay vì cộng trừ cứng
-                float change = weights[i] * Random.Range(-0.2f, 0.2f); // +/- 20%
-                weights[i] += change;
-                if (weights[i] < 1f) weights[i] = 1f; // Không cho âm hoặc bằng 0
-            }
-        }
     }
 }
 
@@ -129,6 +144,7 @@ public class GATrainer : MonoBehaviour {
                     currentDNAs[i].fitness += 2f; // Kẻ thua cuộc (Chết)
                 } else {
                     currentDNAs[i].fitness += 20f; // Kẻ còn sống
+                    currentDNAs[i].fitness += 70f;
                 }
             }
         }
@@ -145,7 +161,7 @@ public class GATrainer : MonoBehaviour {
         }
 
         // 3. Phạt câu giờ
-        float turnPenalty = totalTurns * 0.02f;
+        float turnPenalty = totalTurns * 0.05f;
         for (int i = 0; i < playersPerMatch; i++) {
              currentDNAs[i].fitness -= turnPenalty;
         }

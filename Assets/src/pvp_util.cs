@@ -75,10 +75,10 @@ public static class pvp_util {
 
         bool forceDraw = false;
         
-        int noProgressLimit = data.mem.total_players * 50; 
+        int noProgressLimit = data.mem.total_players * 35; 
         
         // 🚨 THÊM GIỚI HẠN SINH TỬ: Dù có tiến triển hay không, tới Turn này là CHÉM!
-        int absoluteLimit = data.mem.total_players * 80; 
+        int absoluteLimit = data.mem.total_players * 120; 
 
         // Ép hòa nếu vượt quá giới hạn rác HOẶC quá giới hạn sinh tử
         if (GATrainer.instance != null && GATrainer.instance.isTraining) {
