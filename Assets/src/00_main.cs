@@ -92,6 +92,7 @@ public class Game : MonoBehaviour {
 
         if (isAITurn) {
             if (!data.mem.isAIThinking) StartCoroutine(AI_util.PlayAITurn());
+            ClearEnPassant();
             return;
         }
 

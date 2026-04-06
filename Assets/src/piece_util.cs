@@ -172,34 +172,44 @@ public static class piece_util {
     }
 
     public static bool valid_pawn(ref data.chess_piece cp, int tx, int ty, int dx_dir, int dy_dir) {
-    int dx = tx - cp.x;
-    int dy = ty - cp.y;
+        int dx = tx - cp.x;
+        int dy = ty - cp.y;
 
-    // 1. Logic Ăn quân (Di chuyển chéo so với hướng đi thẳng)
-    // Nếu đi dọc (dy_dir != 0): ăn khi |dx|=1 và dy=dy_dir
-    // Nếu đi ngang (dx_dir != 0): ăn khi |dy|=1 và dx=dx_dir
-    bool isDiagonalStep = (dy_dir != 0) ? (Mathf.Abs(dx) == 1 && dy == dy_dir) 
-                                        : (Mathf.Abs(dy) == 1 && dx == dx_dir);
+        // 1. Kiểm tra bước đi chéo (Chỉ dành cho việc ăn quân)
+        bool isDiagonalStep = (dy_dir != 0) ? (Mathf.Abs(dx) == 1 && dy == dy_dir) 
+                                            : (Mathf.Abs(dy) == 1 && dx == dx_dir);
 
-    if (isDiagonalStep) {
-        ref data.board_cell cell = ref board_util.Cell(tx, ty);
-        return cell.has_piece == 1 && data.mem.get_army(cell.piece_color).troop_list[cell.piece_index].player_color != cp.player_color;
+        if (isDiagonalStep) {
+            // Kiểm tra ô đích
+            ref data.board_cell cell = ref board_util.Cell(tx, ty);
+            
+            // ĐIỀU KIỆN QUAN TRỌNG: Phải có quân cờ ở ô đích
+            if (cell.has_piece == 1) {
+                return data.mem.get_army(cell.piece_color).troop_list[cell.piece_index].player_color != cp.player_color;
+            }
+            
+            // Kiểm tra thêm luật En Passant (Bắt chốt qua đường) nếu bạn có dùng
+            if (tx == data.mem.en_passant_x && ty == data.mem.en_passant_y) {
+                return true;
+            }
+
+            return false; // Đi chéo mà không có quân thì không cho đi
+        }
+
+        // 2. Logic Đi thẳng 1 ô (Bắt buộc ô đích phải TRỐNG)
+        if (dx == dx_dir && dy == dy_dir) {
+            return board_util.Cell(tx, ty).has_piece == 0;
+        }
+
+        // 3. Logic Đi thẳng 2 ô (Nước đầu tiên - Bắt buộc cả đường đi và ô đích phải TRỐNG)
+        if (cp.has_moved == 0 && dx == dx_dir * 2 && dy == dy_dir * 2) {
+            bool intermediateEmpty = board_util.Cell(cp.x + dx_dir, cp.y + dy_dir).has_piece == 0;
+            bool destinationEmpty  = board_util.Cell(tx, ty).has_piece == 0;
+            return intermediateEmpty && destinationEmpty;
+        }
+
+        return false;
     }
-
-    // 2. Logic Đi thẳng 1 ô
-    if (dx == dx_dir && dy == dy_dir) {
-        return board_util.Cell(tx, ty).has_piece == 0;
-    }
-
-    // 3. Logic Đi thẳng 2 ô (Nước đi đầu tiên)
-    if (cp.has_moved == 0 && dx == dx_dir * 2 && dy == dy_dir * 2) {
-        bool intermediateEmpty = board_util.Cell(cp.x + dx_dir, cp.y + dy_dir).has_piece == 0;
-        bool destinationEmpty  = board_util.Cell(tx, ty).has_piece == 0;
-        return intermediateEmpty && destinationEmpty;
-    }
-
-    return false;
-}
 
     public static bool valid_line(ref data.chess_piece cp, int tx, int ty) {
         if (tx != cp.x && ty != cp.y) return false;
