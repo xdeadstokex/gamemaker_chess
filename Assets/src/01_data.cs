@@ -253,7 +253,8 @@ public class data : MonoBehaviour {
     public int        aiColor     = 1;
     public bool       isAIThinking= false;
     public static AIMove    lastAIMove           = new AIMove { piece_index = -1 };
-    public BotDNA pveBrain;
+    public List<BotDNA> pveBrains = new List<BotDNA>();
+    public int turns_without_progress = 0;
 
     // =========================================================================
     // SPRITES

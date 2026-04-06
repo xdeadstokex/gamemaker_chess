@@ -7,16 +7,21 @@ public static class AI_util {
     // =========================================================================
     // ENTRY POINT
     // =========================================================================
+    // =========================================================================
+    // ENTRY POINT
+    // =========================================================================
     public static IEnumerator PlayAITurn() {
         data.mem.isAIThinking = true;
         int color = data.mem.current_player_color;
+
         if (GATrainer.instance == null || !GATrainer.instance.isTraining) yield return new WaitForSeconds(0.1f);
 
+        // Phân bổ thuật toán theo cấp độ khó
         data.AIMove move = data.mem.ai_difficulty switch {
-            AIDifficulty.Baby   => RandMove(GenerateAllValidMoves(color)),
-            AIDifficulty.Easy   => CalculateGreedyMove(color), // Đổi thành Greedy
+            AIDifficulty.Baby   => CalculateGreedyMove(color),
+            AIDifficulty.Easy   => CalculateMCTSMove(color),   
             AIDifficulty.Normal => CalculateMinimaxMove(color),
-            AIDifficulty.Asean  => CalculateMinimaxMove(color), // Asean cũng dùng Minimax
+            AIDifficulty.Asean  => CalculateMinimaxMove(color), 
             _                   => new data.AIMove { piece_index = -1 }
         };
 
@@ -60,16 +65,23 @@ public static class AI_util {
         var moves = GenerateAllValidMoves(color);
         if (moves.Count == 0) return new data.AIMove { piece_index = -1 };
 
-        int   best    = -1;
+        int   best    = int.MinValue;
         var   bestAtk = new List<data.AIMove>();
 
         foreach (var m in moves) {
             if (!m.isAttack) continue;
             ref var cell = ref board_util.Cell(m.targetX, m.targetY);
-            var     t    = data.mem.get_army(cell.piece_color).troop_list[cell.piece_index];
-            int     val  = (t.piece_type == 5) ? 1000 : t.score;
-            if (val > best) { best = val; bestAtk.Clear(); }
-            if (val == best) bestAtk.Add(m);
+            var t = data.mem.get_army(cell.piece_color).troop_list[cell.piece_index];
+            var att = data.mem.get_army(color).troop_list[m.piece_index];
+
+            int tgtVal = (t.piece_type == 5) ? 10000 : t.score;
+            int atkVal = (att.piece_type == 5) ? 10000 : att.score;
+
+            bool defended = IsSquareAttacked(m.targetX, m.targetY, color);
+            int netVal = tgtVal - (defended ? atkVal : 0);
+
+            if (netVal > best) { best = netVal; bestAtk.Clear(); }
+            if (netVal == best && netVal > 0) bestAtk.Add(m);  
         }
 
         return bestAtk.Count > 0
@@ -157,37 +169,57 @@ public static class AI_util {
         BotDNA dna = null;
 
         if (GATrainer.instance != null && GATrainer.instance.isTraining) {
-            dna = (cp.player_color == 0) ? GATrainer.instance.currentWhiteDNA : GATrainer.instance.currentBlackDNA;
+            if (cp.player_color < GATrainer.instance.currentDNAs.Length) {
+                dna = GATrainer.instance.currentDNAs[cp.player_color];
+            }
         }
-        else if (data.mem != null && data.mem.ai_difficulty == AIDifficulty.Asean && data.mem.pveBrain != null) {
-            dna = data.mem.pveBrain;
+        else if (data.mem != null && data.mem.pveBrains != null && data.mem.pveBrains.Count > 0 && 
+                (data.mem.ai_difficulty == AIDifficulty.Asean || data.mem.ai_difficulty == AIDifficulty.Normal)) {
+            
+            int brainIndex = Mathf.Clamp(cp.player_color - 1, 0, data.mem.pveBrains.Count - 1);
+            dna = data.mem.pveBrains[brainIndex];
         }
+
+        // ========================================================
+        // TÍNH TOÁN GIÁ TRỊ CƠ BẢN (KHÓA MỨC TỐI THIỂU)
+        // ========================================================
+        float baseVal = 100f;
 
         if (dna != null) { 
             switch (cp.piece_type) {
-                case 5: case 7: return 10000f; 
-                case 4: return dna.weights[3]; 
-                case 6: return dna.weights[9];
-                case 1: return dna.weights[2]; 
-                case 2: return dna.weights[1];
-                case 3: return dna.weights[1];
+                case 5: case 7: return 100000f; // Vua vô giá
+                case 4: baseVal = Mathf.Max(dna.weights[3], 800f); break; // Ép Hậu tối thiểu 800
+                case 6: baseVal = Mathf.Max(dna.weights[9], 800f); break;
+                case 1: baseVal = Mathf.Max(dna.weights[2], 400f); break; // Xe tối thiểu 400
+                case 2: baseVal = Mathf.Max(dna.weights[1], 250f); break;
+                case 3: baseVal = Mathf.Max(dna.weights[1], 250f); break;
                 case 0:
-                    if (cp.evolved == 1) return (cp.evolved_type == 2) ? dna.weights[5] : dna.weights[4]; 
-                    return dna.weights[0];
-                default: return 100f;
+                    if (cp.evolved == 1) baseVal = (cp.evolved_type == 2) ? dna.weights[5] : dna.weights[4]; 
+                    else baseVal = Mathf.Min(dna.weights[0], 150f); // Tốt tối đa 150
+                    break;
+            }
+        } else {
+            // ... (Đoạn fallback giữ nguyên như cũ)
+            switch (cp.piece_type) {
+                case 5: case 7: return 100000f;
+                case 4: case 6: baseVal = 900f; break;
+                case 1:         baseVal = 500f; break;
+                case 2: case 3: baseVal = 300f; break;
+                case 0:
+                    if (cp.evolved == 1) baseVal = (cp.evolved_type == 2) ? 500f : 300f;
+                    else baseVal = 100f;
+                    break;
             }
         }
-
-        switch (cp.piece_type) {
-            case 5: case 7: return 10000f;
-            case 4: case 6: return 900f;
-            case 1:         return 500f;
-            case 2: case 3: return 300f;
-            case 0:
-                if (cp.evolved == 1) return (cp.evolved_type == 2) ? 500f : 300f;
-                return 100f;
-            default: return 100f;
+        // ... (Đoạn thưởng điểm giữ nguyên)
+        float bountyWeight = (dna != null && dna.weights.Length > 10) ? (dna.weights[10] / 10f) : 3.0f;
+        float bonus = cp.score * (10f * bountyWeight); 
+        
+        if (cp.evolved == 1 && cp.piece_type != 0) { 
+            bonus += 400f; 
         }
+
+        return baseVal + bonus;
     }
 
     public static bool IsSquareAttacked(int x, int y, int defColor) {
@@ -240,21 +272,103 @@ public static class AI_util {
         return false;
     }
 
+    public static bool IsSquareDefended(int x, int y, int friendlyColor) {
+        ref var targetCell = ref board_util.Cell(x, y);
+        int oldHasPiece = targetCell.has_piece;
+        int oldColor = targetCell.piece_color;
+        targetCell.has_piece = 1;
+        targetCell.piece_color = (friendlyColor == 0) ? 1 : 0; 
+        
+        bool isDefended = false;
+
+        var army = data.mem.armies[friendlyColor];
+        for (int i = 0; i < army.troop_count; i++) {
+            ref var ep = ref army.troop_list[i];
+            if (ep.rect == null) continue;
+            
+            if (ep.x == x && ep.y == y) continue; 
+
+            int dx = Mathf.Abs(x - ep.x);
+            int dy = Mathf.Abs(y - ep.y);
+
+            if (ep.piece_type == 7) {
+                if (dx <= 2 && dy <= 2 && (dx > 0 || dy > 0)) { isDefended = true; break; }
+                continue;
+            }
+
+            if (ep.piece_type == 0) {
+                int dir = (ep.player_color == 0) ? 1 : -1;
+                if (dx == 1 && (y - ep.y) == dir) { isDefended = true; break; }
+                if (ep.evolved == 1) {
+                    if (ep.evolved_type == 2 && piece_util.valid_line(ref ep, x, y)) { isDefended = true; break; }
+                    if (ep.evolved_type == 0 && piece_util.valid_knight(ref ep, x, y)) { isDefended = true; break; }
+                    if (ep.evolved_type == 1 && piece_util.valid_diag(ref ep, x, y)) { isDefended = true; break; }
+                }
+                continue;
+            }
+
+            bool atk = ep.piece_type switch {
+                1 => piece_util.valid_line(ref ep, x, y),
+                2 => piece_util.valid_knight(ref ep, x, y),
+                3 => piece_util.valid_diag(ref ep, x, y),
+                4 => piece_util.valid_line(ref ep, x, y)   || piece_util.valid_diag(ref ep, x, y),
+                5 => piece_util.valid_king(ref ep, x, y),
+                6 => piece_util.valid_line(ref ep, x, y)   || piece_util.valid_diag(ref ep, x, y) || piece_util.valid_knight(ref ep, x, y),
+                _ => false
+            };
+
+            if (!atk && ep.evolved == 1) {
+                if (ep.piece_type == 2) atk = piece_util.valid_evo_knight(ref ep, x, y);
+                if (ep.piece_type == 3) atk = piece_util.valid_king(ref ep, x, y);
+                if (ep.piece_type == 6) atk = piece_util.valid_knight(ref ep, x, y);
+            }
+
+            if (atk) { isDefended = true; break; }
+        }
+
+        targetCell.has_piece = oldHasPiece;
+        targetCell.piece_color = oldColor;
+
+        return isDefended;
+    }
+
     public static float GetMoveHeuristic(data.AIMove move, int color) {
         float score = 0f;
         var army = data.mem.get_army(color);
         ref var attacker = ref army.troop_list[move.piece_index];
 
-        if (move.isAttack) {
-            ref var cell = ref board_util.Cell(move.targetX, move.targetY);
-            var target = data.mem.get_army(cell.piece_color).troop_list[cell.piece_index];
+        float atkVal = GetPieceValue(ref attacker);
+        bool currentlyAttacked = IsSquareAttacked(attacker.x, attacker.y, color);
+        if (currentlyAttacked && atkVal >= 300f) {
+            score += atkVal * 10f; 
             
-            float tgtVal = GetPieceValue(ref target);
-            float atkVal = GetPieceValue(ref attacker);
-
-            score += (tgtVal * 10f) - atkVal + 1000f; 
+            if (!IsSquareAttacked(move.targetX, move.targetY, color)) {
+                score += atkVal * 10f; 
+            }
         }
 
+        if (move.isAttack) {
+            ref var cell   = ref board_util.Cell(move.targetX, move.targetY);
+            var     target = data.mem.get_army(cell.piece_color).troop_list[cell.piece_index];
+
+            // SÁT THỦ MÁU LẠNH: Nếu nước đi này là ĂN VUA -> Ưu tiên tuyệt đối!
+            if (target.piece_type == 5 || target.piece_type == 7) {
+                return 999999f; 
+            }
+
+            float tgtVal = GetPieceValue(ref target);
+            bool squareDefended = IsSquareAttacked(move.targetX, move.targetY, color);
+            
+            // Trừ điểm nếu thí Hậu/Xe vào ô địch đang canh giữ
+            if (squareDefended && atkVal > tgtVal + 200f) {
+                score -= 5000f; 
+            } else {
+                float netGain = tgtVal - (squareDefended ? atkVal : 0f);
+                score += netGain * 10f + 1000f; 
+            }
+        }
+        
+        // ... (Đoạn vị trí trung tâm và Tốt đẩy lên giữ nguyên)
         float cx = Mathf.Abs(move.targetX - data.mem.board_w * 0.5f);
         float cy = Mathf.Abs(move.targetY - data.mem.board_h * 0.5f);
         score += (10f - cx - cy);
@@ -270,6 +384,25 @@ public static class AI_util {
     public static float EvaluateBoardRaw(int aiColor, int colorToMove) {
         float ai = 0, enemy = 0;
         for (int c = 0; c < data.mem.total_players; c++) {
+            
+            // --- LẤY BỘ GEN TƯƠNG ỨNG CHO MÀU CỜ NÀY ---
+            BotDNA dna = null;
+            if (GATrainer.instance != null && GATrainer.instance.isTraining) {
+                if (c < GATrainer.instance.currentDNAs.Length) dna = GATrainer.instance.currentDNAs[c];
+            } 
+            else if (data.mem != null && data.mem.pveBrains != null && data.mem.pveBrains.Count > 0 && 
+                    (data.mem.ai_difficulty == AIDifficulty.Asean || data.mem.ai_difficulty == AIDifficulty.Normal)) {
+                
+                int brainIndex = Mathf.Clamp(c - 1, 0, data.mem.pveBrains.Count - 1);
+                dna = data.mem.pveBrains[brainIndex];
+            }
+
+            // --- TRÍCH XUẤT CÁC GEN TÍNH CÁCH (NẾU CÓ) ---
+            float defBonus     = (dna != null && dna.weights.Length > 6) ? (dna.weights[6] / 10f) : 1.5f;
+            float pawnPush     = (dna != null && dna.weights.Length > 7) ? (dna.weights[7] / 10f) : 0.5f;
+            float centerCtrl   = (dna != null && dna.weights.Length > 8) ? (dna.weights[8] / 10f) : 1.0f;
+            float kingParanoia = (dna != null && dna.weights.Length > 11)? (dna.weights[11] / 10f) : 5.0f;
+
             float s = 0;
             for (int p = 0; p < data.mem.armies[c].troop_count; p++) {
                 ref var cp = ref data.mem.armies[c].troop_list[p];
@@ -278,15 +411,32 @@ public static class AI_util {
                 float val = GetPieceValue(ref cp);
                 float cx  = Mathf.Abs(cp.x - data.mem.board_w * 0.5f);
                 float cy  = Mathf.Abs(cp.y - data.mem.board_h * 0.5f);
-                float pos = 10f - cx - cy;
+                
+                // [GEN 8]: Ưu tiên chiếm trung tâm
+                float pos = (10f - cx - cy) * centerCtrl;
 
                 if (cp.piece_type == 0) {
                     int fwd = (cp.player_color == 0) ? cp.y : (data.mem.board_h - 1 - cp.y);
-                    pos += fwd * 2f;
+                    // [GEN 7]: Khuyến khích Tốt tiến
+                    pos += fwd * (10f * pawnPush);
                 }
 
-                if ((cp.piece_type == 5 || cp.piece_type == 7) && IsSquareAttacked(cp.x, cp.y, c))
-                    val *= (c == colorToMove) ? 0.5f : 0.1f;
+                bool isAttacked = IsSquareAttacked(cp.x, cp.y, c);
+                bool isDefended = IsSquareDefended(cp.x, cp.y, c);
+
+                if ((cp.piece_type == 5 || cp.piece_type == 7) && isAttacked) {
+                    // [GEN 11]: Nỗi sợ Vua bị chiếu
+                    pos -= (10f * kingParanoia); 
+                } 
+                else if (val >= 300f && isAttacked) {
+                    if (isDefended) pos -= val * 0.5f; 
+                    else            pos -= val * 0.9f; 
+                }
+                
+                // [GEN 6]: Tính bầy đàn (Liên kết đội hình)
+                if (isDefended && cp.piece_type != 5 && cp.piece_type != 7) {
+                    pos += (10f * defBonus); 
+                }
 
                 s += val + pos;
             }
@@ -404,7 +554,7 @@ public static class AI_util {
             var   undo    = DoMoveFast(move, aiColor);
             float score   = undo.is_king_dead
                 ? 99999f
-                : Minimax(depth - 1, alpha, beta, GetNextActiveColor(aiColor), aiColor, false) - penalty;
+                : Minimax(depth - 1, alpha, beta, GetNextActiveColor(aiColor), aiColor, false, move.isAttack) - penalty;
             UndoMoveFast(undo);
 
             if (score > bestScore) { bestScore = score; bestMove = move; }
@@ -417,9 +567,10 @@ public static class AI_util {
 
     static float Minimax(int depth, float alpha, float beta, int colorToMove, int aiColor, bool isMax, bool wasCapture = false) {
         if (depth <= 0) {
-            if (wasCapture && depth > -2) {
-                depth = 1; 
-            } else {
+            if (wasCapture && depth > -4) { 
+                depth = 1;
+            } 
+            else {
                 return EvaluateBoardRaw(aiColor, colorToMove);
             }
         }
@@ -431,15 +582,17 @@ public static class AI_util {
         moves.Sort((a, b) => GetMoveHeuristic(b, colorToMove).CompareTo(GetMoveHeuristic(a, colorToMove)));
 
         float best = isMax ? -Mathf.Infinity : Mathf.Infinity;
-        int   n    = 0;
+        int n = 0;
 
         foreach (var move in moves) {
             if (n++ >= limit) break;
             var   undo = DoMoveFast(move, colorToMove);
             int   next = GetNextActiveColor(colorToMove);
+            
+            // TĂNG ĐIỂM KHI ĂN VUA THÊM 1 SỐ 9
             float eval = undo.is_king_dead
-                ? (isMax ? 99999f + depth : -99999f - depth)
-                : Minimax(depth - 1, alpha, beta, next, aiColor, next == aiColor);
+                ? (isMax ? 999999f + depth : -999999f - depth) 
+                : Minimax(depth - 1, alpha, beta, next, aiColor, next == aiColor, move.isAttack);
             UndoMoveFast(undo);
 
             if (isMax) { best = Mathf.Max(best, eval); alpha = Mathf.Max(alpha, eval); }

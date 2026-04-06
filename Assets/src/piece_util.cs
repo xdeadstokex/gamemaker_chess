@@ -343,6 +343,7 @@ public static class piece_util {
     // =========================================================================
 
     public static void piece_attack(ref data.chess_piece attacker, int tx, int ty, Vector3 pos, bool is_counter = false) {
+        data.mem.turns_without_progress = 0;
         ref data.board_cell cell = ref board_util.Cell(tx, ty);
 
         if (cell.has_piece == 0) return;
@@ -350,7 +351,8 @@ public static class piece_util {
         data.army_data enemy = data.mem.get_army(cell.piece_color);
         ref data.chess_piece target = ref enemy.troop_list[cell.piece_index];
         if(target.piece_type == 99) return; 
-        Debug.Log($"Attacking piece at ({tx}, {ty}) - Type: {target.piece_type}, Player: {target.player_color}");
+        if (GATrainer.instance == null || !GATrainer.instance.isTraining)
+            Debug.Log($"Attacking piece at ({tx}, {ty}) - Type: {target.piece_type}, Player: {target.player_color}");
         // --- LOGIC DEMON QUEEN PHẢN ĐÒN ---
         // Chỉ phản đòn nếu mục tiêu là Demon Queen (6) và ĐÂY KHÔNG PHẢI là đòn phản đòn sẵn có
         if (target.piece_type == 6 && attacker.piece_type != 7 && !is_counter) {
@@ -413,7 +415,8 @@ public static class piece_util {
         if (targetCell.has_piece == 1) {
             var targetPiece = data.mem.get_army(targetCell.piece_color).troop_list[targetCell.piece_index];
             if (targetPiece.piece_type == 99) {
-                Debug.LogWarning("Cannot move: Target cell is an indestructible Rock!");
+                if (GATrainer.instance == null || !GATrainer.instance.isTraining)
+                    Debug.LogWarning("Cannot move: Target cell is an indestructible Rock!");
                 return; 
             }
         }
@@ -425,14 +428,17 @@ public static class piece_util {
             
             return;}
             }
-        
+        if (cp.piece_type == 0) {
+            data.mem.turns_without_progress = 0;
+        }
 
         board_util.clear_cell(cp.x, cp.y);
         cp.x = tx;
         cp.y = ty;
         cp.rect.move_to_board(tx, ty, -1f);
         board_util.set_cell(tx, ty, color, idx);
-        Debug.Log($"Moved piece to ({tx}, {ty})");
+        if (GATrainer.instance == null || !GATrainer.instance.isTraining)
+            Debug.Log($"Moved piece to ({tx}, {ty})");
     }
 
 
@@ -559,7 +565,7 @@ public static class piece_util {
         // Lưu ý: Bạn cần một list riêng cho vật cản hoặc đưa vào một army trung lập
         // Cách nhanh nhất là dùng board_util.set_cell với một index đặc biệt
         board_util.set_cell(x, y, 99, 999); // color 2, index 999 đại diện cho vật cản
-        
-        Debug.Log($"<color=gray>Đã đặt vật cản tại {x}, {y}</color>");
+        if (GATrainer.instance == null || !GATrainer.instance.isTraining)
+            Debug.Log($"<color=gray>Đã đặt vật cản tại {x}, {y}</color>");
     }
 }
