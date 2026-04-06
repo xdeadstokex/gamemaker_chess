@@ -60,18 +60,32 @@ public static class pvp_util {
     // =========================================================
     // NEXT TURN
     // =========================================================
+
     public static void next_player_turn() {
         int next = GetNextPlayer(data.mem.current_player_color);
         data.mem.current_player_color = next;
         data.mem.current_turn_count++;
+        
+        // --- THÊM LOGIC ĐẾM SỐ NƯỚC KHÔNG TIẾN TRIỂN ---
+        data.mem.turns_without_progress++; 
+        
         bool checkedKing = IsKingChecked(next);
         bool hasMove     = CheckForAnyValidMove(next);
         data.mem.turn_state = 0;
 
         bool forceDraw = false;
-        if (GATrainer.instance != null && GATrainer.instance.isTraining && data.mem.current_turn_count > 150) {
-            forceDraw = true;
-            hasMove = false; 
+        
+        int noProgressLimit = data.mem.total_players * 50; 
+        
+        // 🚨 THÊM GIỚI HẠN SINH TỬ: Dù có tiến triển hay không, tới Turn này là CHÉM!
+        int absoluteLimit = data.mem.total_players * 80; 
+
+        // Ép hòa nếu vượt quá giới hạn rác HOẶC quá giới hạn sinh tử
+        if (GATrainer.instance != null && GATrainer.instance.isTraining) {
+            if (data.mem.turns_without_progress >= noProgressLimit || data.mem.current_turn_count >= absoluteLimit) {
+                forceDraw = true;
+                hasMove = false;
+            }
         }
 
         if (!hasMove) {
@@ -80,7 +94,7 @@ public static class pvp_util {
             if (forceDraw) {
                 data.mem.turn_state = 3; // Hòa
                 if (GATrainer.instance == null || !GATrainer.instance.isTraining)
-                    Debug.Log("<color=yellow>HÒA DO QUÁ SỐ TURN (Turn Limit)!</color>");
+                    Debug.Log("<color=yellow>HÒA DO LUẬT 50 NƯỚC KHÔNG TIẾN TRIỂN!</color>");
             } else {
                 data.mem.turn_state = checkedKing ? 2 : 3;
                 if (data.mem.endSound) 
@@ -95,19 +109,22 @@ public static class pvp_util {
                         Debug.Log($"<color=yellow>STALEMATE! Player {next} has no moves.</color>");
             }
 
-            // BÁO CÁO CHI TIẾT CHO GA TRAINER
+            // BÁO CÁO CHI TIẾT CHO GA TRAINER (DẠNG MẢNG)
             if (GATrainer.instance != null && GATrainer.instance.isTraining) {
                 bool isDraw = !checkedKing || forceDraw;
                 
-                // Tính tổng giá trị quân cờ còn lại trên bàn
-                float whiteScore = CalculateMaterial(0);
-                float blackScore = CalculateMaterial(1);
+                // Thu thập điểm của tất cả các Player
+                int pCount = GATrainer.instance.playersPerMatch;
+                float[] scores = new float[pCount];
+                for (int i = 0; i < pCount; i++) {
+                    scores[i] = CalculateMaterial(i);
+                }
 
                 int matchNum = GATrainer.instance.currentMatchIndex + 1;
-                int totalMatches = GATrainer.instance.populationSize / 2;
-                Debug.Log($"<color=orange>=> Xong trận {matchNum}/{totalMatches} (Kéo dài {data.mem.current_turn_count} Turns)</color>");
+                int totalMatches = GATrainer.instance.populationSize / pCount;
+                Debug.Log($"<color=orange>=> Xong trận {matchNum}/{totalMatches} (Tổng: {data.mem.current_turn_count} Turns)</color>");
 
-                GATrainer.instance.ReportMatchResult(next, isDraw, data.mem.current_turn_count, whiteScore, blackScore);
+                GATrainer.instance.ReportMatchResult(next, isDraw, data.mem.current_turn_count, scores);
             }
             return;
         }

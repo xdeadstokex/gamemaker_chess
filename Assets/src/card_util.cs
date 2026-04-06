@@ -303,7 +303,8 @@ public static void add_card(int player_color, CardType type) {
                     // Tạo quân Queen (loại 4) mới tại vị trí đó    
                     piece_util.create_piece(tx, ty, 4, army);   
 
-                    Debug.Log("<color=yellow>Đã hồi sinh/nâng cấp lên Queen mới!</color>");
+                    if (GATrainer.instance == null || !GATrainer.instance.isTraining)
+                        Debug.Log("<color=yellow>Đã hồi sinh/nâng cấp lên Queen mới!</color>");
                     
                     return true;
                 }

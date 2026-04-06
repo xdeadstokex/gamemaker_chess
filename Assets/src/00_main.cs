@@ -27,7 +27,8 @@ public class Game : MonoBehaviour {
     void Start()  {
         if(GATrainer.instance != null && GATrainer.instance.isTraining){
             data.mem.ai_difficulty = AIDifficulty.Normal;
-            StartGame(2, 2);
+            int pCount = GATrainer.instance.playersPerMatch;
+            StartGame(pCount, pCount);
         }
         else{
             if (Camera.main != null) {

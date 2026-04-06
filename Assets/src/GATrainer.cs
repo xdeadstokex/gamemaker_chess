@@ -6,7 +6,7 @@ using System.Data;
 
 [System.Serializable]
 public class BotDNA {
-    public float[] weights = new float[12];
+    public float[] weights = new float[15];
     public float fitness = 0;
 
     public BotDNA() {}
@@ -56,8 +56,9 @@ public class GATrainer : MonoBehaviour {
     [HideInInspector]
     public List<BotDNA> population = new List<BotDNA>();
     
-    public BotDNA currentWhiteDNA;
-    public BotDNA currentBlackDNA;
+    [Header("Training Mode (3 hoặc 4)")]
+    public int playersPerMatch = 4;
+    public BotDNA[] currentDNAs;
 
     string savePath;
 
@@ -97,41 +98,57 @@ public class GATrainer : MonoBehaviour {
     }
 
     public void StartNextMatch() {
-        if (currentMatchIndex >= populationSize / 2) {
+        playersPerMatch = Mathf.Clamp(playersPerMatch, 2, 4);
+
+        if (currentMatchIndex >= populationSize / playersPerMatch) {
             EvolveNextGeneration();
             currentMatchIndex = 0;
         }
 
-        currentWhiteDNA = population[currentMatchIndex * 2];
-        currentBlackDNA = population[currentMatchIndex * 2 + 1];
+        currentDNAs = new BotDNA[playersPerMatch];
+        for(int i = 0; i < playersPerMatch; i++) {
+            currentDNAs[i] = population[currentMatchIndex * playersPerMatch + i];
+        }
 
         SceneManager.LoadScene("main_entry");
     }
 
-    // Đã nâng cấp hàm Report để nhận nhiều thông số hơn
-    public void ReportMatchResult(int loserColor, bool isDraw, int totalTurns, float whiteMaterial, float blackMaterial) {
-        // 1. Điểm cơ bản (Thắng/Thua/Hòa)
+    public void ReportMatchResult(int loserColor, bool isDraw, int totalTurns, float[] materialScores) {
+        
+        // 1. Phân bổ điểm sinh tồn (Rank)
+        // Nếu hòa, mọi người đều nhận điểm hòa (5).
         if (isDraw) {
-            currentWhiteDNA.fitness += 5f;
-            currentBlackDNA.fitness += 5f;
-        } else {
-            if (loserColor == 1) { // Trắng thắng
-                currentWhiteDNA.fitness += 20f; 
-                currentBlackDNA.fitness += 2f; // Điểm an ủi
-            } else { // Đen thắng
-                currentBlackDNA.fitness += 20f;
-                currentWhiteDNA.fitness += 2f;
+            for (int i = 0; i < playersPerMatch; i++) {
+                currentDNAs[i].fitness += 5f;
+            }
+        } 
+        // Nếu có người thua, người sống sót cuối cùng ăn trọn điểm (20), người chết được điểm an ủi (2).
+        else {
+            for (int i = 0; i < playersPerMatch; i++) {
+                if (i == loserColor) {
+                    currentDNAs[i].fitness += 2f; // Kẻ thua cuộc (Chết)
+                } else {
+                    currentDNAs[i].fitness += 20f; // Kẻ còn sống
+                }
             }
         }
 
-        // 2. Điểm phần thưởng: Chênh lệch lực lượng (Khuyến khích ăn quân)
-        currentWhiteDNA.fitness += (whiteMaterial - blackMaterial) * 0.05f;
-        currentBlackDNA.fitness += (blackMaterial - whiteMaterial) * 0.05f;
+        // 2. Điểm phần thưởng chênh lệch lực lượng (Càng cắn được nhiều máu địch càng tốt)
+        float totalEnemyMaterial = 0;
+        for (int i = 0; i < playersPerMatch; i++) totalEnemyMaterial += materialScores[i];
 
-        // 3. Phạt nếu câu giờ vô nghĩa (Khuyến khích thắng nhanh)
+        for (int i = 0; i < playersPerMatch; i++) {
+            // Điểm của người hiện tại so với TỔNG lực lượng của các kẻ địch
+            float myMaterial = materialScores[i];
+            float enemyMaterial = totalEnemyMaterial - myMaterial;
+            currentDNAs[i].fitness += (myMaterial - (enemyMaterial / (playersPerMatch - 1))) * 0.05f;
+        }
+
+        // 3. Phạt câu giờ
         float turnPenalty = totalTurns * 0.02f;
-        if (loserColor == 1 && !isDraw) currentWhiteDNA.fitness -= turnPenalty;
-        else if (loserColor == 0 && !isDraw) currentBlackDNA.fitness -= turnPenalty;
+        for (int i = 0; i < playersPerMatch; i++) {
+             currentDNAs[i].fitness -= turnPenalty;
+        }
 
         currentMatchIndex++;
         StartNextMatch();
@@ -149,7 +166,7 @@ public class GATrainer : MonoBehaviour {
         // 1. Giữ lại tinh hoa (Elitism) - Chuyển thẳng sang lứa sau không lai tạp
         for (int i = 0; i < eliteCount; i++) {
             BotDNA elite = new BotDNA();
-            System.Array.Copy(population[i].weights, elite.weights, 12); // Copy value, not reference
+            System.Array.Copy(population[i].weights, elite.weights, 15); // Copy value, not reference
             newPop.Add(elite);
         }
 
@@ -205,9 +222,10 @@ public class GATrainer : MonoBehaviour {
             GAPopulationData fileData = JsonUtility.FromJson<GAPopulationData>(json);
             
             if (fileData != null && fileData.dnaList.Count > 0) {
-                data.mem.pveBrain = fileData.dnaList[0]; 
+                data.mem.pveBrains = fileData.dnaList; 
+                
                 if (GATrainer.instance == null || !GATrainer.instance.isTraining)
-                    Debug.Log($"<color=green>Đã nạp thành công bộ não Siêu Trí Tuệ (Hậu giá: {data.mem.pveBrain.weights[3]}) vào Bot!</color>");
+                    Debug.Log($"<color=green>Đã nạp thành công {data.mem.pveBrains.Count} bộ não Siêu Trí Tuệ vào Bot!</color>");
             }
         } else {
             if (GATrainer.instance == null || !GATrainer.instance.isTraining)
