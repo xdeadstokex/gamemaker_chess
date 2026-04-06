@@ -270,6 +270,9 @@ public class data : MonoBehaviour {
     public Sprite wp_e_pawn_knight, wp_e_pawn_bishop, wp_e_pawn_rook;
     public Sprite bp_e_pawn_knight, bp_e_pawn_bishop, bp_e_pawn_rook;
 
+    public Sprite blue_pawn, blue_rook, blue_knight, blue_bishop, blue_queen, blue_king, e_blue_pawn_knight, e_blue_pawn_bishop, e_blue_pawn_rook,e_blue_rook, e_blue_knight, e_blue_bishop, e_blue_queen, e_blue_king;
+    public Sprite green_pawn, green_rook, green_knight, green_bishop, green_queen, green_king, e_green_pawn_knight, e_green_pawn_bishop, e_green_pawn_rook,e_green_rook, e_green_knight, e_green_bishop, e_green_queen, e_green_king;
+    
     public Sprite mp_normal, mp_attack, rect_2d_sprite;
 
     // =========================================================================
@@ -280,7 +283,8 @@ public class data : MonoBehaviour {
     public AudioClip   moveSound, captureSound, checkSound, startSound, endSound, timeLess;
     public AudioClip   pawnEvolveSound, knightEvolveSound, GodqueenEvolveSound, kingEvolveSound, DemonqueenEvolveSound,bishopEvolveSound, rookEvolveSound, burstSound;
     public AudioClip   cardDrawSound, cardPlaySound, cardBuffSound, cardDebuffSound;
-    public AudioClip   themesound, clicksound, winSound, loseSound
+    public AudioClip   themesound, clicksound, winSound, loseSound;
+    public Sprite mutebutn, unmutebtn
     ;
 
     // =========================================================================

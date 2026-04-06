@@ -1550,8 +1550,24 @@ MonoBehaviour:
   turn_state: 0
   lose_ui_shown: 0
   ai_difficulty: 0
+  current_turn_count: 0
   aiColor: 1
   isAIThinking: 0
+  pveBrain:
+    weights:
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    fitness: 0
   board_tile0: {fileID: -2845123107130222339, guid: 2589ea6c1e955f989a6477bf85c14a98, type: 3}
   board_tile1: {fileID: 2014498029736853455, guid: 6396a7b39e50368128a40695aebdf80f, type: 3}
   board_tile2: {fileID: -2845123107130222339, guid: 2589ea6c1e955f989a6477bf85c14a98, type: 3}
@@ -1586,6 +1602,34 @@ MonoBehaviour:
   bp_e_pawn_knight: {fileID: -5748060717870506092, guid: 6b772d900c03eef498713d0950959b5b, type: 3}
   bp_e_pawn_bishop: {fileID: 2417290649967731324, guid: 6e2f157e13f042047b2b86fb3810c569, type: 3}
   bp_e_pawn_rook: {fileID: -705458621286082977, guid: bc4262fc57ad68741b7d0b81cf018ae8, type: 3}
+  blue_pawn: {fileID: 7740168125482804264, guid: 65945e8ab6760d64ea50febca410f1b5, type: 3}
+  blue_rook: {fileID: -5483117685424196773, guid: 7f28562f437a9864885393eaffbb9dd5, type: 3}
+  blue_knight: {fileID: -317473367123830222, guid: 0d73753300824da4281f682d92de9621, type: 3}
+  blue_bishop: {fileID: -6852671552617249429, guid: 3d39aafc30768f247b2a2ee14430dab0, type: 3}
+  blue_queen: {fileID: 235914826145814440, guid: 464c483fffec0514fa6dc341bfbe5cec, type: 3}
+  blue_king: {fileID: -126255065478675676, guid: fba7b3c36659e88459a26ef4691cf3c9, type: 3}
+  e_blue_pawn_knight: {fileID: 487883668743556885, guid: 0e5bc2e006e3e13408b2983f2608d819, type: 3}
+  e_blue_pawn_bishop: {fileID: 1862839143062816402, guid: 85246ef5fdb990b4dbd32305eeb424de, type: 3}
+  e_blue_pawn_rook: {fileID: 8055375956969846454, guid: ef600490ef43c7f44bd48c990aed1ec4, type: 3}
+  e_blue_rook: {fileID: 3836537081063194738, guid: ee45c109f7c35ad4c96a1b454b62cc3d, type: 3}
+  e_blue_knight: {fileID: 1198509699878415352, guid: 185c43a8178023048a7a98c091f439e5, type: 3}
+  e_blue_bishop: {fileID: -1732596585282045279, guid: bba0909490ac41948bb1c436be49d39d, type: 3}
+  e_blue_queen: {fileID: 4472174083155837985, guid: 040f7da10cfa98b438be6bf0e00ab99e, type: 3}
+  e_blue_king: {fileID: -8884277226859805299, guid: 647eb0b1fe4696e4d9d1868593309bc3, type: 3}
+  green_pawn: {fileID: 3319829523664483768, guid: 39c679ae8a2c30342a7d951e28a4a5a8, type: 3}
+  green_rook: {fileID: 8402368112855240186, guid: 62e8d6a86cd8db24c9a599a15d4e4f75, type: 3}
+  green_knight: {fileID: -8551339969372593287, guid: ba10caf12b26c5a468bcb08bbec0a0e6, type: 3}
+  green_bishop: {fileID: -4091445015567662446, guid: 1d060c09ed386154a944ae3513f89bff, type: 3}
+  green_queen: {fileID: 807102250060402689, guid: a9c115af9ffe08145b66e79b0c9a7b1a, type: 3}
+  green_king: {fileID: -640372968891915580, guid: 9861026b544cc744186c32275c908ef8, type: 3}
+  e_green_pawn_knight: {fileID: -6621686022305157118, guid: 65d941744b32d474c835d1aad65549e0, type: 3}
+  e_green_pawn_bishop: {fileID: -3447949519824543403, guid: 216f6b083200073499e2eac03cf2609a, type: 3}
+  e_green_pawn_rook: {fileID: -4670782275138778310, guid: b1e5f17211cf9d94bb65c33417399884, type: 3}
+  e_green_rook: {fileID: 8113213444671848899, guid: de9d6d6ddea6a5e4b8fa23fa814d56cc, type: 3}
+  e_green_knight: {fileID: 7082763436938563274, guid: 4e23f3d628310934dbcc0a44a3584264, type: 3}
+  e_green_bishop: {fileID: -878244986587062773, guid: 500698c42c77d7d4ca40c11e58d2dd1e, type: 3}
+  e_green_queen: {fileID: -7310939456216999882, guid: 5340a386826bb6b41ae2b4c589b40842, type: 3}
+  e_green_king: {fileID: -8259960634003533592, guid: 2354bf8e96ba1004ca27f34003b0ef08, type: 3}
   mp_normal: {fileID: -1642050057519057660, guid: e173589c72f9aad418c543d2e790db5d, type: 3}
   mp_attack: {fileID: 0}
   rect_2d_sprite: {fileID: 7445137717605717678, guid: 8003d2d75acc314108cb0715d82c902f, type: 3}
@@ -1612,6 +1656,8 @@ MonoBehaviour:
   clicksound: {fileID: 8300000, guid: 9a9b6481cee7e9d46b84400e4ab71693, type: 3}
   winSound: {fileID: 8300000, guid: 5e3110b209dba9246bcb5dbaff4fd423, type: 3}
   loseSound: {fileID: 8300000, guid: ab64ee8fdb053f64594d6d2f8954b4a1, type: 3}
+  mutebutn: {fileID: 0}
+  unmutebtn: {fileID: 0}
   en_passant_x: -1
   en_passant_y: -1
 --- !u!4 &1239710108

@@ -8,7 +8,7 @@ public static class piece_util {
     // PIECE — CREATE / SPRITE
     // =========================================================================
 	public static void create_piece(int x, int y, int piece_type, data.army_data army, int pawn_dir_x = 0, int pawn_dir_y = 0) {
-        bool w = army.color == 0;
+        int c = army.color;
 
 	    data.chess_piece cp = new data.chess_piece();
         cp.rect                = rect_2d.create(board_util.board_to_world(x), board_util.board_to_world(y), -1f);
@@ -32,30 +32,45 @@ public static class piece_util {
         cp.pawn_dir_y          = pawn_dir_y;
 
         switch (piece_type) {
-            case 0: cp.normal_sprite = w ? data.mem.wp_pawn   : data.mem.bp_pawn;
-                    cp.evo_sprite0   = w ? data.mem.wp_e_pawn_knight : data.mem.bp_e_pawn_knight;
-                    cp.evo_sprite1   = w ? data.mem.wp_e_pawn_bishop : data.mem.bp_e_pawn_bishop;
-                    cp.evo_sprite2   = w ? data.mem.wp_e_pawn_rook   : data.mem.bp_e_pawn_rook;
-                    break;
-            case 1: cp.normal_sprite = w ? data.mem.wp_rook   : data.mem.bp_rook;
-                    cp.evo_sprite0   = w ? data.mem.wp_e_rook  : data.mem.bp_e_rook;
-                    cp.evo_sprite1   = null; cp.evo_sprite2 = null; break;
-            case 2: cp.normal_sprite = w ? data.mem.wp_knight : data.mem.bp_knight;
-                    cp.evo_sprite0   = w ? data.mem.wp_e_knight: data.mem.bp_e_knight;
-                    cp.evo_sprite1   = null; cp.evo_sprite2 = null; break;
-            case 3: cp.normal_sprite = w ? data.mem.wp_bishop : data.mem.bp_bishop;
-                    cp.evo_sprite0   = w ? data.mem.wp_e_bishop: data.mem.bp_e_bishop;
-                    cp.evo_sprite1   = null; cp.evo_sprite2 = null; break;
-            case 4: cp.normal_sprite = w ? data.mem.wp_queen  : data.mem.bp_queen;
-                    cp.evo_sprite0   = w ? data.mem.wp_e_queen : data.mem.bp_e_queen;
-                    cp.evo_sprite1   = null; cp.evo_sprite2 = null; break;
-            case 5: cp.normal_sprite = w ? data.mem.wp_king   : data.mem.bp_king;
-                    cp.evo_sprite0   = w ? data.mem.wp_e_king  : data.mem.bp_e_king;
-                    cp.evo_sprite1   = null; cp.evo_sprite2 = null; break;
-            case 6: cp.normal_sprite = w ? data.mem.wp_e_dqueen : data.mem.bp_e_dqueen;
-                    cp.evo_sprite0   = w ? data.mem.wp_e_dqueen : data.mem.bp_e_dqueen; break;
-            case 7: cp.normal_sprite = w ? data.mem.wp_e_king : data.mem.bp_e_king;
-                    cp.evo_sprite0   = w ? data.mem.wp_e_king : data.mem.bp_e_king;break;
+            case 0: // Pawn
+                cp.normal_sprite = c == 0 ? data.mem.wp_pawn : c == 1 ? data.mem.bp_pawn : c == 2 ? data.mem.blue_pawn : data.mem.green_pawn;
+                cp.evo_sprite0   = c == 0 ? data.mem.wp_e_pawn_knight : c == 1 ? data.mem.bp_e_pawn_knight : c == 2 ? data.mem.e_blue_pawn_knight : data.mem.e_green_pawn_knight;
+                cp.evo_sprite1   = c == 0 ? data.mem.wp_e_pawn_bishop : c == 1 ? data.mem.bp_e_pawn_bishop : c == 2 ? data.mem.e_blue_pawn_bishop : data.mem.e_green_pawn_bishop;
+                cp.evo_sprite2   = c == 0 ? data.mem.wp_e_pawn_rook   : c == 1 ? data.mem.bp_e_pawn_rook   : c == 2 ? data.mem.e_blue_pawn_rook   : data.mem.e_green_pawn_rook;
+                break;
+
+            case 1: // Rook
+                cp.normal_sprite = c == 0 ? data.mem.wp_rook : c == 1 ? data.mem.bp_rook : c == 2 ? data.mem.blue_rook : data.mem.green_rook;
+                cp.evo_sprite0   = c == 0 ? data.mem.wp_e_rook : c == 1 ? data.mem.bp_e_rook : c == 2 ? data.mem.e_blue_rook : data.mem.e_green_rook;
+                cp.evo_sprite1   = null; cp.evo_sprite2 = null; break;
+
+            case 2: // Knight
+                cp.normal_sprite = c == 0 ? data.mem.wp_knight : c == 1 ? data.mem.bp_knight : c == 2 ? data.mem.blue_knight : data.mem.green_knight;
+                cp.evo_sprite0   = c == 0 ? data.mem.wp_e_knight : c == 1 ? data.mem.bp_e_knight : c == 2 ? data.mem.e_blue_knight : data.mem.e_green_knight;
+                cp.evo_sprite1   = null; cp.evo_sprite2 = null; break;
+
+            case 3: // Bishop
+                cp.normal_sprite = c == 0 ? data.mem.wp_bishop : c == 1 ? data.mem.bp_bishop : c == 2 ? data.mem.blue_bishop : data.mem.green_bishop;
+                cp.evo_sprite0   = c == 0 ? data.mem.wp_e_bishop : c == 1 ? data.mem.bp_e_bishop : c == 2 ? data.mem.e_blue_bishop : data.mem.e_green_bishop;
+                cp.evo_sprite1   = null; cp.evo_sprite2 = null; break;
+
+            case 4: // Queen
+                cp.normal_sprite = c == 0 ? data.mem.wp_queen : c == 1 ? data.mem.bp_queen : c == 2 ? data.mem.blue_queen : data.mem.green_queen;
+                cp.evo_sprite0   = c == 0 ? data.mem.wp_e_queen : c == 1 ? data.mem.bp_e_queen : c == 2 ? data.mem.e_blue_queen : data.mem.e_green_queen;
+                cp.evo_sprite1   = null; cp.evo_sprite2 = null; break;
+
+            case 5: // King
+                cp.normal_sprite = c == 0 ? data.mem.wp_king : c == 1 ? data.mem.bp_king : c == 2 ? data.mem.blue_king : data.mem.green_king;
+                cp.evo_sprite0   = c == 0 ? data.mem.wp_e_king : c == 1 ? data.mem.bp_e_king : c == 2 ? data.mem.e_blue_king : data.mem.e_green_king;
+                cp.evo_sprite1   = null; cp.evo_sprite2 = null; break;
+
+            case 6: // Demon QueenFshield
+                cp.normal_sprite = c == 0 ? data.mem.wp_e_dqueen : data.mem.bp_e_dqueen;
+                cp.evo_sprite0   = cp.normal_sprite; break;
+
+            case 7: // King (Democracy/Evolved)
+                cp.normal_sprite = c == 0 ? data.mem.wp_e_king : c == 1 ? data.mem.bp_e_king : c == 2 ? data.mem.e_blue_king : data.mem.e_green_king;
+        cp.evo_sprite0   = cp.normal_sprite; break;
             case 99: cp.normal_sprite = data.mem.rock;
                     cp.evo_sprite0   = null;
                     cp.evo_sprite1   = null;
@@ -98,7 +113,7 @@ public static class piece_util {
                 case 2: cp.unitType = PieceType.KHeavy; break;
                 case 3: cp.unitType = PieceType.BHeavy; break;
                 case 0: cp.unitType = PieceType.ELight; break;
-                case 6: cp.unitType = PieceType.Core; cp.shield = 4;   break; //added shield to dqueen
+                case 6: cp.unitType = PieceType.Core; cp.shield = 6;   break; //added shield to dqueen
                 case 99: cp.unitType = PieceType.Rock;  break; 
             }
         }
@@ -126,7 +141,7 @@ public static class piece_util {
 
 
         switch (cp.piece_type) {
-            case 0: baseMove = valid_pawn(ref cp, tx, ty, dir);                             break;
+            case 0: baseMove = valid_pawn(ref cp, tx, ty, cp.pawn_dir_x, cp.pawn_dir_y);                            break;
             case 1: baseMove = valid_line(ref cp, tx, ty);                                  break;
             case 2: baseMove = valid_knight(ref cp, tx, ty);                                break;
             case 3: baseMove = valid_diag(ref cp, tx, ty);                                  break;
@@ -156,26 +171,35 @@ public static class piece_util {
         }
     }
 
-    public static bool valid_pawn(ref data.chess_piece cp, int tx, int ty, int dir) {
-        int dx = tx - cp.x, dy = ty - cp.y;
+    public static bool valid_pawn(ref data.chess_piece cp, int tx, int ty, int dx_dir, int dy_dir) {
+    int dx = tx - cp.x;
+    int dy = ty - cp.y;
 
-        if (Mathf.Abs(dx) == 1 && dy == dir) {
-            ref data.board_cell cell = ref board_util.Cell(tx, ty);
-            return cell.has_piece == 1 && data.mem.get_army(cell.piece_color).troop_list[cell.piece_index].player_color != cp.player_color;
-        }
+    // 1. Logic Ăn quân (Di chuyển chéo so với hướng đi thẳng)
+    // Nếu đi dọc (dy_dir != 0): ăn khi |dx|=1 và dy=dy_dir
+    // Nếu đi ngang (dx_dir != 0): ăn khi |dy|=1 và dx=dx_dir
+    bool isDiagonalStep = (dy_dir != 0) ? (Mathf.Abs(dx) == 1 && dy == dy_dir) 
+                                        : (Mathf.Abs(dy) == 1 && dx == dx_dir);
 
-        if (dx == 0 && dy == dir) {
-            return board_util.Cell(tx, ty).has_piece == 0;
-        }
-
-        int startRow = (cp.player_color == 0) ? 1 : 6;
-        if (dx == 0 && dy == dir * 2 && cp.y == startRow) {
-            bool intermediateEmpty = board_util.Cell(cp.x, cp.y + dir).has_piece == 0;
-            bool destinationEmpty  = board_util.Cell(tx, ty).has_piece == 0;
-            return intermediateEmpty && destinationEmpty;
-        }
-        return false;
+    if (isDiagonalStep) {
+        ref data.board_cell cell = ref board_util.Cell(tx, ty);
+        return cell.has_piece == 1 && data.mem.get_army(cell.piece_color).troop_list[cell.piece_index].player_color != cp.player_color;
     }
+
+    // 2. Logic Đi thẳng 1 ô
+    if (dx == dx_dir && dy == dy_dir) {
+        return board_util.Cell(tx, ty).has_piece == 0;
+    }
+
+    // 3. Logic Đi thẳng 2 ô (Nước đi đầu tiên)
+    if (cp.has_moved == 0 && dx == dx_dir * 2 && dy == dy_dir * 2) {
+        bool intermediateEmpty = board_util.Cell(cp.x + dx_dir, cp.y + dy_dir).has_piece == 0;
+        bool destinationEmpty  = board_util.Cell(tx, ty).has_piece == 0;
+        return intermediateEmpty && destinationEmpty;
+    }
+
+    return false;
+}
 
     public static bool valid_line(ref data.chess_piece cp, int tx, int ty) {
         if (tx != cp.x && ty != cp.y) return false;
