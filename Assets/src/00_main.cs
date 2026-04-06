@@ -44,6 +44,7 @@ public class Game : MonoBehaviour {
     if (data.mem.themesound != null && data.mem.audioSource != null) {
         data.mem.audioSource.clip = data.mem.themesound;
         data.mem.audioSource.loop = true; // Bật lặp lại
+        data.mem.audioSource.volume = 0.2f;
         data.mem.audioSource.Play();
     }
 }
@@ -92,6 +93,7 @@ public class Game : MonoBehaviour {
 
         if (isAITurn) {
             if (!data.mem.isAIThinking) StartCoroutine(AI_util.PlayAITurn());
+            ClearEnPassant();
             return;
         }
 
@@ -575,6 +577,7 @@ public class Game : MonoBehaviour {
 		data.mem.menu_rects.Remove(data.mem.settings_button);
 	}
 
+
 	void ShowSettingsOverlay() {
 		Vector2 off = GetSettingsOffset();
 		data.mem.btn_main_menu = gui_util.make_button_sprite(SETTINGS_MENU_X + off.x, SETTINGS_MENU_Y + off.y, data.mem.back_btn_sprite, 1f, 1f);
@@ -692,4 +695,5 @@ public class Game : MonoBehaviour {
             hand.card_rects.Clear(); // Làm trống list sau khi destroy
         }
     }
+    
 }

@@ -179,6 +179,7 @@ public static void handle_card_input(int player_color) {
         }
     }
 public static void add_card(int player_color, CardType type) {
+    if (data.mem.total_players != 2 || data.mem.bot_count != 0) return;
     sound_util.play_sound(data.mem.cardDrawSound);
     if (data.mem == null) return;
 
