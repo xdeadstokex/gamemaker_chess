@@ -220,6 +220,59 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: aa0ce4367a93f8140a3ecc4c88c73c77, type: 3}
+--- !u!1 &98480354
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 98480356}
+  - component: {fileID: 98480355}
+  m_Layer: 0
+  m_Name: GeneticTrainer
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &98480355
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 98480354}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8140e20333d2a104a9fab0c5d2e66da4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  isTraining: 0
+  populationSize: 40
+  mutationRate: 0.03
+  eliteCount: 4
+  currentGeneration: 1
+  currentMatchIndex: 0
+  population: []
+  playersPerMatch: 4
+  currentDNAs: []
+--- !u!4 &98480356
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 98480354}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.1758064, y: -0.14296806, z: -0.0025274148}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!224 &122129728 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 4474192150969876591, guid: aa0ce4367a93f8140a3ecc4c88c73c77, type: 3}
@@ -1553,21 +1606,8 @@ MonoBehaviour:
   current_turn_count: 0
   aiColor: 1
   isAIThinking: 0
-  pveBrain:
-    weights:
-    - 0
-    - 0
-    - 0
-    - 0
-    - 0
-    - 0
-    - 0
-    - 0
-    - 0
-    - 0
-    - 0
-    - 0
-    fitness: 0
+  pveBrains: []
+  turns_without_progress: 0
   board_tile0: {fileID: -2845123107130222339, guid: 2589ea6c1e955f989a6477bf85c14a98, type: 3}
   board_tile1: {fileID: 2014498029736853455, guid: 6396a7b39e50368128a40695aebdf80f, type: 3}
   board_tile2: {fileID: -2845123107130222339, guid: 2589ea6c1e955f989a6477bf85c14a98, type: 3}
@@ -2679,3 +2719,4 @@ SceneRoots:
   - {fileID: 1728710305}
   - {fileID: 609339474}
   - {fileID: 2023649121}
+  - {fileID: 98480356}

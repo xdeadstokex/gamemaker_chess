@@ -7,9 +7,6 @@ public static class AI_util {
     // =========================================================================
     // ENTRY POINT
     // =========================================================================
-    // =========================================================================
-    // ENTRY POINT
-    // =========================================================================
     public static IEnumerator PlayAITurn() {
         data.mem.isAIThinking = true;
         int color = data.mem.current_player_color;
@@ -187,19 +184,18 @@ public static class AI_util {
 
         if (dna != null) { 
             switch (cp.piece_type) {
-                case 5: case 7: return 100000f; // Vua vô giá
-                case 4: baseVal = Mathf.Max(dna.weights[3], 800f); break; // Ép Hậu tối thiểu 800
+                case 5: case 7: return 100000f;
+                case 4: baseVal = Mathf.Max(dna.weights[3], 800f); break; 
                 case 6: baseVal = Mathf.Max(dna.weights[9], 800f); break;
-                case 1: baseVal = Mathf.Max(dna.weights[2], 400f); break; // Xe tối thiểu 400
+                case 1: baseVal = Mathf.Max(dna.weights[2], 400f); break; 
                 case 2: baseVal = Mathf.Max(dna.weights[1], 250f); break;
                 case 3: baseVal = Mathf.Max(dna.weights[1], 250f); break;
                 case 0:
                     if (cp.evolved == 1) baseVal = (cp.evolved_type == 2) ? dna.weights[5] : dna.weights[4]; 
-                    else baseVal = Mathf.Min(dna.weights[0], 150f); // Tốt tối đa 150
+                    else baseVal = Mathf.Min(dna.weights[0], 150f); 
                     break;
             }
         } else {
-            // ... (Đoạn fallback giữ nguyên như cũ)
             switch (cp.piece_type) {
                 case 5: case 7: return 100000f;
                 case 4: case 6: baseVal = 900f; break;
@@ -211,7 +207,6 @@ public static class AI_util {
                     break;
             }
         }
-        // ... (Đoạn thưởng điểm giữ nguyên)
         float bountyWeight = (dna != null && dna.weights.Length > 10) ? (dna.weights[10] / 10f) : 3.0f;
         float bonus = cp.score * (10f * bountyWeight); 
         
@@ -351,7 +346,6 @@ public static class AI_util {
             ref var cell   = ref board_util.Cell(move.targetX, move.targetY);
             var     target = data.mem.get_army(cell.piece_color).troop_list[cell.piece_index];
 
-            // SÁT THỦ MÁU LẠNH: Nếu nước đi này là ĂN VUA -> Ưu tiên tuyệt đối!
             if (target.piece_type == 5 || target.piece_type == 7) {
                 return 999999f; 
             }
@@ -359,7 +353,6 @@ public static class AI_util {
             float tgtVal = GetPieceValue(ref target);
             bool squareDefended = IsSquareAttacked(move.targetX, move.targetY, color);
             
-            // Trừ điểm nếu thí Hậu/Xe vào ô địch đang canh giữ
             if (squareDefended && atkVal > tgtVal + 200f) {
                 score -= 5000f; 
             } else {
@@ -368,7 +361,6 @@ public static class AI_util {
             }
         }
         
-        // ... (Đoạn vị trí trung tâm và Tốt đẩy lên giữ nguyên)
         float cx = Mathf.Abs(move.targetX - data.mem.board_w * 0.5f);
         float cy = Mathf.Abs(move.targetY - data.mem.board_h * 0.5f);
         score += (10f - cx - cy);
@@ -397,7 +389,6 @@ public static class AI_util {
                 dna = data.mem.pveBrains[brainIndex];
             }
 
-            // --- TRÍCH XUẤT CÁC GEN TÍNH CÁCH (NẾU CÓ) ---
             float defBonus     = (dna != null && dna.weights.Length > 6) ? (dna.weights[6] / 10f) : 1.5f;
             float pawnPush     = (dna != null && dna.weights.Length > 7) ? (dna.weights[7] / 10f) : 0.5f;
             float centerCtrl   = (dna != null && dna.weights.Length > 8) ? (dna.weights[8] / 10f) : 1.0f;
@@ -412,12 +403,10 @@ public static class AI_util {
                 float cx  = Mathf.Abs(cp.x - data.mem.board_w * 0.5f);
                 float cy  = Mathf.Abs(cp.y - data.mem.board_h * 0.5f);
                 
-                // [GEN 8]: Ưu tiên chiếm trung tâm
                 float pos = (10f - cx - cy) * centerCtrl;
 
                 if (cp.piece_type == 0) {
                     int fwd = (cp.player_color == 0) ? cp.y : (data.mem.board_h - 1 - cp.y);
-                    // [GEN 7]: Khuyến khích Tốt tiến
                     pos += fwd * (10f * pawnPush);
                 }
 
@@ -425,7 +414,6 @@ public static class AI_util {
                 bool isDefended = IsSquareDefended(cp.x, cp.y, c);
 
                 if ((cp.piece_type == 5 || cp.piece_type == 7) && isAttacked) {
-                    // [GEN 11]: Nỗi sợ Vua bị chiếu
                     pos -= (10f * kingParanoia); 
                 } 
                 else if (val >= 300f && isAttacked) {
@@ -433,7 +421,6 @@ public static class AI_util {
                     else            pos -= val * 0.9f; 
                 }
                 
-                // [GEN 6]: Tính bầy đàn (Liên kết đội hình)
                 if (isDefended && cp.piece_type != 5 && cp.piece_type != 7) {
                     pos += (10f * defBonus); 
                 }
@@ -465,7 +452,7 @@ public static class AI_util {
             var node = root;
             undoStack.Clear();
 
-            // 1. Selection
+            //Selection
             while (node.untriedMoves.Count == 0 && node.children.Count > 0) {
                 float   best = -Mathf.Infinity;
                 data.MCTSNode pick = null;
@@ -482,7 +469,7 @@ public static class AI_util {
                 undoStack.Add(DoMoveFast(node.move, node.parent.colorToMove));
             }
 
-            // 2. Expansion + 3. Evaluation
+            //Expansion + Evaluation
             float nodeVal = 0.5f;
             if (node.untriedMoves.Count > 0) {
                 int last  = node.untriedMoves.Count - 1;
@@ -509,10 +496,10 @@ public static class AI_util {
                     GetMoveHeuristic(a, node.colorToMove).CompareTo(GetMoveHeuristic(b, node.colorToMove)));
             }
 
-            // 4. Backprop
+            //Backprop
             for (var n = node; n != null; n = n.parent) { n.visits++; n.wins += nodeVal; }
 
-            // 5. Undo
+            //Undo
             for (int j = undoStack.Count - 1; j >= 0; j--) UndoMoveFast(undoStack[j]);
         }
 
@@ -589,7 +576,6 @@ public static class AI_util {
             var   undo = DoMoveFast(move, colorToMove);
             int   next = GetNextActiveColor(colorToMove);
             
-            // TĂNG ĐIỂM KHI ĂN VUA THÊM 1 SỐ 9
             float eval = undo.is_king_dead
                 ? (isMax ? 999999f + depth : -999999f - depth) 
                 : Minimax(depth - 1, alpha, beta, next, aiColor, next == aiColor, move.isAttack);

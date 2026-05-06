@@ -8,33 +8,29 @@ using System.Data;
 public class BotDNA {
     public float[] weights = new float[15];
     public float fitness = 0;
-
     public BotDNA() {}
-
     public void InitializeRandom() {
-        // Cấp cho thế hệ đầu tiên tỷ lệ vàng gần giống cờ vua tiêu chuẩn
-        weights[0] = Random.Range(80f, 150f);   // Tốt thường
-        weights[1] = Random.Range(280f, 350f);  // Tượng/Mã
-        weights[2] = Random.Range(480f, 550f);  // Xe
-        weights[3] = Random.Range(850f, 1000f); // 🚨 Hậu (Bắt buộc khởi điểm cao)
-        weights[4] = Random.Range(300f, 400f);  // Tốt tiến hóa
-        weights[5] = Random.Range(800f, 1000f); // Tốt tiến hóa xịn
+        weights[0] = Random.Range(80f, 150f);
+        weights[1] = Random.Range(280f, 350f); 
+        weights[2] = Random.Range(480f, 550f); 
+        weights[3] = Random.Range(850f, 1000f);
+        weights[4] = Random.Range(300f, 400f);  
+        weights[5] = Random.Range(800f, 1000f);
 
-        // Các trọng số chiến thuật (từ index 6 trở đi) vẫn để ngẫu nhiên
         for (int i = 6; i < weights.Length; i++) {
             weights[i] = Random.Range(10f, 50f); 
         }
     }
 
-    // Đột biến (Mutate)
+    //Mutation
     public void Mutate(float mutationRate) {
         for (int i = 0; i < weights.Length; i++) {
             if (Random.value < mutationRate) {
-                // Đột biến theo tỷ lệ phần trăm (thay đổi nhẹ +/- 15% để tránh phá hỏng gen tốt)
+                //mutation rate
                 float change = weights[i] * Random.Range(-0.15f, 0.15f); 
                 weights[i] += change;
 
-                // Khóa chặn: Riêng Gen số 3 (Hậu) và 5 (Tốt xịn) không bao giờ cho rớt dưới 800
+                //keep in range queen and vip pawn
                 if (i == 3 || i == 5) {
                     weights[i] = Mathf.Clamp(weights[i], 800f, 2000f);
                 } else {
@@ -44,7 +40,7 @@ public class BotDNA {
         }
     }
 
-    // Lai ghép (Uniform Crossover)
+    //Crossover
     public BotDNA Crossover(BotDNA partner) {
         BotDNA child = new BotDNA();
         for (int i = 0; i < weights.Length; i++) {
@@ -97,7 +93,7 @@ public class GATrainer : MonoBehaviour {
         QualitySettings.vSyncCount = 0;  
         Application.targetFrameRate = -1;
         
-        LoadPopulation(); // Thử load não cũ nếu có
+        LoadPopulation();
         if (population.Count < populationSize) {
             population.Clear();
             for (int i = 0; i < populationSize; i++)
@@ -130,26 +126,23 @@ public class GATrainer : MonoBehaviour {
 
     public void ReportMatchResult(int loserColor, bool isDraw, int totalTurns, float[] materialScores) {
         
-        // 1. Phân bổ điểm sinh tồn (Rank)
-        // Nếu hòa, mọi người đều nhận điểm hòa (5).
+        //draw +5
         if (isDraw) {
             for (int i = 0; i < playersPerMatch; i++) {
                 currentDNAs[i].fitness += 5f;
             }
         } 
-        // Nếu có người thua, người sống sót cuối cùng ăn trọn điểm (20), người chết được điểm an ủi (2).
         else {
             for (int i = 0; i < playersPerMatch; i++) {
                 if (i == loserColor) {
-                    currentDNAs[i].fitness += 2f; // Kẻ thua cuộc (Chết)
+                    currentDNAs[i].fitness += 2f; //lose +2
                 } else {
-                    currentDNAs[i].fitness += 20f; // Kẻ còn sống
-                    currentDNAs[i].fitness += 70f;
+                    currentDNAs[i].fitness += 90f; //win +90
                 }
             }
         }
 
-        // 2. Điểm phần thưởng chênh lệch lực lượng (Càng cắn được nhiều máu địch càng tốt)
+        //thắng nhiều quân hơn
         float totalEnemyMaterial = 0;
         for (int i = 0; i < playersPerMatch; i++) totalEnemyMaterial += materialScores[i];
 
@@ -160,7 +153,7 @@ public class GATrainer : MonoBehaviour {
             currentDNAs[i].fitness += (myMaterial - (enemyMaterial / (playersPerMatch - 1))) * 0.05f;
         }
 
-        // 3. Phạt câu giờ
+        //phạt câu giờ
         float turnPenalty = totalTurns * 0.05f;
         for (int i = 0; i < playersPerMatch; i++) {
              currentDNAs[i].fitness -= turnPenalty;
@@ -171,22 +164,21 @@ public class GATrainer : MonoBehaviour {
     }
 
     void EvolveNextGeneration() {
-        // Sắp xếp theo Fitness giảm dần
         population.Sort((a, b) => b.fitness.CompareTo(a.fitness));
         Debug.Log($"<color=cyan>Xong Thế hệ {currentGeneration}! Hậu Bot xịn nhất giá: {population[0].weights[3]} | Fitness: {population[0].fitness}</color>");
 
-        SavePopulation(); // Lưu lại lứa tốt nhất
+        SavePopulation();
 
         List<BotDNA> newPop = new List<BotDNA>();
         
-        // 1. Giữ lại tinh hoa (Elitism) - Chuyển thẳng sang lứa sau không lai tạp
+        //2 tinh hoa ko cần lai tạp
         for (int i = 0; i < eliteCount; i++) {
             BotDNA elite = new BotDNA();
-            System.Array.Copy(population[i].weights, elite.weights, 15); // Copy value, not reference
+            System.Array.Copy(population[i].weights, elite.weights, 15);
             newPop.Add(elite);
         }
 
-        // 2. Lai ghép phần còn lại bằng Tournament Selection
+        //lai ghép
         for (int i = eliteCount; i < populationSize; i++) {
             BotDNA parentA = TournamentSelection();
             BotDNA parentB = TournamentSelection();
@@ -200,7 +192,7 @@ public class GATrainer : MonoBehaviour {
         currentGeneration++;
     }
 
-    // Chọn ngẫu nhiên 3 con, lấy con giỏi nhất trong 3 con đó (Giữ đa dạng gen)
+    //chọn ngẫu nhiên 3 giữ lại 1
     BotDNA TournamentSelection() {
         int tournamentSize = 3;
         BotDNA best = null;
@@ -213,7 +205,6 @@ public class GATrainer : MonoBehaviour {
         return best;
     }
 
-    // Lưu/Tải File JSON
     void SavePopulation() {
         GAPopulationData data = new GAPopulationData { generation = currentGeneration, dnaList = population };
         string json = JsonUtility.ToJson(data, true);
