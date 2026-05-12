@@ -1,6 +1,10 @@
 # ♟️ CHESS EVOLUTION: PROJECT LOG
 Dự án biến thể Cờ Vua với cơ chế tích lũy điểm số và hệ thống tiến hóa kỹ năng.
 
+
+# DEMO VIDEO
+[![Watch the video](https://img.youtube.com/vi/UlAD9AypnM8/0.jpg)](https://www.youtube.com/watch?v=UlAD9AypnM8)
+
 ---
 
 # 📜 LORE
